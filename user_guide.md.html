@@ -1,0 +1,233 @@
+<meta charset="utf-8">
+
+    **Enterprise PBR Shading Model**
+          **User Guide**
+        Dassault Systèmes
+           Version 1.0
+         ![][license.png]
+
+Introduction
+============
+
+The Enterprise PBR Shading Model (DSPBR) is a material model for physically based rendering, supported by all renderers in the <b>3D</b>EXPERIENCE Platform. Physically based rendering (PBR) means that we approximate the real-world appearance of a surface with a bidirectional scattering distribution function (BSDF). This function describes how light interacts with the surface, i.e., how the light is reflected into the environment or transmitted into the volume beneath the surface.
+
+Conceptually, the Enterprise PBR Shading Model is organized in different components that cover different aspects of a material.
+
+* The _Base_ component contains parameters common to most materials.
+* The _Clearcoat_ component offers parameters describing a coating of a material like the clear coat of a car paint.
+* The _Emission_ component contains parameters for specifying light radiation properties of a surface.
+* The _Volume_ component features parameters for describing the volumetric parameters of (partially) transparent materials.
+
+Parameters
+==========
+
+Although the Enterprise PBR Shading Model offers a large number of parameters, only a few of them are needed for most materials. This guide will walk you through all the parameters, beginning with the most important ones.
+
+![Figure [parameter-overview]: Parameter overview](img/user_guide_material_chart.png)
+
+Base Component
+--------------
+
+The _Base_ component of the Enterprise PBR Shading Model describes the most fundamental and most common visual parameters of real-world materials. The parameters of this component enable modeling the appearance of a large amount of materials, both dielectrics (transparent and opaque) and conductors.
+
+### Albedo
+
+_Albedo_ defines the overall color of the material. It takes an RGB value in the range [0,1] as a constant or from a texture and applies it to the material. You have to make sure that an albedo texture does not include any lighting effects like shadows or specular highlights, because these effects are simulated by the rendering algorithm. A list of albedo values for typical materials can be found in the documentation of the Unreal Engine 4 [#UE4].
+
+### Metallic
+
+The _Metallic_ parameter describes the metallic-ness of the surface. A value of 0.0 denotes a non-metallic or dielectric surface, a value of 1.0 is used for a metallic surface. Occasionally you may want to use values in between to linearly blend between the two models, for example for rusty metal.
+
+!!! Tip: Nonmetals are 0, metals are 1
+    This is a binary decision, a pure material can either be dielectric or metallic. Only if you want to layer, for example, dust onto metal, this parameter is between 0 and 1.
+
+![Figure [metallic]: Metallic 0 to 1](img/user_guide_metallic.png)
+
+### Roughness
+
+_Roughness_ describes the microscopic roughness of the surface. Smooth and polished surfaces have a low roughness value, rough surfaces have a high value. A perfect mirror has a value of 0.
+
+![Figure [roughness]: Roughness 0 to 1. Nonmetal top, metal bottom.](img/user_guide_roughness.png)
+
+### Anisotropy
+
+With _Anisotropy_ you can control the aspect ratio of the specular highlight. This is useful for, e.g., brushed metal, where the mirror-like microfacets on the surface are all oriented into the same direction, resulting in a long and narrow highlight. A value of 0 disables anisotropy, a value of 1 sets it to the maximum.
+
+The microfacets on the surface are oriented in a certain direction. This direction is initially given by the texture coordinates of the mesh, but can additionally be rotated with the _Anisotropy Rotation_ parameter, effectively rotating the specular highlight. A value of 0 corresponds to 0° rotation, a value of 1 rotates 360°.
+
+!!! WARNING: Anisotropy needs texture coordinates
+    The orientation of the highlight is based on the tangent space. That means that the mesh needs proper texture coordinates from which the tangent space is computed.
+
+### Normal Map
+
+A _Normal Map_ describes the macroscopic structure of the surface in terms of the normal direction of the tangent space. This allows you to add details like small bumps and dents without using more polygons. The normal direction is encoded as an RGB value in a texture, where the default normal [0,0,1] is mapped to the color [128,128,255].
+
+!!! WARNING: Mapping RGB values to vectors
+    There is no common standard that defines how RGB values in the range [0,255] are mapped to float values in the range [-1.0,1.0]. In the <b>3D</b>EXPERIENCE Platform, 1 corresponds to -1.0, 128 to 0.0 and 255 to 1.0. 0 is undefined. Be careful when using normal maps from foreign sources.
+
+!!! Tip: Coordinate system convention
+    If bumps appear to sink in the surface instead of stick out, try to invert the green channel of the texture.
+
+### Transparency
+
+_Transparency_ controls the transparency of the surface. An opaque surface has a transparency of 0.0, a transparent surface like glass or water has a transparency of 1.0. Values in between blend between the two models and may occasionally be useful for hybrid surfaces like dirty glass.
+
+!!! Tip: Opaque surfaces are 0, transparent surfaces are 1
+    This is a binary decision, a pure material can either be opaque or transparent. Only if you want to layer, for example, dust onto glass, this parameter is between 0 and 1.
+
+### Cut-Out
+
+_Cut-out_ acts like an alpha channel on geometry. It is usually a texture which defines holes in thin-walled objects, making it possible to fake highly-detailed geometry boundaries without additional polygons.
+
+!!! Tip: A surface either has a cut (0) or not (1).
+    This is a binary decision. If a surface has a hole, set cut-out opacity 0. If not, set it to 1. Values in-between can be used to smooth the edges. Use _Transparency_ if the surface is semi-transparent, e.g., for glass or water.
+
+![Figure [cutout-geometry]: Cut-out mask (left) applied to a sphere (right). Note that transparent regions are exactly 0, opaque regions are exactly 1. Other values are only used for anti-aliasing at edges.](img/user_guide_cutout_geometry.png)
+
+Note that it is important to distinguish between _Transparency_ and _Cut-Out_. _Transparency_ is a view-dependent effect that blends between reflection and transmission based on a Fresnel term. _Cut-Out_ is not view-dependent, it simply makes the surface transparent after lighting computations have finished.
+ 
+![Figure [cutout]: Transparency (top) and (inverted) Cut-Out (bottom) 0 to 1. Note that while the sphere with cut-out completely vanishes, the transparent sphere still reflects light at grazing angles.](img/user_guide_cutout.png)
+ 
+### Sheen
+
+Some fabrics like velvet show a significant amount of rim lighting (or sheen), resulting from both forward and backward scattering. This comes from tiny fibers standing straight up on the surface. The _Sheen_ parameter controls the amount of sheen, ranging from 0 (no sheen) to 1 (maximum sheen).
+
+### Specular
+
+The _Specular_ parameter scales the amount of specular reflection on non-metallic surfaces. It has no effect on metals.
+
+!!! Tip: Everything is shiny [#Hab10]
+    Every surface in the real-world has a specular contribution, there are no pure diffuse surfaces. Therefore, there is usually no reason to touch this parameter, even for cardboard, cloth or concrete. If you want to model mostly-diffuse materials just make them rough.
+
+If you want pure diffuse materials, maybe for simple visualizations in engineering or high-performance preview renderings, you can set this parameter to 0 to completely disable the microfacet-based reflection component.
+
+### Specular Tint
+
+_Specular Tint_ is an additional color parameter that tints the specular reflection of non-metallic surfaces. At grazing angles, the reflection still blends to white, and the parameter has not effect on metals.
+
+Be careful with this parameter, it is not physically-plausible and can easily be abused to create materials that do not exist in the real world. However, certain non-photorealistic art styles may require this kind of flexibility.
+
+Clearcoat Component
+-------------------
+
+A clear coat is an additional monochromatic specular reflection layer on top of the surface. It is enabled if the _Clearcoat_ parameter is not zero. The coating roughness is controlled with _Clearcoat Roughness_, commonly 0 or a small value, although any value between 0 and 1 is supported.
+
+The clear coat layer has a separate normal map _Clearcoat Normal_, which works the same as the _Normal Map_ of the base layer.
+
+Emission Component
+-------------------
+
+The Enterprise PBR Shading Model contains an emissive component that turns surfaces into area lights. Light is emitted uniformly into the upper hemisphere with regard to the normal of each surface point. Apart from emission color, emission parameters cannot be textured.
+
+The color and amount of emitted light is determined by three parameters, which are closely related to real-world specifications of emission properties (see Figure [light-bulb-label]), and a hint how to interpret them.
+
+![Figure [light-bulb-label]: Specification of light emission properties of a real light bulb.](img/user_guide_light_bulb_label.png)
+
+### Emission Color
+
+The color of the emitted light (roughly: the spectral distribution of emitted power) is determined by _Emission Color_. Real-world light bulbs specify this in terms of color temperature. In Figure [light-bulb-label] the color temperature (called "Light Appearance") is 2700 K.
+
+### Emission Value and Emission Mode
+
+The brightness of a light source can be specified as luminous power (roughly: the power emitted by the light source; unit: lumens or lm) or as luminous emittance (roughly: the power emitted per surface area of the light source; unit: lux). Figure [light-bulb-label] specifies a brightness of 820 lumens, which translates into an _Emission Value_ of 820 and setting _Emission Mode_ to true (for luminous power). Figure [emission-modes] illustrates the two modes.
+
+![Figure [emission-modes]: Illustration of the two emission modes. Left: The emission of both spheres is set to 1 lux by specifying an _Emission Value_ of 1 and setting _Emission Mode_ to false. When directly looking at them they appear equally bright, but the amount of energy they emit is significantly higher for the large sphere. Right: Emission is set to 1 lm for both spheres by specifying _Emission Mode_ as true. They radiate the same amount of energy into the scene but they are differently bright when looking at them directly.](img/user_guide_emission_modes.png)
+
+!!! Tip: Using suitable emission mode
+    Specify luminous power whenever finding real-world specifications and when using proxy surfaces as light emitters (e.g., for light bulbs often the glass surface surrounding the filament is set as emissive instead of the filament that actually emits light). Use luminous emittance when changing the size of a light source shall impact the amount of energy it emits. 
+
+### Energy Normalization
+
+Emission color can modify the emission in two different ways:
+
+* When _Energy Normalization_ is disabled, darker emission colors lead to darker emission even if hue and saturation are kept constant. The quantity of emitted light is determined by _Emission Mode_ and the product of _Emission Color_ and _Emission Value_. Example: _Emission Color_ is set to 50% gray, _Emission Value_ is set to 1 and _Emission Mode_ to luminous power. As a result, the light source emits colorless light at 0.5 lm.
+* When _Energy Normalization_ is enabled, the quantity of emitted light is solely determined by the emission mode and the emission value. _Emission Color_ only modifies the colorfulness of the light. Example: _Emission Color_ is set to 50% gray, _Emission Value_ is set to 1 and _Emission Mode_ to luminous power. As a result, the light source emits colorless light at 1 lm.
+
+![Figure [energy-normalization]: In both images the emissive value of both spheres is set to 1 and emission quantity to luminous power. The left sphere has a dark gray emission color, on the right sphere it is white. Without energy normalization (left) the left sphere is darker as emission color influences intensity. With energy normalization (right) they are equally bright as only emission color chromaticity is considered.](img/user_guide_energy_normalization.png)
+
+!!! Tip: Using _Energy Normalization_
+    Use energy normalization to replicate real light bulbs whose emission characteristic is specified by luminous power and color temperature as in Figure [energy-normalization]. Do not use energy normalization to tweak the intensity of mesh lights via the emission color slider. 
+
+Volumetric Component
+--------------------
+
+### Thin Walled
+
+In case the material is transparent, you have to configure what should happen in the space enclosed by the geometry boundary. There are two options:
+
+* Either the geometry defines the boundary between the outside world and a volume, i.e., the geometry encloses a volume. In this case, you have to set _Thin Walled_ to false and use the volume parameters to configure scattering inside the volume.
+* Or the geometry defines an infinitely thin volume with surfaces on both sides. _Thin Walled_ has to be set to true and the volume parameters (except Index of Refraction) do not have an effect.
+
+This parameter has no effect if the material is not transparent.
+
+![Figure [thin-walled]: Thin walled (left) and volumetric sphere (right).](img/user_guide_thin_walled.png)
+
+![Figure [thin-walled-sketch]: Geometry (black line) defines two-sided object with infinitely thin volume inside. Right: Geometry (black line) defines boundary between outside and inside (gray box).](img/user_guide_thin_walled_sketch.png)
+
+!!! WARNING: Real-time renderers have only limited support for volumetric objects
+    Due to their complexity, refraction, attenuation and subsurface scattering are only partially supported by rasterizers. Do not expect consistency across all renderers.
+
+!!! Tip: Thin Walled is faster
+    Although raytracers supports volumetric objects, thin walled objects are much faster to render. If you are concerned about render times, use thin walled if possible. Windows, for example, are usually very well approximated with a thin walled material, as the glass is very thin and refraction is hardly noticeable.
+
+### Index of Refraction
+
+The _Index of Refraction_ (IOR) is a measured physical number usually in the range between 1 and 2 that determines how much the path of light is bent, or refracted, when entering a material. It also influences the ratio between reflected and transmitted light, calculated from the Fresnel equations.
+
+Note that if the material is thin, i.e., _Thin Walled_ is set to true, the volume is infinitely thin and, thus, the light is not refracted. However, the reflectivity is still computed from the index of refraction.
+
+ Material    | Index of Refraction
+-------------|---------------------
+Air          | 1.0
+Ice          | 1.31
+Water        | 1.33
+Plastic      | 1.49
+Window glass | 1.52
+Flint glass  | 1.62
+Sapphire     | 1.77
+Diamond      | 2.42
+
+![Figure [ior]: Index of Refraction 1 to 2. Note that besides refraction also the reflectivity changes with increasing IOR.](img/user_guide_ior.png)
+
+### Attenuation
+
+The volume beneath a surface may be contain small particles that absorb or scatter the light. Depending on the density of the particles, more light is absorbed or scattered. It may also depend on the wavelength, resulting in colored attenuation.
+
+The wavelength-dependent density of particles in the medium is controlled by the parameters _Attenuation Color_ and _Attenuation Distance_. They define the remaining energy in terms of a color after a ray of white light traveled a certain distance through the volume. If subsurface scattering is disabled, the particles absorb all the energy. If it is enabled, some energy is scattered.
+
+To disable attenuation, set the color to white, so that not light absorbed.
+
+Attenuation has no effect on _Thin Walled_ materials, as an infinitely thin surface does not absorb light.
+
+!!! WARNING: Avoid 0 or 1 for an RGB channel
+    0 makes the object opaque for this color channel, 1 disables attenuation. In both cases, the distance has no effect. If only some color channels have this behavior, the result may be confusing.
+
+!!! Tip: _Albedo Color_ and _Attenuation Color_ are not the same
+    When _Transparency_ is 1, it seems like there are two options to control the color of glass: _Albedo_ and _Attenuation Color_. However, there is a subtle difference: _Albedo_ controls the absorption when the light enters the volume. _Attenuation Color_ determines what happens inside the volume (taking the distance into account). As a rule of thumb, if an object is thin walled, you have to set its color with the _Albedo_ parameter. If it is volumetric, you use _Attenuation Color_ and _Attenuation Distance_.
+
+### Subsurface Scattering
+
+Subsurface scattering (SSS) models scattering of light inside a volume. While traveling through the medium, light rays may not only be absorbed when hitting a particle, but also scattered into some direction, eventually leaving the surface at another point. The overall color an object has after multiple scattering events (assuming non-colored attenuation) is determined by the _Subsurface Color_.
+
+!!! Tip: Subsurface scattering needs attenuation
+    _Attenuation Color_ and _Attenuation Distance_ describe the density of the medium, i.e., the mean free path length after which a particle is hit. If either the distance is too high, or the color is set to 1, no particle will be hit, thus no scattering will occur.
+
+For very short attenuation distances, the overall appearance of a pure diffuse object is very similar to an object with subsurface scattering. You can utilize this to find good parameters for subsurface scattering: Start with white _Albedo_, full _Transparency_, small _Attenuation Distance_ and some grayish value for _Attenuation Color_. Any _Subsurface Color_ you choose now will roughly be very similar to a pure diffuse object with the same color set as _Albedo_.
+
+Bibliography
+============
+
+[#UE4]: Unreal Engine 4 Documentation about Physically Based Materials. https://docs.unrealengine.com/latest/INT/Engine/Rendering/Materials/PhysicallyBased/index.html 2017.
+
+[#Hab10]: John Hable. Everything is Shiny. http://filmicworlds.com/blog/everything-is-shiny/ 2010.
+
+License
+=======
+
+The Enterprise PBR Shading Model (DSPBR), © Dassault Systèmes 2019, is licensed under [CC-BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/). In addition, please acknowledge your use of the Dassault Systèmes Enterprise PBR Shading Model (DSPBR) when DSPBR is used or implemented in a product by adding  the following "[name of the product] is implementing DSPBR, the Dassault Systèmes Enterprise PBR Shading Model", in a place and format which shall be reasonably visible.
+
+![](https://i.creativecommons.org/l/by-sa/4.0/88x31.png)
+
+[license.png]: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAPCAMAAABEF7i9AAAAllBMVEUAAAD///+rsapERER3d3eIiIjMzMzu7u4iIiKUmZO6v7rKzsoODg4RERFVVVUNDQ0NDg0PEA8zMzNLTEtbXltmZmZydnF9gn2AgICPkI+ZmZmqqqq7u7vFxsXIzMgNDQwZGRkgICAhISEkJSMnKCcuMC4xMzE5Ozk7PTtBQkFCQkJDQ0Nna2eGhoaHh4ezuLLGysbd3d1wVGpAAAAA0klEQVR42q2T1xbCIAyGk0CXdlmto3XvPd7/5QRL1432WHI4XED4+PMHALQHag0JJBlXMNQScx2ibu9PdTnQcY3iErYl6oxbAo/rUrUJA6J5vx0wNNC0gVkMbBPZXtQ8Uf6qpNJwOf0EjmCKto+ce1aSIg9FzTO1/xlYyVeL34FDMC3ZFT+SNXOX6PEsBKm0rIOYPYuGClnsWTxBHtQV1gRhI4UUGJh6EAsPoxdedjUPK+dzT38DDyvNXXYW9wJ43mh4h6ItN8U7Ldv+FN1/WXO8Aed5CQIgC4KiAAAAAElFTkSuQmCC
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

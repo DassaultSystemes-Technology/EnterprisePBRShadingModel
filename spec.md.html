@@ -1,0 +1,490 @@
+<meta charset="utf-8">
+
+    **Enterprise PBR Shading Model**
+        Dassault Systèmes
+           Version 1.0
+        ![][license.png]
+
+The Enterprise PBR Shading Model (DSPBR) is a material optimized for performance in realtime scenarios in a rasterizer. It is inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13]. Although it is primarily targeted at performance, it must still be possible to render the model without any difficulties in a GI renderer, as it is also the basis for cross-renderer consistency.
+
+The model consists of a core part and additional effects. Renderers must implement all effects in order to be consistent, but may choose to compile spezialized shaders if an effect is disabled.
+
+Components
+==========
+
+Core
+----
+
+At its core, the Enterprise PBR Shading Model consists of three BSDFs which are combined in such a way that it is possible to model a large amount of real-world materials, both dielectrics (transparent and opaque) and conductors. Users can adjust parameters to continuously mix between the models.
+
+The material can operate in two modes: it can simulate an infinitely thin, two-sided object or a volume boundary. In the latter case, the material has to be attached to a closed mesh, i.e., the mesh encloses a volume and does not have any holes. The parameters of the volume extension (Section [Volume]) describe what happens inside the volume.
+
+The model is a sum of a diffuse, a reflective and a transmissive component:
+
+\begin{equation}
+f(\mathbf{v},\mathbf{l}) = f_d(\mathbf{v},\mathbf{l}) + f_r(\mathbf{v},\mathbf{l}) + f_t(\mathbf{v},\mathbf{l})
+\end{equation}
+
+The BSDFs are defined in the following way:
+
+\begin{eqnarray}
+f_d(\mathbf{v},\mathbf{l}) &=& \frac{\rho_d}{\pi} B(\mathbf{v}, \mathbf{l}) \\
+f_r(\mathbf{v},\mathbf{l}) &=& M_r(\mathbf{v},\mathbf{l}) F(\mathbf{h}_r \cdot \mathbf{v}) + C_r(\mathbf{v},\mathbf{l})\\
+f_t(\mathbf{v},\mathbf{l}) &=& \rho_t M_t(\mathbf{v},\mathbf{l}') (1 - F(\mathbf{h}_t \cdot \mathbf{v}))
+\end{eqnarray}
+
+with $\mathbf{h}_r = \frac{\mathbf{l} + \mathbf{v}}{\lVert\mathbf{l} + \mathbf{v}\rVert}$, $\mathbf{h}_t = \frac{\mathbf{l'} + \mathbf{v}}{\lVert\mathbf{l'} + \mathbf{v}\rVert}$ and $\mathbf{l}' = \mathbf{l} + 2 \mathbf{n} (-\mathbf{l} \cdot \mathbf{n})$ to flip the light direction from lower to upper hemisphere in order to be able to reuse the microfacet reflection function for transmission.
+
+### Reflection and Transmission Components
+
+Reflection and transmission are based on microfacet BSDFs [#Wal07]. An additional energy compensation term $C_r(\mathbf{v},\mathbf{l})$ for reflection makes the microfacet BRDF energy preserving by approximating the energy from multiple scattering between microfacets, an effect that gets stronger the higher the roughness of the surface is.
+
+The roughness $(\alpha_u, \alpha_v)$ is squared to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_t$, respectively.
+
+\begin{eqnarray}
+M_r(\mathbf{v},\mathbf{l}) &=& \frac{D(\mathbf{h},\alpha_u^2,\alpha_v^2) G(\mathbf{v},\mathbf{l},\alpha_u^2,\alpha_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})}\\
+M_t(\mathbf{v},\mathbf{l}) &=&
+\begin{cases}
+M_r(\mathbf{v},\mathbf{l}) & \text{if thin-walled} \\
+\frac{|\mathbf{l} \cdot \mathbf{h}_t| |\mathbf{v} \cdot \mathbf{h}_t|}{|\mathbf{l} \cdot \mathbf{n}| |\mathbf{v} \cdot \mathbf{n}|} \frac{\eta_t^2 D(\mathbf{h}_t,\alpha_u^2,\alpha_v^2) G(\mathbf{v},\mathbf{l},\alpha_u^2,\alpha_v^2)}{\eta_i(\mathbf{l} \cdot \mathbf{h}_t) + (\eta_t(\mathbf{v} \cdot \mathbf{h}_t))^2} & \text{otherwise} \\
+\end{cases}
+\end{eqnarray}
+
+To allow for anisotropic materials we derive roughnesses in tangent ($\alpha_u$) and bitangent ($\alpha_v$) direction from the isotropic roughness $\alpha$ and anisotropy strength $o$. In addition we support anisotropy rotation by rotating the local tangent space counter-clockwise around the normal with the anisotropy rotation parameter $\beta$.
+
+\begin{equation}
+\begin{pmatrix}\alpha_u\\\alpha_v\end{pmatrix} = \alpha \begin{pmatrix}1\\1-o\end{pmatrix}
+\end{equation}
+
+\begin{equation}
+\begin{pmatrix}\mathbf{t}_\text{rot} \\ \mathbf{b}_\text{rot} \\ \mathbf{n}_\text{rot}\end{pmatrix}^\top = \begin{pmatrix}\cos(2\pi\beta)\mathbf{t}+\sin(2\pi\beta)\mathbf{b} \\ -\sin(2\pi\beta)\mathbf{t}+\cos(2\pi\beta)\mathbf{b} \\ \mathbf{n}\end{pmatrix}^\top
+\end{equation}
+
+For performance reasons Schlick's Fresnel approximation is used. It is a lot easier to compute than the full Fresnel equations.
+
+\begin{eqnarray}
+F(\theta) &=&
+\begin{cases}
+\rho_{s,r,0} + (\rho_{s,r,90} - \rho_{s,r,0}) (1 - |\cos\theta|)^5 & \text{if }
+\eta_t >= \eta_i
+ \\
+\rho_{s,r,0} + (\rho_{s,r,90} - \rho_{s,r,0}) (1 - |\cos\theta_t|)^5 & \text{if }
+\eta_t < \eta_i \land \sin^2\theta_t < 1
+ \\
+1 & \text{if }
+\eta_t < \eta_i \land \sin^2\theta_t >= 1 \text{ (total internal reflection)}
+\end{cases}
+\end{eqnarray}
+
+where $\theta_t$ is the angle of transmission, computed from the angle of incidence via $\sin^2\theta_t = \left(\frac{\eta_i}{\eta_t}\right)^2 (1 - \cos^2\theta_i)$ [#Lag13]. Note that in case of total internal reflection, the Fresnel does not depend on $\rho_{s,r,90}$ anymore, so it is impossible to disable the reflection in this situation. This allows users to change the specular component of a refractive object without introducing artifacts, i.e., dark appearance in areas where total internal reflection occurs.
+
+For the microfacet distribution, the material uses the Generalized Trowbridge-Reitz GTR model (generalized anisotropic GGX) [#Bur12] with $\gamma=2$
+
+\begin{eqnarray}
+D(\mathbf{h},\alpha_x,\alpha_y) = \frac{1}{\pi \alpha_x \alpha_y} \frac{1}{\left(\frac{(\mathbf{h} \cdot \mathbf{x})^2}{\alpha_x^2}+\frac{(\mathbf{h} \cdot \mathbf{y})^2}{\alpha_y^2}+(\mathbf{h} \cdot \mathbf{n})^2\right)^2}
+\end{eqnarray}
+
+which corresponds to classic GGX in isotropic case $\alpha=\alpha_u=\alpha_v$:
+
+\begin{eqnarray}
+D(\mathbf{h},\alpha) = \frac{1}{\pi} \frac{\alpha^2}{((\mathbf{h} \cdot \mathbf{n})^2(\alpha^2-1)+1)^2}
+\end{eqnarray}
+
+#### Energy Preservation
+
+The standard microfacet model does not account for scattering occuring between microfacets on the microsurface. As the surface becomes less specular, the multiple scattering becomes stronger, effectively resulting in high energy loss if this is not accounted for (see Figure [energycomp-microfacet-metallic]). [#KC17] describes a method based on [#Kel01] to approximate multiple scattering for microfacet models that can be adapted for real-time rendering.
+
+![Figure [energycomp-microfacet-metallic]: Left: Metallic surface with roughness 0. Middle: Non-energy preserving metallic surface with roughness 1. Right: Energy-preserving metallic surface with roughness 1 by accounting for multiple scattering. Note that the surface in the middle looks significantly darker than the others.](img/energycomp_metallic.png)
+
+Instead of a lookup table as in [#KC17], we use analytical fits for the energy compensation term $C_r(\mathbf{v},\mathbf{l})$. This improves real-time performance as we do not need additional texture fetches.
+
+\begin{eqnarray}
+C_r(\mathbf{v},\mathbf{l}) &=& \underbrace{\frac{(1-E_m(\mathbf{v}\cdot\mathbf{n}))(1-E_m(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{m,avg})}}_{\text{Multiple scattering GGX}} \underbrace{\frac{{F_{m,avg}}^2 E_{m,avg}}{{1 - F_{m,avg}(1 - E_{m,avg})}}}_{\text{Multiple scattering Fresnel}}
+\end{eqnarray}
+
+We measured the directional albedo $E_m(\theta)$ and average albedo $E_{m,avg}$ by integrating the single-scattering GGX microfacet model as described in [#KC17]. The following functions approximate the measured data with reasonable performance-quality tradeoff:
+
+\begin{eqnarray}
+E_m(\theta) &=& 1 - 1.4594\alpha_{uv}\cos\theta \\
+ &&* \left(-0.20277 + \alpha_{uv} (2.772 + \alpha_{uv} (-2.6175 + 0.73343 \alpha_{uv}))\right) \nonumber\\
+ &&* \left(3.09507 + \cos\theta (-9.11369 + \cos\theta (15.8884 + \cos\theta (-13.70343 + 4.51786 \cos\theta)))\right) \nonumber\\
+ \alpha_{uv} &=& \alpha_u \alpha_v \\
+ \nonumber\\
+E_{m,avg} &=& 1.0 + \alpha_{uv} (-0.113 + \alpha_{uv} (-1.8695 + \alpha_{uv} (2.2268 - 0.83397 \alpha_{uv})))
+ \\
+F_{m,avg} &=& 0.047619 \rho_{s,r,90} + 0.952381 \rho_{s,r,0}
+\end{eqnarray}
+
+Note that we convert from anisotropic to isotropic roughness $\alpha_{uv}$ to simplify the function.
+
+Implementations may choose to replace the multiple scattering Fresnel part with the single scattering Fresnel $F(\theta)$ if concerned about performance.
+
+### Diffuse Component
+
+The diffuse contribution of the material is modeled with a simple Lambertian BRDF. Based on the amount of specular contribution from the microfacet components, the diffuse contribution needs to be multiplied with a directional-dependent factor to ensure energy conservation. Following the approach of [#Kel01] and [#KC17], the factor is calculated from the missing energy after specular reflection. Instead of a lookup table, we use an analytical fit to save expensive texture lookups. For more information see Section [Energy Compensation: Diffuse-Specular].
+
+![Figure [energycomp-plastic]: Combination of diffuse and specular component with energy compensation for roughness 0 (left) and 1 (right). Note that the combination is energy-conserving (no energy is produced, even at multiple bounces inside the object) and energy-preserving (especially at grazing angles).](img/energycomp_plastic.png)
+
+The diffuse BRDF looks as follows:
+
+\begin{eqnarray}
+B(\mathbf{v}, \mathbf{l}) &=&
+\begin{cases}
+(1-s) + \frac{s(1-E(\mathbf{v}\cdot\mathbf{n}))(1-E(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{avg})} & \ \\
+ 0 & \text{if total internal reflection wrt.} \mathbf{v} \text{ or }\mathbf{l}
+\end{cases}
+\end{eqnarray}
+
+The factor $s$ can be used to decrease the contribution of the microfacet model, as described in Section [Parameters]. When the microfacet model becomes darker, we blend the diffuse component to a constant Lambertian BRDF.
+
+The directional albedo $E(\theta)$ and average albedo $E_{avg}$ are expensive to compute, as it involves integrating the Fresnel-weighted GGX microfacet model over all light directions on the hemisphere. The terms are approximated with the following formulas:
+
+\begin{eqnarray}
+E(\cos\theta) &=& \operatorname{lerp}(E_0 + (1.0 - E_0)(1 - \cos\theta)^5, 0.04762 + 0.95238 E_0, 1 - (1 - \alpha_{uv})^5) \\
+E_{avg} &=& E_0 + (-0.33263 \alpha_{uv} - 0.072359) (1 - E_0) E_0
+\end{eqnarray}
+
+with $E_0 = F_0 s \rho_{s,\text{max}}$, where $\rho_{s,\text{max}}$ denotes the maximum value of the wavelength-dependent color $\rho_s$. The maximum is used because the color is subtracted, leading to unexpected behavior if this is done per channel. Section [Parameters] describes these parameters in more detail.
+
+### Parameters
+
+In order to simplify usage of the model and to ensure energy conservation, the weights $\rho_d$, $\rho_{s,r,0}$, $\rho_{s,r,90}$, and $\rho_t$ of the individual components of the model are not directly given by the user, but instead computed from a set of user parameters $\rho$, $\rho_s$, $m$, $t$, $s$ as follows:
+
+\begin{eqnarray}
+\rho_d &=& \rho (1-m) (1-t) \\
+\rho_t &=& \rho (1-m) t \\
+\rho_{s,r,0} &=& (1-m) F_0 s \rho_s + m \rho \\
+\rho_{s,r,90} &=& (1-m) s + m \\
+\end{eqnarray}
+
+where $F_0 = \left(\frac{\eta_i - \eta_o}{\eta_i + \eta_o}\right)^2$.
+
+Table [core-parameters] describes the user parameters in more detail. The parameters $s$, $m$ and $t$ make the model very flexible. Table [mst] shows a list of all available combinations and explains their meaning.
+
+ Name        | Type          | Default | Range  | Description
+-------------|---------------|---------|--------|-------------
+$\mu$        | uniform bool  | true    |        | Material describes volume boundary (false) or thin, two-sided object (true).
+$\rho$       | color         | 1       | 0-1    | Albedo of the material.
+$\rho_{s}$   | color         | 1       | 0-1    | Specular tint to adjust the color of the specular lobe near $\theta=0^\circ$.
+$m$          | float         | 0       | 0-1    | Metallic-ness (0 = dielectric, 1 = metallic).
+$s$          | float         | 1       | 0-1    | Directional-independent amount of specular contribution to fine-tune the effect of the index of refraction.
+$t$          | float         | 0       | 0-1    | Transparency (0 = opaque, 1 = transparent).
+$\eta$       | uniform float | 1.5     | 1-inf  | Index of refraction of the volume (t=1) or the dielectric coating (m=0).
+$\alpha$     | float         | 0       | 0-1    | Roughness of microfacet distribution.
+$o$          | float         | 0       | 0-1    | Anisotropy strength.
+$\beta$      | float         | 0       | 0-1    | Anisotropy rotation angle (counter-clockwise rotation of the tangent space around local normal, where $0.25\equiv90^\circ$, $0.5\equiv180^\circ$, $1.0\equiv360^\circ$.
+$\mathbf{n}$ | float3        | (0,0,1) $\lVert\mathbf{n}\rVert=1$ | | Normal for normal mapping.
+[Table [core-parameters]: List of core parameters.]
+
+![Figure [core-parameters-fig]: Result for various values of core parameters.](img/params_core.png)
+
+$m$ | $s$ | $t$ | Active Components | Use this for | Description
+----|-----|-----|-------------------|--------------|-------------
+0   | 0   | 0   | Diffuse | | Pure diffuse material.
+0   | 0   | 1   | Refraction | | Pure refractive material.
+0   | 1   | 0   | Diffuse, Reflection | Plastic, wood, stone | Specular coating on top of diffuse base layer. Adjust $\eta_o$ to change the index of refraction of the coating. For artistic effects, adjust $s$ and $\rho_s$ to fine-tune the coating layer.
+0   | 1   | 1   | Reflection, Refraction | Glass, water, ice | Transparent material. Use $\eta_o$ to adjust the index of refraction. For artistic effects, adjust $s$ and $\rho_s$ to fine-tune the reflection.
+1   | N/A | N/A | Reflection | Metal | Specular material with Fresnel effect that fades to white at grazing angles. Metallic takes precedence, $s$ and $t$ have no effect.
+[Table [mst]: Metallic, Specular and Transparency.]
+
+The basic workflow to configure a physically-plausible material involves three steps:
+
+1. Choose the color $\rho$ of the material.
+2. Choose the material type via $m$ and $t$.
+3. Choose an IOR for the coating/refraction.
+
+For more fine-grained artistic control, the material can now be tweaked even further:
+
+4. Fine-tune amount of specular contribution via $s$.
+5. Fine-tune specular color near $\theta=0^\circ$ via $\rho_s$.
+
+Sheen
+-----
+
+This extension adds rim lighting (or sheen) resulting from both forward and backward scattering to the Enterprise PBR Shading Model, controlled by a single parameter $b$. This is useful for some fabrics like, for example, velvet.
+
+\begin{equation}
+f(\mathbf{v},\mathbf{l}) = f'_d(\mathbf{v},\mathbf{l}) + f_r(\mathbf{v},\mathbf{l}) + f_t(\mathbf{v},\mathbf{l}) + f_b(\mathbf{v},\mathbf{l})
+\end{equation}
+
+The new component $f_b(\mathbf{v},\mathbf{l})$ is mixed into the diffuse component of the core material, modifying $f_d(\mathbf{v},\mathbf{l})$ accordingly:
+
+\begin{eqnarray}
+f'_d(\mathbf{v},\mathbf{l}) &=& \frac{\rho'_d}{\pi} B(\mathbf{v}, \mathbf{l}) \\
+f_b(\mathbf{v},\mathbf{l}) &=& \rho_b M_b(\mathbf{v},\mathbf{l}) B(\mathbf{v}, \mathbf{l})
+\end{eqnarray}
+
+Both components are weighted the same with regard to the Fresnel, making the retro-reflective component also part of the base layer. It uses the Ashikhmin BRDF with the "inverted Gaussian distribution" [#AP07] [#NP13].
+
+\begin{eqnarray}
+M_b(\mathbf{v},\mathbf{l}) &=& \frac{D_{inv}(b,\mathbf{h})}{4 \left[(\mathbf{n}\cdot\mathbf{l}) + (\mathbf{n}\cdot\mathbf{v}) - (\mathbf{n}\cdot\mathbf{l})(\mathbf{n}\cdot\mathbf{v})\right]} \\
+D_{inv}(b,\mathbf{h}) &=& \frac{1}{\pi (1 + 4b^2)} \left(1 + \frac{4 \exp\left(\frac{-\cot^2\theta_h}{b^2}\right)}{\sin^4\theta_h}\right)
+\end{eqnarray}
+
+$b$ controls the shape of the inverse Gaussian distribution and, therefore, could be considered as its roughness.
+
+### Parameters
+
+The mixing into the diffuse component is important to achieve energy conservation. The parameter $b$ is not only used to control the roughness of the Ashikhmin BRDF, but also to interpolate between the two BRDFs:
+
+\begin{eqnarray}
+\rho'_d &=& \rho (1-m) (1-t) \hat{b} \\
+\rho_b &=& \rho (1-m) (1-t) (1-\hat{b})
+\end{eqnarray}
+
+The reason for reusing the parameter is the fact that the Ashikhmin BRDF looks almost like a Lambertian BRDF for small values of $b$. However, as this similarity quickly disappears, $b$ is not directly used as mixing weight, but instead $\hat{b}$ is derived from $b$ via $\hat{b} = (1-b)^5$.
+
+Besides that, the retro-reflective component also makes use of the overall albedo of the material, it does not introduce another color. In effect that means that by increasing $b$, the color gets distributed to grazing angles, making the material appear darker if the incident angle is close to the surface normal.
+
+In conclusion, the sheen effect introduces only one additional parameter to the material, shown in the following table.
+
+ Name        | Type          | Default | Range  | Description
+-------------|---------------|---------|--------|-------------
+$b$          | float         | 0       | 0-1    | Sheen (0 = none, 1 = full).
+[Table [sheen-parameters]: List of sheen parameters.]
+
+![Figure [sheen-parameters-fig]: Result for various values of sheen parameters.](img/params_sheen.png)
+
+Clearcoat
+---------
+
+The clearcoat extension adds a dielectric coating as a layer on top of the Enterprise PBR Shading Model. The base material $f(\mathbf{v},\mathbf{l})$ and the coating layer are weighted with a Fresnel term. The parameter $c$ determines the strength of the effect.
+
+\begin{eqnarray}
+f_{coated}(\mathbf{v},\mathbf{l}) &=& f_\text{flaky_base}(\mathbf{v},\mathbf{l}) + f_{coating}(\mathbf{v},\mathbf{l}) \\ \nonumber\\
+f_\text{flaky_base}(\mathbf{v},\mathbf{l}) &=& f(\mathbf{v},\mathbf{l}) (1 - c \ \max(F_c(\mathbf{n}_c \cdot \mathbf{v}), F_c(\mathbf{n}_c \cdot \mathbf{l})) \\
+f_{coating}(\mathbf{v},\mathbf{l}) &=& M_c(\mathbf{v},\mathbf{l}) \ c \ F_c(\mathbf{h} \cdot \mathbf{v})
+\end{eqnarray}
+
+The coating is based on a microfacet BRDF with an isotropic GGX distribution and squared roughness, similar to the reflection component in the core material.
+
+\begin{eqnarray}
+M_c(\mathbf{v},\mathbf{l}) &=& \frac{D(\mathbf{h},\alpha_c^2) G(\mathbf{v},\mathbf{l})}{4 (\mathbf{v} \cdot \mathbf{n}_c) (\mathbf{l} \cdot \mathbf{n}_c)}
+\end{eqnarray}
+
+The index of refraction in Schlick's Fresnel term is fixed to 1.5 to resemble a glass-like dielectric coating.
+
+\begin{eqnarray}
+F_c(\theta) &=& 0.04 + 0.96 \ (1 - \cos\theta)^5
+\end{eqnarray}
+
+### Parameters
+
+As shown in Table [clearcoat-parameters], the clearcoat is parametrized via two scalar values and a normal.
+
+ Name          | Type          | Default | Range  | Description
+---------------|---------------|---------|--------|-------------
+$c$            | float         | 0       | 0-1    | Clearcoat reflectivity (0 = no clearcoat, 1 = full clearcoat).
+$\alpha_c$     | float         | 0       | 0-1    | Roughness of clearcoat's microfacet distribution.
+$\mathbf{n}_c$ | float3        | (0,0,1) | $\lVert\mathbf{n}_c\rVert=1$ | Clearcoat normal for normal mapping.
+[Table [clearcoat-parameters]: List of clearcoat parameters.]
+
+![Figure [clearcoat-parameters-fig]: Result for various values of clearcoat parameters.](img/params_clearcoat.png)
+
+Cut-out
+-------
+
+The cut-out acts like an alpha channel for the surface. It makes parts of the surface transparent, independent of Fresnel terms, view and light direction or any parameters.
+
+### Parameters
+
+ Name          | Type          | Default | Range  | Description
+---------------|---------------|---------|--------|-------------
+$\nu$          | float         | 0       | 0-1    | Cut-out opacity value (0 = transparent, 1 = opaque).
+[Table [cutout-parameters]: List of cut-out parameters.]
+
+![Figure [cutout-parameters-fig]: Result for various values of cut-out parameters.](img/params_cutout.png)
+
+The cut-out parameter is primarily used in conjunction with textures to fake details in geometry, see Figure [cutout-geometry].
+
+![Figure [cutout-geometry]: Cut-out texture applied to a sphere.](img/params_cutout_geometry.png)
+
+Emission
+--------
+
+In addition to the reflective and transmissive components, the material contains an emissive component that turns surfaces into diffuse area lights. Light is emitted into the upper hemisphere with regard to the normal.
+
+\begin{eqnarray}
+L_e(v) =
+\begin{cases}
+\rho_e & \text{if } (\mathbf{v} \cdot \mathbf{n}) > 0 \\
+0 & \text{otherwise}
+\end{cases}
+\end{eqnarray}
+
+$\rho_e$ is luminance given in $\frac{\text{lm}}{\text{m}^2 \text{ sr}}$. It is computed from the parameters given in the following table.
+
+### Parameters
+
+ Name          | Type          | Default | Range  | Description
+---------------|---------------|---------|--------|-------------
+$l_c$          | color         | 1       | 0-inf  | Emission color.
+$l_v$          | uniform float | 0       | 0-inf  | Emission value in $\frac{\text{lm}}{\text{m}^2}$ (relative power leaving the object per surface area) or $\text{lm}$ (absolute power leaving the object).
+$l_\text{norm}$| uniform bool  | false   |        | Normalize emission color.
+[Table [emission-parameters]: List of emission parameters.]
+
+![Figure [emission-parameters-fig]: Result for various values of emission parameters.](img/params_emission.png)
+
+Lights are defined in photometric units. This means, the energy is spectrally weighted with the response curve of the human eye.
+
+The emission is provided as a color $l_c$ and a energy value $l_v$. We expect the color to be in linear sRGB color space with a D65 whitepoint. If the energy normalization flag $l_\text{norm}$ is enabled, the color will be normalized by its luminance. This behavior is needed for physical workflows and it guarantees that the light exactly emits the specified value in its respective physical unit.
+
+The following equations show how to compute $\rho_e$ from these parameters. $\text{area}$ denotes the area of the entire surface of an object in square meters.
+
+\begin{eqnarray}
+l = &
+\begin{cases}
+l_v l_c & \text{if } l_\text{norm}\text{ is false} \\
+l_v \frac{l_c}{l_c \cdot \begin{pmatrix}0.2126729 \\ 0.7151522 \\ 0.0721750\end{pmatrix}} & \text{otherwise}
+\end{cases} \\
+\rho_e = &
+\begin{cases}
+\frac{1}{\pi \text{ area}} l & \text{if } l_v \text{ is given in lm} \\
+\frac{1}{\pi} l & \text{if } l_v \text{ is given in } \frac{\text{lm}}{\text{m}^2}
+\end{cases}
+\end{eqnarray}
+
+Volume
+------
+
+If the material is configured to behave as a volume boundary, i.e., if the thin-walled flag is set to false, light rays may enter the volume below the surface, scatter and eventually leave at another place. This process is called subsurface scattering and it is controlled by the absorption coefficient $\sigma_a$ and the scattering coefficient $\sigma_s$. Both coefficients are wavelength-dependent values in range $0..\inf$. As this is hard to parametrize for users, we first map from more user-friendly attenuation color $a$ and attenuation distance $d$ to the mean free path length $\text{mfp}$ (or its inverse, the attenuation or extinction coefficient $\sigma_t$), and from subsurface color $\rho_{ms}$ to the single-scattering albedo $\rho_{ss}$ [#KC17].
+
+\begin{eqnarray}
+\sigma_t &=& \frac{1}{\text{mfp}} = \frac{-\log(a)}{d} \\
+\rho_{ss} &=& 1 - \left(4.09712 + 4.20863\rho_{ms} - \sqrt{9.59217 + 41.6808\rho_{ms} + 17.7126\rho_{ms}^2}\right)^2
+\end{eqnarray}
+
+From this we derive the absorption and scattering coefficient.
+
+\begin{eqnarray}
+\sigma_a &=& \frac{1 - \rho_{ss}}{\text{mfp}} = \sigma_t (1 - \rho_{ss}) \\
+\sigma_s &=& \frac{\rho_{ss}}{\text{mfp}} = \sigma_t\rho_{ss} = \sigma_t - \sigma_a
+\end{eqnarray}
+
+Intuitively, the mean free path length describes the reciprocal of the density of the medium. The denser the medium, the shorter the distance until a particle is hit and, therefore, the more light is absorbed or scattered out. In our case, after the light traveled $d$ units into the medium, all that remains is the color $a$.
+
+When a particle is hit, the light color gets multiplied by the single-scattering color $\rho_{ss}$. On the surface, the color $\rho_{ms}$ can be observed from the multiple scattering events occuring in the medium.
+
+### Parameters
+
+ Name          | Type          | Default | Range  | Description
+---------------|---------------|---------|--------|-------------
+$a$            | uniform color | 1       | 0-1    | Attenuation color.
+$d$            | uniform float | inf     | 0-inf  | Attenuation distance. A value of 0 will make to surface opaque.
+$\rho_{ms}$    | uniform color | 0       | 0-1    | Subsurface color. Subsurface scattering is disabled if $\rho_{ms}=0$.
+[Table [volume-parameters]: List of volume parameters.]
+
+![Figure [volume-parameters-fig]: Result for various values of volume parameters.](img/params_volume.png)
+
+Parameter Order
+===============
+
+We recommend to display the parameters to users in the UI in the following order:
+
+* Base
+  - Albedo
+  - Metallic
+  - Roughness
+  - Anisotropy
+  - Anisotropy Rotation
+  - Normal Map
+  - Transparency
+  - Cut-Out Opacity
+  - Sheen
+  - Specular
+  - Specular Tint
+* Coating
+  - Clearcoat
+  - Clearcoat Roughness
+  - Clearcoat Normal Map
+* Emission
+  - Emission Color
+  - Emission Value
+  - Emission Mode
+  - Energy Normalization
+* Volume
+  - Thin Walled
+  - Index of Refraction
+  - Attenuation Color
+  - Attenuation Distance
+  - Subsurface Color
+
+Design Rationale
+================
+
+The Enterprise PBR Shading Model is the basis for a large variety of use-cases, ranging from high-performance VR applications to high-quality offline GI renderings. However, it is not expected that it will cover all use-cases one can imagine, but it should be sufficient for day-to-day use. This requires some tradeoffs, which are based on the following guidelines and requirements.
+
+Most important, the material should be *easy to use* for inexperienced users, but still powerful enough for trained artists in real-time rendering and global illumination. For this reason, the material has only a small amount parameters, following industry-standard workflows known from real-time engines (Unreal Engine 4, Unity Engine) and movie production (Disney BRDF). Using the *metallic/roughness workflow*, it is possible to create a wide varietey of materials from just a very small subset of the whole parameter set, namely albedo, metallic, roughness and normal map. Another aspect of this is the fact that it allows users to parametrize materials in a way that they are *physically-based as a default*, but can be tweaked when needed for more artistic freedom, for example via the specular tint and specular parameters. Wherever possible, the parameters are linear and texturable, so that *layering via parameter blending* is possible. Notable exceptions are parameters affecting the volume, because there are no texture coordinates available inside an object.
+
+Especially for GI renderers, there are certain physical and mathematical properties that materials or BSDFs must fullfill. A BSDF must obey *Helmholtz reciprocity* (for bidirectional rendering methods), be *positive* and *energy conserving* (for fast convergence).
+
+*Performance in real-time rendering* is a critical aspect. Most parameters do not influence each other or have a clearly defined state in which an effect is disbabled, making it possible to specialize shader code for certain use-cases. Clearly, offline GI rendering also profits from this, but besides that it is also important to choose BSDFs that can be *sampled efficiently*, like the GGX microfacet model.
+
+As many software packages offer a unified interface to different renderers, *consistency across renderers* and rendering-algorithms is another key requirement for the material. A material prepared in one renderer, for example in GI, should look the same in other renderers, for example in a rasterizer. As this is not always possible, because some effects like refraction or brute-force subsurface scattering are impossible in a real-time rasterizer, the *rasterizers will approximate* the *ground-truth GI solution*. The material is defined in a way that it encourages approximations wherever possible.
+
+Not all real-world effects can be rendered with the Enterprise PBR Shading Model. Especially for high-quality renderings or light simulation, artists and engineers need more flexbility. Other material systems like [Open Shading Language (OSL)](https://github.com/imageworks/OpenShadingLanguage) from Imageworks or [Material Definition Language (MDL)](http://mdlhandbook.com/) from NVIDIA allow users to build their own materials from basic building blocks structured as a node graph. The [Appearance Exchange Format (AxF)](https://www.xrite.com/axf) from X-Rite stores results from a capturing process using their material scanners. Such material systems and models are projected onto the parameters of the Enterprise PBR Shading Model via *fitting* (or *distilling*).
+
+Appendix
+========
+
+Energy Compensation: Diffuse-Specular
+-------------------------------------
+
+Figure [energycomp-plastic_furnace] shows an overview of several methods that can be used to combine diffuse and specular components. We use method $f_4$.
+
+\begin{eqnarray}
+f_1(\mathbf{v},\mathbf{l}) &=& \frac{1}{\pi} &+& M_r(\mathbf{v},\mathbf{l}) F(\mathbf{v} \cdot \mathbf{h}_r) \\
+f_2(\mathbf{v},\mathbf{l}) &=& \frac{1}{\pi} (1 - F(\mathbf{n} \cdot \mathbf{l})) &+& M_r(\mathbf{v},\mathbf{l}) F(\mathbf{v} \cdot \mathbf{h}_r) \\
+f_3(\mathbf{v},\mathbf{l}) &=& \frac{1}{\pi} (1 - F(\mathbf{n} \cdot \mathbf{v})) &+& M_r(\mathbf{v},\mathbf{l}) F(\mathbf{v} \cdot \mathbf{h}_r) \\
+f_4(\mathbf{v},\mathbf{l}) &=& B(\mathbf{v}, \mathbf{l}) &+& M_r(\mathbf{v},\mathbf{l}) F(\mathbf{v} \cdot \mathbf{h}_r) \\
+\end{eqnarray}
+
+![Figure [energycomp-plastic_furnace]: Four different methods $f_1 ... f_4$ to combine diffuse (Lambert) and specular (microfacet reflection) component for roughness 0 (top row) and 1 (bottom row). $f_1$ is not energy-conserving, at grazing angles and for multiple bounces the white furnace test fails. The same happens for $f_2$ if roughness is 0. $f_3$, on the other hand, is not energy-preserving, resulting in darkness at grazing angles. $f_4$ is energy-conserving and (almost) energy-preserving. The slight darkening at grazing angles comes from the imperfect approximations we use for performance reasons. This becomes worse for multiple bounces.](img/energycomp_plastic_furnace.png)
+
+Bibliography
+============
+
+[#AS00]: Michael Ashikhmin, Peter Shirley. An Anisotropic Light Reflection Model., Technical Report, University of Utah, 2000.
+
+[#AP07]: Michael Ashikhmin, Simon Premože. Distribution-based BRDFs., Technical Report, University of Utah, 2007.
+
+[#Bur12]: Brent Burley. Physically-Based Shading at Disney., SIGGRAPH 2012.
+
+[#Bur15]: Brent Burley. Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering., SIGGRAPH 2015.
+
+[#Kar13]: Brian Karis. Real Shading in Unreal Engine 4., SIGGRAPH 2013.
+
+[#Kel01]: Csaba Keleman, Lazlo Szirmay-Kalos. A Microfacet Based Coupled Specular-Matte BRDF Model with Importance Sampling, Eurographics 2001.
+
+[#Wal07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
+
+[#Hei14]: Eric Heitz. Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs., Journal of Computer Graphics Techniques Vol. 3, No. 2, 2014.
+
+[#Pen11]: Eric Penner. Pre-integrated skin shading. 2011.
+
+[#JWSG10]: Jorge Jimenez, David Whelan, Veronica Sundstedt, and Diego Gutierrez. Real-time realistic skin translucency. 2010.
+
+[#JMLH]: Henrik Wann Jensen, Stephen R. Marschner, Marc Levoy, Pat Hanrahan. A Practical Model for Subsurface Light Transport.
+
+[#NP13]: David Neubelt and Matt Pettineo. Crafting a Next-Gen Material Pipeline for The Order: 1886. 2013.
+
+[#D10]: Joachim De Deken. A BRDF Analysis of Cloth. 2010.
+
+[#KC17]: Christopher Kulla and Alejandro Conty. Revisiting Physically Based Shading at Imageworks. 2017.
+
+[#Jak14]: Wenzel Jakob et al. Discrete Stochastic Microfacet Models, ACM Transactions on Graphics (ACM SIGGRAPH 2014).
+
+[#AK16]: Asen Atanasov and Vladimir Koylazov. A Practical Stochastic Algorithm for Rendering Mirror-Like Flakes. 2016.
+
+[#Lag13]: Sébastien Lagarde. Memo on Fresnel equations, 2013. https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
+
+License
+=======
+
+The Enterprise PBR Shading Model (DSPBR), © Dassault Systèmes 2019, is licensed under [CC-BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/). In addition, please acknowledge your use of the Dassault Systèmes Enterprise PBR Shading Model (DSPBR) when DSPBR is used or implemented in a product by adding  the following "[name of the product] is implementing DSPBR, the Dassault Systèmes Enterprise PBR Shading Model", in a place and format which shall be reasonably visible.
+
+![](https://i.creativecommons.org/l/by-sa/4.0/88x31.png)
+
+[license.png]: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAPCAMAAABEF7i9AAAAllBMVEUAAAD///+rsapERER3d3eIiIjMzMzu7u4iIiKUmZO6v7rKzsoODg4RERFVVVUNDQ0NDg0PEA8zMzNLTEtbXltmZmZydnF9gn2AgICPkI+ZmZmqqqq7u7vFxsXIzMgNDQwZGRkgICAhISEkJSMnKCcuMC4xMzE5Ozk7PTtBQkFCQkJDQ0Nna2eGhoaHh4ezuLLGysbd3d1wVGpAAAAA0klEQVR42q2T1xbCIAyGk0CXdlmto3XvPd7/5QRL1432WHI4XED4+PMHALQHag0JJBlXMNQScx2ibu9PdTnQcY3iErYl6oxbAo/rUrUJA6J5vx0wNNC0gVkMbBPZXtQ8Uf6qpNJwOf0EjmCKto+ce1aSIg9FzTO1/xlYyVeL34FDMC3ZFT+SNXOX6PEsBKm0rIOYPYuGClnsWTxBHtQV1gRhI4UUGJh6EAsPoxdedjUPK+dzT38DDyvNXXYW9wJ43mh4h6ItN8U7Ldv+FN1/WXO8Aed5CQIgC4KiAAAAAElFTkSuQmCC
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
