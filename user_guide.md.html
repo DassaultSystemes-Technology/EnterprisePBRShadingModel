@@ -14,6 +14,7 @@ The Enterprise PBR Shading Model (DSPBR) is a material model for physically base
 Conceptually, the Enterprise PBR Shading Model is organized in different components that cover different aspects of a material.
 
 * The _Base_ component contains parameters common to most materials.
+* The _Flakes_ component entails parameters for specifying shifting random patterns of bright sparkles or glints commonly found in metallic car paints and grainy metals.
 * The _Clearcoat_ component offers parameters describing a coating of a material like the clear coat of a car paint.
 * The _Emission_ component contains parameters for specifying light radiation properties of a surface.
 * The _Volume_ component features parameters for describing the volumetric parameters of (partially) transparent materials.
@@ -106,6 +107,36 @@ If you want pure diffuse materials, maybe for simple visualizations in engineeri
 _Specular Tint_ is an additional color parameter that tints the specular reflection of non-metallic surfaces. At grazing angles, the reflection still blends to white, and the parameter has not effect on metals.
 
 Be careful with this parameter, it is not physically-plausible and can easily be abused to create materials that do not exist in the real world. However, certain non-photorealistic art styles may require this kind of flexibility.
+
+Flakes Component
+----------------
+
+Some materials, such as car paint or grainy metals, exhibit shifting random patterns of bright sparkles or glints. These glints may suddenly appear or disappear if light or view direction changes. In car paints, for example, this phenomenon comes from small mirror-like flakes distributed in the material below its coating. This can be modeled with the _Flakes_ component of the Enterprise PBR Shading Model.
+
+### Flake Coverage
+
+_Flake Coverage_ specifies how densely the flakes are packed. At a value of 1, flakes cover the surface entirely.
+
+### Flake Color
+
+Metallic flakes show a specific color which can be specified via _Flake Color_. It is usually determined by the pigments in the binder containing the aluminium flakes.
+
+!!! Tip: Specifying plausible Flake Color
+    To specify a realistic metallic car paint, choose a flake color whose chromaticity is close to the chromaticity of the albedo, which determines the color of the base coat of the car paint.
+
+### Flake Size
+
+Real-world flakes in car paints have a typical size of few to tens of micrometers. _Flake size_ allows specifying the size / diameter of flakes in mm.
+
+!!! Tip: Modeling large scale flakes
+    It is recommended to model really large flakes via a normal and potentially a roughness map instead of via flakes.
+
+### Flake Roughness
+
+Metallic flakes typically have a silver-dollar geometry, meaning that they resemble coins. The sparkle effect mostly originates from light reflecting off the faces of the coin. The more aligned the normals of the flake faces are, the more distinct the highlight from a directional light like the sun looks. _Flake Roughness_ specifies the distribution of flake normals: the smaller the value, the more the flakes are aligned with the surface normal of the geometry. The higher the value, the more they deviate from it.
+
+!!! Tip: Suitable value for Flake Roughness
+    Realistic metallic car paints typically have a _Flake Roughness_ of around 0.1.
 
 Clearcoat Component
 -------------------

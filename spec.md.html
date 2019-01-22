@@ -245,6 +245,119 @@ $b$          | float         | 0       | 0-1    | Sheen (0 = none, 1 = full).
 
 ![Figure [sheen-parameters-fig]: Result for various values of sheen parameters.](img/params_sheen.png)
 
+Flakes
+------
+
+Some materials, such as car paint or grainy metals, exhibit shifting random patterns of bright sparkles or glints. These glints may suddenly appear or disappear if light or view direction changes. In car paints, for example, this phenomenon comes from small mirror-like flakes distributed in the material below its coating. This can be modeled with the flakes layer of the Enterprise PBR Shading Model.
+
+### Overview
+
+Our method is based on [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The common idea is to procedurally generate individual flakes instead of using a texture (e.g. a high resolution normal map). This reduces texture fetching by trading them for a bit of extra computation to generate the flake positions and orientations on the fly. Also the BRDF is not evaluated pointwise but instead is understood to return the integral over the whole pixel foot print (see Section 3.1 "Multiscale BRDFs" in [#Jak14]), thus allowing to efficiently account for the contribution of many flakes in one evaluation which results in positionally and temporally stable flakes without flickering.
+
+For stable and efficient handling of flakes the method requires approximation of pixel footprint on the directly visible surface which can be given by position and two vectors defining parallogramm in 3D space. Once we have the pixel footprint we can convert it to texture space, build and iterate the full list of flake positions and directions within the footprint and calculates the final radiance.
+
+Converting pixel footprint into texture space is done using triplanar mapping (for details see Section [Triplanar Mapping]). Additionally we also repeat the texture by wrapping coordinates of the footprint in [0, 1) range.
+
+### Parameters
+
+ Name        | Type          | Default | Range  | Description
+-------------|---------------|---------|--------|-------------
+$s_d$        | float         | 0.      | 0.-1.  | Flake coverage (0 = no flakes, 1 = only flakes).
+$s_s$        | float         | 0.      | 0.-1.  | Flake size (diameter) in mm.
+$\alpha_s$   | float         | 0.      | 0.-1.  | Roughness of distribution that controls flake orientation.
+$\rho_s$     | color         | 1.      | 0.-1.  | Flake color.
+[Table [flakes-parameters]: List of flakes parameters]
+
+![Figure [flakes-parameters-fig]: Result for various values of flakes parameters](img/params_flakes.png)
+
+### BRDF Evaluation
+
+Flakes are added to the base material using a weighted average of base and flakes layer. The flake coverage parameter controls the blending. Here the flake coverage parameter functions as a linear blend parameter (e.g. alpha) in a lerp between the base albedo $\rho$ and the flake color $\rho_s$.
+
+\begin{eqnarray}
+f_\text{flaky_base}(\mathbf{v},\mathbf{l}) &=& f_\text{base}(\mathbf{v},\mathbf{l}) + f_\text{flakes}(\mathbf{v},\mathbf{l}) \\ \\
+f_\text{base}(\mathbf{v},\mathbf{l}) &=& f(\mathbf{v},\mathbf{l}) \ (1 - s_d) \\
+f_\text{flakes}(\mathbf{v},\mathbf{l}) &=& \rho_s M_s(\mathbf{v},\mathbf{l}) s_d
+\end{eqnarray}
+
+The flake layer is an alpha blend between a stochastic flakes BRDF (see next section) and a smooth microfacet BRDF with the same roughness $\alpha_s$ and color $\rho_s$.
+
+\begin{eqnarray}
+M_s(\alpha_s,\mathbf{v},\mathbf{l}) &=& (1-b)M_\text{stoch}(\alpha_s, \mathbf{v},\mathbf{l}) + b\, M_\text{smooth}(\alpha_s, \mathbf{v},\mathbf{l}) \\
+M_\text{smooth}(\alpha_s,\mathbf{v},\mathbf{l}) &=& \frac{ D(\alpha_s, \mathbf{h}) G(\alpha_s, \mathbf{v}, \mathbf{l})}{4 (\mathbf{v}\cdot\mathbf{n})(\mathbf{l}\cdot\mathbf{n}) } \\
+b &=& \text{smoothstep}\left(\frac{N_\text{exp}-\text{blend_min}}{\text{blend_max}-\text{blend_min}}\right) \\
+N_\text{exp} &=& A_\text{footprint} N \\
+A_\text{footprint} &=& \lVert\mathbf{u}\times\mathbf{v}\rVert \\
+\text{smoothstep}(x) &=& y^2(3-2y) \quad \text{where}\quad y=\text{clamp}(x,0,1)
+\end{eqnarray}
+
+Here $A_\text{footprint}$ is the area of the pixel footprint (parallelogram) in texture space and $\mathbf{u},\mathbf{v}$ are its base vectors. $\mathbf{h}$ is the regular half vector $\left(=\left(\mathbf{v} + \mathbf{l}\right) / \left\Vert\mathbf{v}+\mathbf{l}\right\Vert\right)$.
+
+$M_\text{smooth}$ is the Cook-Torrance microfacet BRDF with the Fresnel term set to one.
+
+In the limit of high number of flakes the stochastic flakes BRDF should match the smooth microfacet BRDF. For performance reasons we evaluate only the smooth microfacet model when the number of expected flakes in the footprint $N_\text{exp}$ exceeds an internal fixed parameter $\text{blend_max}$. How this should be set depends on the hardware to guarantee best performance, but we had good results setting it to 64. $\text{blend_min}=1$. When $N_\text{exp}$ lies between $\text{blend_min}$ and $\text{blend_max}$ we return a blended mix between the stochastic flakes and the smooth microfacet BRDF. When $N_\text{exp}$ is below $\text{blend_min}$ we only evaluate the stochastic flakes BRDF.
+
+### Stochastic Flake BRDF Evaluation
+
+In accordance to [#Jak14] Section 3.1 the model is a Cook Torrance microfacet BRDF with two modifications. Instead of a smooth normal distribution function, the distribution function consists of a sum of procedurally generated flakes with specific positions and orientations, that have a nearly specular appearance, approximated by a cone BRDF. Secondly in the model the BRDF is integrated over the pixel footprint in texture space and over solid angle inside a cone around the light vector with a fixed low cone angle (we found $\gamma=7$ degree to be a good value), meaning that all flakes inside the pixel footprint whose orientation is close to the halfvector contribute to the result. In [#Jak14] this is called a multiscale BRDF, in contrast to a regular BRDF evaluated pointwise in texture and orientation space, which could only catch a single flake at maximum at each evaluation. The formula of the resulting multiscale BRDF we use in accordance to ([#Jak14], 3.1, formula (5)+(6)) is
+
+\begin{eqnarray}
+M_\text{stoch}(\alpha_s,\mathbf{v},\mathbf{l}) &=& \frac{ (\mathbf{v}\cdot\mathbf{h}) \hat{D}(A,\Omega_h) G(\alpha_s, \mathbf{v}, \mathbf{l})}{A_\text{footprint} N*2\pi(1-\cos(\gamma)) (\mathbf{v}\cdot\mathbf{n})(\mathbf{l}\cdot\mathbf{n}) } \\
+\hat{D}(A,\Omega_h) &=& \sum_{k=1}^N \mathbf{1}_{\Omega_h}(\mathbf{h}^k)\mathbf{1}_A(\mathbf{p}^k)
+\end{eqnarray}
+
+where $\mathbf{1}_A(\mathbf{p}^k)$ and $\mathbf{1}_{\Omega_h}(\mathbf{h}^k)$ are indicator functions, which are one when the $k$-th flake position is inside the pixel footprint and the $k$-th flake is oriented so that the reflected view direction is inside a cone with opening angle $2\gamma$. In effect the sum is counting the flakes which are in the footprint and oriented so that view reflects to the light direction within $\gamma$ degrees. $G(\alpha_s, \mathbf{v}, \mathbf{l})$ is the microfacet shadowing masking function (we use height correlated Smith). Compared to the classic Cook Torrance microfacet formula we omit the Fresnel term for simplicity and we gain a factor of $4(\mathbf{v}\cdot\mathbf{\omega}_h)$ to account for the change of variables from half vector direction to light direction in $\hat{D}(A,\Omega_h)$. Additionally we have three normalization factors in the denominator in the form of the pixel footprint area $A_\text{footprint}$, the total number of flakes $N$ and the cone solid angle $2\pi(1-\cos(\gamma))$ that are introduced by the multiscale BRDF integration over pixel footprint and solid angle in a cone around the light direction. $A_\text{footprint} N$ together can also be interpreted as the expected number of flakes inside the pixel footprint, which is needed in other parts as well.
+
+### Flake Generation
+
+To procedurally generate the flake positions we deviate from previous approaches (traversing a 4D structure and a multinomial stochastic process to distribute the flakes in [#Jak14] or traversing a quad tree with a normal approximation to a multinomial distribution for the flake count in [#AK16]) and use a much easier method that is well suited for the rasterizer:
+
+First we compute the number of flakes per area (in texture uv space assuming $1m^2$ for the unit square) as
+
+\begin{equation}
+N = \frac{s_d}{s_s^2}
+\end{equation}
+
+and then we distribute the $N$ flakes in a stratified grid over the texture space so that each grid cell contains the same (small) number of flakes (currently we use $N_\text{cell} = 4$ flakes per grid cell). This results in a grid resolution of
+
+\begin{equation}
+\text{seed_res} = \text{max}\left(4,  \left \lfloor \sqrt{ \frac{N}{N_\text{cell}} } \right \rfloor \right)
+\end{equation}
+
+which can be seen as the (virtual) seed texture resolution (the `max(4,...)` construct is there to make sure we don't hit zero resolution, the 4 is arbitrarily chosen).
+We use the [Tiny Encryption Algorithm](https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm) with six rounds as a hash function (see Section [TEA] for more information) to generate a random number generator seed for a linear congruential generator with the parameters
+
+\begin{eqnarray}
+r_0 &=& \text{TEA}((i+\text{seed_res})\;\text{mod}\;\text{seed_res}, (j+\text{seed_res})\;\text{mod}\;\text{seed_res}) \\
+r_{n+1} &\equiv& 1103515245 r_n + 12345 \quad(\text{mod}\; 2^{32})
+\end{eqnarray}
+
+Here we give seed pixel coordinates $i,j$ modulo seed_res to our hash functions to make the flake texture consistent w.r.t. uv space wrap around. The added offset of seed_res makes sure that we don't have to take modulo of a negative number, which in general would resultin a wrong wrap around behaviour (modulo of the unsigned twos complement instead of integers decreasing with steps of one).
+
+From the generated seed $r_0 = 4$ we generate four uniform random float numbers $u_{1...4}\in[0,1]$ per flake which are then used to generate the flake position and orientations.
+
+\begin{eqnarray}
+\mathbf{p}^k &=& \frac{1}{\text{seed_res}}\left(\begin{pmatrix}i\\j\end{pmatrix}+\begin{pmatrix}u^k_1\\u^k_2\end{pmatrix}\right) \\
+\mathbf{h}^k &=& \text{ggx_sample}(\mathbf{v}=(0,0,1), \alpha_s, \begin{pmatrix}u^k_3\\u^k_4\end{pmatrix})
+\end{eqnarray}
+
+where $i,j$ are the current (integer) row/column indices in the seed grid, which *can go outside the usual* $i,j\in\{0,1,\ldots,\text{seed_res}-1\}$ case, because pixel footprint parallelograms can protrude outside the seed pixel rectangle from their starting point. For the case of computing flake positions and later checking if they are inside of the pixel footprint they *should not be wrapped or clamped*. This makes the parallelogram test easier and avoids artifacts at the borders. $k\in\{0,1,\ldots,N_\text{cell}-1\}$ is the index for the current flake in the cell and $\mathbf{p}^k$, $\mathbf{h}^k$ are the $k$-th flake position and orientation, respectively. The orientations are sampled from a smooth microfacet normal distribution function, in our case GGX.
+
+### Counting Contributing Flakes
+
+Because we want to know which flakes are within the pixel foot print, it is necessary to calculate which grid cells are actually intersected by the pixel footprint first. Flake positions for those grid cells which are partially intersected by the footprint need to be checked explicitly against parallelogram. Those flakes inside a grid cell, which is fully contained by the footprint, don't require this extra check. For both checks we use the *unclamped* and *unwrapped* flake positions, which can go outside the original $u\in(0,1) \wedge v\in(0,1)$ uv-space. This makes the following parallelogram test easier and avoids border artifacts. Finally we generate the reflection direction for all the flakes within the paralellogram and count flakes which are within cone around light direction.
+
+\begin{eqnarray}
+  \mathbf{1}_A(\mathbf{p}^k) &=& \begin{cases} 1 & \begin{pmatrix}0\\0\end{pmatrix}\leq\begin{pmatrix}u_x&v_x\\u_y&v_y\end{pmatrix}^{-1}\cdot\begin{pmatrix}p_x^k-f_x\\p_y^k-f_y\end{pmatrix} \leq \begin{pmatrix}1\\1\end{pmatrix} \\ 0 & \text{otherwise} \end{cases} \\
+  \mathbf{1}_{\Omega_h}(\mathbf{v}, \mathbf{l}, \mathbf{h}^k) &=& \begin{cases} 1 & \text{dot}(\mathbf{r},\mathbf{l}) > \cos(\gamma) \\ 0 & \text{otherwise} \end{cases} \quad \text{where} \quad \mathbf{r}=2 \text{dot}(\mathbf{v}, \mathbf{h}^k) \mathbf{h}^k - \mathbf{v}
+\end{eqnarray}
+
+where $\mathbf{f},\mathbf{u},\mathbf{v}$ are the origin and two vectors which span the footprint parallelogram and $\mathbf{p}^k$ is the $k$-th flake position in texture space. Since flakes only contribute when they pass both checks (inside footprint and inside cone), we can exchange the order of the checks, which can benefit performance, because the cone test might be less costly than testing against the footprint. We recommend to use rasterization (e.g scan line fill algorithm) to efficiently determine grid cells which are partially or fully intersected with parallelogram.
+
+![Figure [flakes-grid-footprint]: Pixel Footprint Rasterization](img/flakes_grid_footprint.png)
+
+For more details and code examples, see Section [Flakes Implementation Details].
+
 Clearcoat
 ---------
 
@@ -393,6 +506,11 @@ We recommend to display the parameters to users in the UI in the following order
   - Sheen
   - Specular
   - Specular Tint
+* Flakes
+  - Flake Coverage
+  - Flake Color
+  - Flake Size
+  - Flake Roughness
 * Coating
   - Clearcoat
   - Clearcoat Roughness
@@ -440,6 +558,65 @@ f_4(\mathbf{v},\mathbf{l}) &=& B(\mathbf{v}, \mathbf{l}) &+& M_r(\mathbf{v},\mat
 \end{eqnarray}
 
 ![Figure [energycomp-plastic_furnace]: Four different methods $f_1 ... f_4$ to combine diffuse (Lambert) and specular (microfacet reflection) component for roughness 0 (top row) and 1 (bottom row). $f_1$ is not energy-conserving, at grazing angles and for multiple bounces the white furnace test fails. The same happens for $f_2$ if roughness is 0. $f_3$, on the other hand, is not energy-preserving, resulting in darkness at grazing angles. $f_4$ is energy-conserving and (almost) energy-preserving. The slight darkening at grazing angles comes from the imperfect approximations we use for performance reasons. This becomes worse for multiple bounces.](img/energycomp_plastic_furnace.png)
+
+Flakes Implementation Details
+-----------------------------
+
+### TEA
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Tiny Encryption Algorithm (TEA)
+(int, int) encrypt_tea(int v0, int v1, int4 xor_key, static int rounds) {
+  tea_key = int4(0xa341316c, 0xc8013ea4, 0xad90777d, 0x7e95761e);
+  sum     = 0;
+  delta   = 0x9e3779b9;
+  key     = tea_key ^ xor_key;
+
+  for (i = 0; i < rounds; i += 1) {
+    sum += delta;
+    v0 += ((v1 << 4) + key.x) ^ (v1 + sum) ^ ((v1 >> 5) + key.y);
+    v1 += ((v0 << 4) + key.z) ^ (v0 + sum) ^ ((v0 >> 5) + key.w);
+  }
+  return (v0, v1);
+};
+(_, lcg_seed) = encrypt_tea(915927258,1547188273, int4(i,j,0,0), 6);
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Triplanar Mapping
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+triplanar_mapping = function(float3 pos, float3 p_ddx, float3 p_ddy, float3 normal, float scale) {
+	if (abs(n.x) >= abs(n.y) && abs(n.x) >= abs(n.z)) {
+    uv = float2(-p.z,-p.y);
+    uv_ddx = float2(-p_ddx.z, -p_ddx.y);
+    uv_ddy = float2(-p_ddy.z, -p_ddy.y);
+  } else if (abs(n.y) >= abs(n.z)) {
+    uv = float2(p.x, p.z);
+    uv_ddx = float2(p_ddx.x, p_ddx.z);
+    uv_ddy = float2(p_ddy.x, p_ddy.z);
+  } else {
+    uv = float2(p.x,-p.y);
+    uv_ddx = float2(p_ddx.x, -p_ddx.y);
+    uv_ddy = float2(p_ddy.x, -p_ddy.y);
+  }
+  return (fract(float2(scale) * uv)
+         ,float2(scale) * uv_ddx
+         ,float2(scale) * uv_ddy );
+};
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The triplanar mapping takes the normal (in world coordinates) and the shading point position as parameters. It also takes the derivatives of the shading point with respect to camera image pixel coordinates. In a GI renderer usually the pixel footprint is computed by starting from a camera ray with differentials of pixel width/height for the camera ray origin, which is then propagated forward through AutoDiff computation rules through the shading point interpolation code to get a shading point with differentials included. In glsl (or similaraly for rasterizers in general) one would use `float3 p_ddx = dFdx(pos);`, `float3 p_ddy = dFdy(pos);` to compute them.
+
+The reason to do the `dFdx` computation on the shading point instead of the uv coordinates after triplanar mapping is, that the shading point is continuous, which produces correct differentials over the whole surface, whereas if we did it after the triplanar mapping (and the wrapping of `u`/`v` coordinates through `fract`) we would need special case handling for the borders of uv space or live with border artifacts because of discontinuities in the differentials.
+
+### GI Implementation details
+
+For a GI implementation it's advisable to have some form of caching of the generated flakes in the footprint. This allows for efficient sampling of the BRDF. In principle smooth microfacet BRDF sampling also works but is not efficient.
+
+### IBL in Rasterizer
+
+We use preconvolved IBL lighting in rasterizer which requires only one environment texture lookup. Handling flake reflections under environment lighting in a stable way is a hard problem because individual flakes have different directions which means that the pixel BRDF lobe can have a very difficult shape. Taking multiple samples in order to sample the BRDF lobe is too costly and might still give some flickering artifacts so instead we decided to keep the naive preconvolved IBL method which does only one environment texture lookup in the main direction of the BRDF lobe and we handle all flakes inside the BRDF evaluation. This gives very stable and smooth results during animations and still remains fast. The limitation of this method is that it doesn't account for light which contributes from the side of the BRDF so it doesn't have a strong glittering effect. Artists can still achieve strong glittering effects and stable flake appearance if they combine IBL with directional light(s).
+
 
 Bibliography
 ============
