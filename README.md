@@ -7,9 +7,9 @@ The [Dassault Systèmes](https://www.3ds.com/) Enterprise PBR Shading Model (DSP
 * [Specification](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec.md.html)
 * [User Guide](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/user_guide.md.html)
 
-![raytraced image](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/blob/images/img/rt_brownstone_dspbr.jpg)
-![raytraced image](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/blob/images/img/rt_darkzink_dspbr.jpg)
-![raytraced image](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/blob/images/img/rt_goldmesh_dspbr.jpg)
+![raytraced image](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/blob/images/img/rt_brownstone_dspbr_256.jpg)
+![raytraced image](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/blob/images/img/rt_darkzink_dspbr_256.jpg)
+![raytraced image](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/blob/images/img/rt_goldmesh_dspbr_256.jpg)
 
 ## License
 
