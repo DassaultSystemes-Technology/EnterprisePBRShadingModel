@@ -90,6 +90,14 @@ which corresponds to classic GGX in isotropic case $\alpha=\alpha_u=\alpha_v$:
 D(\mathbf{h},\alpha) = \frac{1}{\pi} \frac{\alpha^2}{((\mathbf{h} \cdot \mathbf{n})^2(\alpha^2-1)+1)^2}
 \end{eqnarray}
 
+The appropriate Smith shadowing-masking term (height-correlated) [#Hei14] for GGX:
+
+\begin{eqnarray}
+G(\mathbf{v},\mathbf{l},\alpha_x,\alpha_y) &=& \frac{2}{\sqrt{1-a_l+\frac{a_l}{(\mathbf{l} \cdot \mathbf{n})^2}} + \sqrt{1-a_v+\frac{a_v}{(\mathbf{v} \cdot \mathbf{n})^2}}} \\
+a_{\{v,l\}} &=& \cos^2\Phi_{\{v,l\}}\alpha_x^2 + \sin^2\Phi_{\{v,l\}}\alpha_y^2
+\end{eqnarray}
+
+
 #### Energy Preservation
 
 The standard microfacet model does not account for scattering occuring between microfacets on the microsurface. As the surface becomes less specular, the multiple scattering becomes stronger, effectively resulting in high energy loss if this is not accounted for (see Figure [energycomp-microfacet-metallic]). [#KC17] describes a method based on [#Kel01] to approximate multiple scattering for microfacet models that can be adapted for real-time rendering.
