@@ -28,7 +28,7 @@ f(\mathbf{v},\mathbf{l}) = f_d(\mathbf{v},\mathbf{l}) + f_r(\mathbf{v},\mathbf{l
 The BSDFs are defined in the following way:
 
 \begin{eqnarray}
-f_d(\mathbf{v},\mathbf{l}) &=& \frac{\rho_d}{\pi} B(\mathbf{v}, \mathbf{l}) \\
+f_d(\mathbf{v},\mathbf{l}) &=& \rho_d B(\mathbf{v}, \mathbf{l}) \\
 f_r(\mathbf{v},\mathbf{l}) &=& M_r(\mathbf{v},\mathbf{l}) F(\mathbf{h}_r \cdot \mathbf{v}) + C_r(\mathbf{v},\mathbf{l})\\
 f_t(\mathbf{v},\mathbf{l}) &=& \rho_t M_t(\mathbf{v},\mathbf{l}') (1 - F(\mathbf{h}_t \cdot \mathbf{v}))
 \end{eqnarray}
@@ -218,7 +218,7 @@ f(\mathbf{v},\mathbf{l}) = f'_d(\mathbf{v},\mathbf{l}) + f_r(\mathbf{v},\mathbf{
 The new component $f_b(\mathbf{v},\mathbf{l})$ is mixed into the diffuse component of the core material, modifying $f_d(\mathbf{v},\mathbf{l})$ accordingly:
 
 \begin{eqnarray}
-f'_d(\mathbf{v},\mathbf{l}) &=& \frac{\rho'_d}{\pi} B(\mathbf{v}, \mathbf{l}) \\
+f'_d(\mathbf{v},\mathbf{l}) &=& \rho'_d B(\mathbf{v}, \mathbf{l}) \\
 f_b(\mathbf{v},\mathbf{l}) &=& \rho_b M_b(\mathbf{v},\mathbf{l}) B(\mathbf{v}, \mathbf{l})
 \end{eqnarray}
 
