@@ -39,21 +39,21 @@ with $\mathbf{h}_r = \frac{\mathbf{l} + \mathbf{v}}{\lVert\mathbf{l} + \mathbf{v
 
 Reflection and transmission are based on microfacet BSDFs [#Wal07]. An additional energy compensation term $C_r(\mathbf{v},\mathbf{l})$ for reflection makes the microfacet BRDF energy preserving by approximating the energy from multiple scattering between microfacets, an effect that gets stronger the higher the roughness of the surface is.
 
-The roughness $(\alpha_u, \alpha_v)$ is squared to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_t$, respectively.
+The roughness $(r_u, r_v)$ is squared to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_t$, respectively.
 
 \begin{eqnarray}
-M_r(\mathbf{v},\mathbf{l}) &=& \frac{D(\mathbf{h},\alpha_u^2,\alpha_v^2) G(\mathbf{v},\mathbf{l},\alpha_u^2,\alpha_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})}\\
+M_r(\mathbf{v},\mathbf{l}) &=& \frac{D(\mathbf{h},r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})}\\
 M_t(\mathbf{v},\mathbf{l}) &=&
 \begin{cases}
 M_r(\mathbf{v},\mathbf{l}) & \text{if thin-walled} \\
-\frac{|\mathbf{l} \cdot \mathbf{h}_t| |\mathbf{v} \cdot \mathbf{h}_t|}{|\mathbf{l} \cdot \mathbf{n}| |\mathbf{v} \cdot \mathbf{n}|} \frac{\eta_t^2 D(\mathbf{h}_t,\alpha_u^2,\alpha_v^2) G(\mathbf{v},\mathbf{l},\alpha_u^2,\alpha_v^2)}{\eta_i(\mathbf{l} \cdot \mathbf{h}_t) + (\eta_t(\mathbf{v} \cdot \mathbf{h}_t))^2} & \text{otherwise} \\
+\frac{|\mathbf{l} \cdot \mathbf{h}_t| |\mathbf{v} \cdot \mathbf{h}_t|}{|\mathbf{l} \cdot \mathbf{n}| |\mathbf{v} \cdot \mathbf{n}|} \frac{\eta_t^2 D(\mathbf{h}_t,r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{\eta_i(\mathbf{l} \cdot \mathbf{h}_t) + (\eta_t(\mathbf{v} \cdot \mathbf{h}_t))^2} & \text{otherwise} \\
 \end{cases}
 \end{eqnarray}
 
-To allow for anisotropic materials we derive roughnesses in tangent ($\alpha_u$) and bitangent ($\alpha_v$) direction from the isotropic roughness $\alpha$ and anisotropy strength $o$. In addition we support anisotropy rotation by rotating the local tangent space counter-clockwise around the normal with the anisotropy rotation parameter $\beta$.
+To allow for anisotropic materials we derive roughnesses in tangent ($r_u$) and bitangent ($r_v$) direction from the isotropic roughness $r$ and anisotropy strength $o$. In addition we support anisotropy rotation by rotating the local tangent space counter-clockwise around the normal with the anisotropy rotation parameter $\beta$.
 
 \begin{equation}
-\begin{pmatrix}\alpha_u\\\alpha_v\end{pmatrix} = \alpha \begin{pmatrix}1\\1-o\end{pmatrix}
+\begin{pmatrix}r_u\\r_v\end{pmatrix} = r \begin{pmatrix}1\\1-o\end{pmatrix}
 \end{equation}
 
 \begin{equation}
@@ -178,7 +178,7 @@ $m$          | float         | 0       | 0-1    | Metallic-ness (0 = dielectric,
 $s$          | float         | 1       | 0-1    | Directional-independent amount of specular contribution to fine-tune the effect of the index of refraction.
 $t$          | float         | 0       | 0-1    | Transparency (0 = opaque, 1 = transparent).
 $\eta$       | uniform float | 1.5     | 1-inf  | Index of refraction of the volume (t=1) or the dielectric coating (m=0).
-$\alpha$     | float         | 0       | 0-1    | Roughness of microfacet distribution.
+$r$          | float         | 0       | 0-1    | Roughness of microfacet distribution.
 $o$          | float         | 0       | 0-1    | Anisotropy strength.
 $\beta$      | float         | 0       | 0-1    | Anisotropy rotation angle (counter-clockwise rotation of the tangent space around local normal, where $0.25\equiv90^\circ$, $0.5\equiv180^\circ$, $1.0\equiv360^\circ$.
 $\mathbf{n}$ | float3        | (0,0,1) $\lVert\mathbf{n}\rVert=1$ | | Normal for normal mapping.
