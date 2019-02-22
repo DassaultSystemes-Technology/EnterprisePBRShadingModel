@@ -5,9 +5,9 @@
            Version 1.0
         ![][license.png]
 
-The Enterprise PBR Shading Model (DSPBR) is a material optimized for performance in realtime scenarios in a rasterizer. It is inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13]. Although it is primarily targeted at performance, it must still be possible to render the model without any difficulties in a GI renderer, as it is also the basis for cross-renderer consistency.
+The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. It is inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13]. The material combines a dielectric and a metallic model, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat and sheen to cover a wider range of appearances.
 
-The model consists of a core part and additional effects. Renderers must implement all effects in order to be consistent, but may choose to compile spezialized shaders if an effect is disabled.
+This document provides in-depth instructions on how to implement the model in a physically-based renderer.
 
 Components
 ==========
