@@ -1,0 +1,242 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "title": "3DS_materials_enterprise_pbr glTF extension",
+    "type": "object",
+    "description": "glTF extension that defines the Dassault Systemes Enterprise PBR Shading Model.",
+    "allOf": [
+        {
+            "$ref": "glTFProperty.schema.json"
+        }
+    ],
+    "properties": {
+        "anisotropy": {
+            "type": "number",
+            "description": "Controls the aspect ratio of the specular highlight.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 1,
+            "gltf_detailedDescription": "This is useful for, e.g. brushed metal, where the mirror-like microfacets on the surface are all oriented into the same direction, resulting in a long and narrow highlight. A value of 0 disables anisotropy, a value of 1 sets it to the maximum."
+        },
+        "anisotropyTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The grayscale anisotropy texture.",
+            "gltf_detailedDescription": "See anisotropy."
+        },
+        "anisotropyRotation": {
+            "type": "number",
+            "description": "Controls the orientation of the anisotropic highlight.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 1,
+            "gltf_detailedDescription": "The microfacets on the surface are oriented in a certain direction. This direction is initially given by the texture coordinates of the mesh, but can additionally be rotated with the anisotropyRotation parameter, effectively rotating the specular highlight. A value of 0 corresponds to 0° rotation, a value of 1 rotates 360°."
+        },
+        "anisotropyRotationTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The grayscale anisotropy rotation texture.",
+            "gltf_detailedDescription": "See anisotropyRotation."
+        },
+        "transparency": {
+            "type": "number",
+            "description": "Controls the fresnel weighted transparency of the surface.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 1,
+            "gltf_detailedDescription": "An opaque surface has a transparency of 0.0, a transparent surface like glass or water has a transparency of 1.0. Values in between blend between the two models and may occasionally be useful for hybrid surfaces like dirty glass."
+        },
+        "transparencyTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The grayscale transparency texture.",
+            "gltf_detailedDescription": "See transparency."
+        },
+        "sheen": {
+            "type": "number",
+            "description": "Controls the amount of backscattering, ranging from 0 to 1.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 1,
+            "gltf_detailedDescription": "Some fabrics like velvet show a significant amount of rim lighting (or sheen), resulting from both forward and backward scattering."
+        },
+        "sheenTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The grayscale sheen texture.",
+            "gltf_detailedDescription": "See sheen."
+        },
+        "specular": {
+            "type": "number",
+            "description": "Scales the amount of specular reflection on non-metallic surfaces. It has no effect on metals.",
+            "default": 1,
+            "minimum": 0,
+            "maximum": 1,
+            "gltf_detailedDescription": "Every surface in the real-world has a specular contribution, there are no pure diffuse surfaces. Therefore, there's usually no reason to set this parameter to less than 1, even for cardboard, cloth or concrete. If you want to model mostly-diffuse materials just make them rough. If you want pure diffuse materials, maybe for simple visualizations in engineering or high-performance preview renderings, you can set this parameter to 0 to completely disable the microfacet-based reflection component."
+        },
+        "specularTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The grayscale specular texture.",
+            "gltf_detailedDescription": "See specular."
+        },
+        "specularTint": {          
+            "type": "array",
+            "description": "An additional color parameter that tints the specular reflection color of non-metallic surfaces.",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "default": [
+                1,
+                1,
+                1
+            ],
+            "minItems": 3,
+            "maxItems": 3,
+            "gltf_detailedDescription": "At grazing angles, the reflection still blends to white, and the parameter has not effect on metals. Be careful with this parameter, it is not physically-plausible and can easily be abused to create materials that do not exist in the real world. However, certain non-photorealistic art styles may require this kind of flexibility."
+        },
+        "specularTintTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The linear sRGB specular tint texture.",
+            "gltf_detailedDescription": "See specularTint."
+        },
+        "clearcoat": {
+            "type": "number",
+            "description": "Controls an additional monochromatic specular reflection layer on top of the surface. It is enabled if the clearcoat parameter is not zero",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 1
+        },
+        "clearcoatTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The grayscale clearcoat texture.",
+            "gltf_detailedDescription": "See clearcoat."
+        },
+        "clearcoatRoughness": {
+            "type": "number",
+            "description": "Controls coating roughness. Commonly 0 or a small value, although any value between 0 and 1 is supported.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 1,
+            "gltf_detailedDescription": "Controls the microfacet roughness of the clearcoat layer."
+        },
+        "clearcoatRougnessTexture": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "The grayscale clearcoat roughness texture.",
+            "gltf_detailedDescription": "See clearcoatRoughness."
+        },
+        "clearcoatNormalMap": {
+            "allOf": [
+                {
+                    "$ref": "textureInfo.schema.json"
+                }
+            ],
+            "description": "Describes the macroscopic structure of the clearcoat surface in terms of the normal direction of the tangent space.",
+            "gltf_detailedDescription": "Adds details like small bumps and dents without using more polygons. The normal direction is encoded as an RGB value, where the default normal is [0,0,1]."
+        },
+        "emissionMode": {
+            "description": "Controls the emission mode of the emitted light.",
+            "default": "POWER",
+            "type": "string",
+            "enum": [
+                "POWER",
+                "EMITTANCE"
+            ],
+            "gltf_detailedDescription": "The energy leaving an emitting surface can be specified in two major ways: Dependent or independent of its surface area. \"POWER\" is the absolute energy leaving the surface, independent of its area (lm). Whereas \"EMITTANCE\" is the emissive energy relative to the surface area. So, large surface area means more energy leaving the emitter (e.g. lm/m^2)."
+        },
+        "thinWalled": {
+            "type": "boolean",
+            "description": "Sets the geometry to an infinitely thin volume with surfaces on both sides.",
+            "default": true,
+            "gltf_detailedDescription": "Either, the geometry defines the boundary between the outside world and a volume, i.e. the geometry encloses a volume. In this case, you have to set thinWalled to false and use the volume parameters to configure scattering inside the volume. Or, the geometry defines an infinitely thin volume with surfaces on both sides. thinWalled has to be set to true and the volume parameters (except Index of Refraction) do not have an effect."
+        },
+        "ior": {
+            "type": "number",
+            "description": "The Index of Refraction.",
+            "default": 1.5,
+            "minimum": 1.0,
+            "gltf_detailedDescription": "The Index of Refraction (IoR) is a measured physical number usually in the range between 1 and 2 that determines how much the path of light is bent, or refracted, when entering a material. It also influences the ratio between reflected and transmitted light, calculated from the Fresnel Equations. Note that if the material is thin, i.e., thinWalled is set to true, the volume is infinitely thin and, thus, the light is not refracted. However, the reflectivity is still computed from the IoR."
+        },
+        "attenuationColor": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "description": "The color of the remaining light after volume attenuation in linear sRGB.",
+            "default": [
+                1,
+                1,
+                1
+            ],
+            "minItems": 3,
+            "maxItems": 3,
+            "gltf_detailedDescription": "When transparency is 1, it seems like there are two options to control the color of glass: baseColor and attenutationColor. However, there is a subtle difference: baseColor controls the absorption when the light enters the volume. attenuationColor determines what happens inside the volume (taking the distance into account). As a rule of thumb, if an object is thin-walled, you have to set its color with the baseColor parameter. If it is volumetric, you use attenuationColor and attenuationDistance."
+        },
+        "attenuationDistance": {
+            "type": "number",
+            "description": "The mean free path length after which a particle is scattered or absorpted.",
+            "default": 1e+5,
+            "minimum": 0,
+            "gltf_detailedDescription": "The mean free path length after which a particle is scattered or absorpted."
+        },
+        "subsurfaceColor": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "description": "The overall color an object has after multiple scattering events (assuming non-colored attenuation) in linear sRGB.",
+            "default": [
+                0,
+                0,
+                0
+            ],
+            "minItems": 3,
+            "maxItems": 3,
+            "gltf_detailedDescription": "While traveling through the medium, light rays may not only be absorbed when hitting a particle, but also scattered into some direction, eventually leaving the surface at another point. Subsurface scattering needs attenuation. Attenuation color and attenuation distance describe the density of the medium, i.e., the mean free path length after which a particle is hit. When the distance is too high, or the color is set to 1, no particle will be hit, thus no scattering will occur."
+        },
+        "previewImage": {
+            "source": {
+                "allOf": [
+                    {
+                        "$ref": "glTFid.schema.json"
+                    }
+                ],
+                "description": "The index of the image used as preview image for this material. When undefined, the resulting behavior is undefined."
+            }
+        },
+        "extensions": {},
+        "extras": {}
+    }
+}
