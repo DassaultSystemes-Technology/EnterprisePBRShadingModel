@@ -2,52 +2,235 @@
 
     **Enterprise PBR Shading Model**
         Dassault Systèmes
-           Version 1.0
+           Version 1.0.1
         ![][license.png]
 
-The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. It is inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13]. The material combines a dielectric and a metallic model, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat and sheen to cover a wider range of appearances.
+The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. Inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13], it combines a metallic and a dielectric BSDF, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat and sheen to cover a wide range of appearances.
 
-This document provides in-depth instructions on how to implement the model in a physically-based renderer.
+In this document we provide in-depth instructions on how to implement the model in a physically-based renderer.
 
 Components
 ==========
 
+At its core, the Enterprise PBR Shading Model is a linear blend of a metallic BSDF and a dielectric BSDF, see Figure [components-diagram]. The dielectric BSDF can be either opaque or transparent. The former is used for materials like simple plastics, wood, or stone. The latter makes the surface transparent, allowing light rays to refract into the object, resulting in attenuation and subsurface scattering. This is needed, for example, for glass, water, ice, more complex plastics, or wax. Section [Core] explains the BSDFs in more detail.
+
+************************************************************************
+* .----------------------------------------------. .----------.        *
+* |                  Clearcoat                   | |          |        *
+* '----------------------------------------------' |          |        *
+*                                                  |          |        *
+* .-------------+--------------------------------. |          |        *
+* |  Metallic   |         Dielectric             | |          |        *
+* |             |                                | |          |        *
+* |             |   Opaque     |   Transparent   | | Emission |        *
+* |             |              |                 | |          |        *
+* |             |   - Plastic  |   - Glass       | |          |        *
+* |             |   - Wood     |   - Plastic     | |          |        *
+* |             |   - Stone    |   - Water       | |          |        *
+* |             |              |   - Ice         | |          |        *
+* |             |              |   - Wax         | |          |        *
+* '-------------+--------------+-----------------+ '----------'        *
+*                              |     Volume      |                     *
+*                              '-----------------'                     *
+************************************************************************
+[Figure [components-diagram]: Structure of the Enterprise PBR Shading Model.]
+
+The weights $m$ (metallic) and $t$ (transparency) control the blending between the BSDFs, as shown in Figure [blending-diagram] and described in Section [Putting it all together]. The values range from 0 to 1 and may vary based on the position on the surface.
+
+*******************************
+*               .---.         *
+*              |  +  |        *
+*               +---+         *
+*          1-m /     \  m     *
+*         .---+       \       *
+*        |  +  |     Metal    *
+*         +---+               *
+*    1-t /     \ t            *
+*       /       \             *
+*   Opaque    Transparent     *
+* Dielectric  Dielectric      *
+*******************************
+[Figure [blending-diagram]: Blending of metallic and dielectric BSDFs based on parameters $m$ and $t$.]
+
+On top of the core, a Fresnel-weighted specular BSDF adds coating effects, see Section [Clearcoat]. Moreover, the material can be configured to emit light via the emission component (Section [Emission]).
+
+The material can operate in two modes: it can either simulate an infinitesimally thin, two-sided object or a volume boundary. Volume boundaries have to be attached to a closed mesh, i.e., the mesh encloses a volume and does not have any holes. The parameters of the volume extension (Section [Volume]) describe what happens inside the volume.
+
 Core
 ----
 
-At its core, the Enterprise PBR Shading Model consists of three BSDFs which are combined in such a way that it is possible to model a large amount of real-world materials, both dielectrics (transparent and opaque) and conductors. Users can adjust parameters to continuously mix between the models.
+The three BSDFs at the core of the Enterprise PBR Shading Model are built from a small number of building blocks, exploiting as many similarities as possible to reduce the mathematical complexity and, thus, computational effort. In the following, we first describe the individual BSDFs, then we show how to combine them efficiently, and finally we provide detailed equations for the distribution functions.
 
-The material can operate in two modes: it can simulate an infinitely thin, two-sided object or a volume boundary. In the latter case, the material has to be attached to a closed mesh, i.e., the mesh encloses a volume and does not have any holes. The parameters of the volume extension (Section [Volume]) describe what happens inside the volume.
+### Metallic BSDF
 
-The model is a sum of a diffuse, a reflective and a transmissive component:
+The metallic BSDF (Figure [bsdf-metallic]) is given by a microfacet BSDF $M_r$ and a configurable Fresnel term $F$, corrected for energy loss via the terms $M_{r,ms}$ and $F_{ms}$ (see Section [In-depth look at the BSDFs]). Users can change the anisotropic roughness $r_u$, $r_v$ and the color at normal incidence $\rho$. The color at grazing angles is fixed to 1.
 
 \begin{equation}
-f(\mathbf{v},\mathbf{l}) = f_d(\mathbf{v},\mathbf{l}) + f_r(\mathbf{v},\mathbf{l}) + f_t(\mathbf{v},\mathbf{l})
+\begin{aligned}
+&\text{Metallic}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho) = \\
+&\quad\quad\quad\quad M_r(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F(\cos\theta_r; \rho, 1) + M_{r,ms}(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F_{ms}(\rho, 1)
+\end{aligned}
 \end{equation}
 
-The BSDFs are defined in the following way:
+We parameterize the Fresnel $F(\cos\theta_r; f_0, f_{90})$ (Schlick approximation) by the angle $\theta_r$, the color at normal incidence $f_0$, and the color at grazing incidence $f_{90}$. By computing the angle $\theta_r$ from the half-vector $\mathbf{h}_r$, we take the orientation of the microfacets into account.
 
 \begin{eqnarray}
-f_d(\mathbf{v},\mathbf{l}) &=& \rho_d B(\mathbf{v}, \mathbf{l}) \\
-f_r(\mathbf{v},\mathbf{l}) &=& M_r(\mathbf{v},\mathbf{l}) F(\mathbf{h}_r \cdot \mathbf{v}) + M_{r,ms}(\mathbf{v},\mathbf{l}) F_{ms} \\
-f_t(\mathbf{v},\mathbf{l}) &=& \rho_t M_t(\mathbf{v},\mathbf{l}') (1 - F(\mathbf{h}_t \cdot \mathbf{v}))
+\cos\theta_r &=& (\mathbf{h}_r \cdot \mathbf{v}) \\
+\mathbf{h}_r &=& \frac{\mathbf{v} + \mathbf{l}}{\lVert\mathbf{v} + \mathbf{l}\rVert}
 \end{eqnarray}
 
-with $\mathbf{h}_r = \frac{\mathbf{l} + \mathbf{v}}{\lVert\mathbf{l} + \mathbf{v}\rVert}$, $\mathbf{h}_t = \frac{\mathbf{l'} + \mathbf{v}}{\lVert\mathbf{l'} + \mathbf{v}\rVert}$ and $\mathbf{l}' = \mathbf{l} + 2 \mathbf{n} (-\mathbf{l} \cdot \mathbf{n})$ to flip the light direction from lower to upper hemisphere in order to be able to reuse the microfacet reflection function for transmission.
+See Section [In-Depth Look at the BSDFs] for more details about the Fresnel term.
 
-### Reflection and Transmission Components
+![Figure [bsdf-metallic]: The metallic BSDF, a single specular lobe.](img/bsdf_metallic.png)
 
-Reflection and transmission are based on microfacet BSDFs [#Wal07]. An additional energy compensation term $M_{r,ms}(\mathbf{v},\mathbf{l})\,F_{ms}$ for reflection makes the microfacet BRDF energy preserving by approximating the energy from multiple scattering between microfacets, an effect that gets stronger the higher the roughness of the surface is.
+### Dielectric BSDF for Transparent Surfaces
 
-The roughness $(r_u, r_v)$ is squared to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_t$, respectively.
+The Fresnel-weighted combination of a microfacet BRDF $M_r$ and a microfacet BTDF $M_t$ forms the BSDF for transparent dielectric surfaces. As before, $r_u$ and $r_v$ change the anisotropic roughness of the BSDF. In addition, we now provide a parameter to change the index of refraction $\eta$, which determines how the light ray is refracted when entering the volume beneath the surface, and how the amount of incoming light is distributed to reflection and transmission. $s$ and $\rho_s$ allow fine-tuning the amount of reflection and its color. $\rho$ changes the color of the transmissive component.
+
+We again compensate for energy-loss of the reflection component via $M_{r,ms}$ and $F_{ms}$. Energy compensation for transmission may be added in a future revision. The complete equation is given as follows:
 
 \begin{eqnarray}
-M_r(\mathbf{v},\mathbf{l}) &=& \frac{D(\mathbf{h},r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})}\\
-M_t(\mathbf{v},\mathbf{l}) &=&
+\begin{aligned}
+&\text{TransparentDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s) = \\
+&\quad\quad\quad\quad s \, M_r(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F_d(\cos\theta_r; F_0 \rho_s, 1) \\
+&\quad\quad\quad + \rho\,{M_t}^\prime(\mathbf{v}, \mathbf{l}; r_u, r_v, \eta_i, \eta_o) \, (1 - s \, F_d(\cos\theta_t; F_0 \rho_s, 1)) \\
+&\quad\quad\quad + s\,M_{r,ms}(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F_{ms}(F_0 \rho_s, 1) \\
+\end{aligned}
+\end{eqnarray}
+
+\begin{eqnarray}
+{M_t}^\prime(\mathbf{v}, \mathbf{l}; r_u, r_v, \eta_i, \eta_o) &=&
 \begin{cases}
-M_r(\mathbf{v},\mathbf{l}) & \text{if thin-walled} \\
-\frac{|\mathbf{l} \cdot \mathbf{h}_t| |\mathbf{v} \cdot \mathbf{h}_t|}{|\mathbf{l} \cdot \mathbf{n}| |\mathbf{v} \cdot \mathbf{n}|} \frac{\eta_t^2 D(\mathbf{h}_t,r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{\eta_i(\mathbf{l} \cdot \mathbf{h}_t) + (\eta_t(\mathbf{v} \cdot \mathbf{h}_t))^2} & \text{otherwise} \\
+M_r(\mathbf{v}, {\mathbf{l}}^\prime; r_u, r_v) & \text{ if thin-walled}\\
+M_t(\mathbf{v}, \mathbf{l}; r_u, r_v, \eta_i, \eta_o) & \text{ otherwise}
 \end{cases}
+\end{eqnarray}
+
+with ${\mathbf{l}}^\prime = \mathbf{l} + 2 \mathbf{n} (-\mathbf{l} \cdot \mathbf{n})$ to flip the light direction from lower to upper hemisphere in thin-walled case to be able to reuse the microfacet reflection function for transmission (Figure [bsdf-transparent-dielectric-thin]). 
+
+![Figure [bsdf-transparent-dielectric-thin]: The dielectric BSDF for transparent surfaces is composed of a reflective lobe and a transmissive lobe.](img/bsdf_transparent_dielectric_thin.png)
+
+The Fresnel angles $\cos\theta_r$ and $\cos\theta_t$ are based on the half-vector.
+
+\begin{eqnarray}
+\cos\theta_r &=& (\mathbf{v} \cdot \mathbf{h}_r) 
+& \qquad &
+\cos\theta_t &=&
+\begin{cases}
+(\mathbf{v} \cdot \mathbf{h}_t) & \text{ if thin-walled}\\
+(\mathbf{v} \cdot \mathbf{h}_{t,v}) & \text{ otherwise}
+\end{cases}
+\end{eqnarray}
+
+\begin{eqnarray}
+\mathbf{h}_r = \frac{\mathbf{v} + \mathbf{l}}{\lVert\mathbf{v} + \mathbf{l}\rVert} & \quad &
+\mathbf{h}_t = \frac{\mathbf{v} + {\mathbf{l}}^\prime}{\lVert\mathbf{v} + {\mathbf{l}}^\prime\rVert} & \quad &
+\mathbf{h}_{t,v} = \frac{-\mathbf{v} \eta_i - \mathbf{l} \eta_o}{\lVert -\mathbf{v} \eta_i - \mathbf{l} \eta_o \rVert}
+\end{eqnarray}
+
+Refraction only takes place if the material is configured to be volumetric, see Section [Volume]. In this case, and if the surface is transparent, light rays are refracted through the surface into the volume beneath the object (Figure [bsdf-transparent-dielectric-volumetric]). The BSDF has to consider refraction and total internal reflection, affecting the outgoing direction and the dielectric Fresnel term $F_d$. This closely follows [#Wal07].
+
+The Fresnel term at normal incidence depends on the index of refraction: $F_0 = \left(\frac{\eta_i - \eta_o}{\eta_i + \eta_o}\right)^2$. $\eta_i$ and $\eta_o$ determine the index of refraction of the current medium and the medium on the other side of the surface, respectively, and have to be setup properly by the renderer, taking into account the material's $\eta$
+
+![Figure [bsdf-transparent-dielectric-volumetric]: The dielectric BSDF for transparent surfaces is composed of a reflective lobe and a transmissive lobe.](img/bsdf_transparent_dielectric_volumetric.png)
+
+### Dielectric BSDF for Opaque Surfaces
+
+In opaque dielectric surfaces (Figure [bsdf-opaque-dielectric]), we replace the BTDF by a diffuse-like BRDF that models the interaction of the light not reflected from the specular BRDF. This results in a combination of a diffuse-like base BRDF $B$ and a Fresnel-weighted microfacet BRDF $M_r$. Parameter $\rho$ controls the color of $B$, all other parameters behave consistent to the transparent BSDF: The amount of specular contribution from the microfacet BRDF is determined by the parameters for specular tint $\rho_s$ and the index of refraction $\eta$, which both influence the Fresnel term. In addition, there is a directional-independent scaling factor $s$. $r_u$ and $r_v$ change the anisotropic roughness of the microfacet BRDF. $b$ controls the sheen term, as described below.
+
+As in the metallic BSDF, the energy loss of the microfacet term is compensated via $M_{r,ms}\,F_{ms}$.
+
+The BSDF looks as follows:
+
+\begin{equation}
+\begin{aligned}
+&\text{OpaqueDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b) = \\
+&\quad\quad\quad\quad \rho \, B(\mathbf{v}, \mathbf{l}; s, F_0, \rho_s, b) \\
+&\quad\quad\quad + s\,M_r(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F(\cos\theta_r; F_0 \rho_s, 1) \\
+&\quad\quad\quad + s\,M_{r,ms}(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F_{ms}(F_0 \rho_s, 1)
+\end{aligned}
+\end{equation}
+
+![Figure [bsdf-opaque-dielectric]: The dielectric BSDF for opaque surfaces is composed of a diffuse lobe and a specular lobe.](img/bsdf_opaque_dielectric.png)
+
+Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#Kel01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF out of it. Controlled by the parameter $s$ (i.e., the amount of specular contribution), we gradually blend to this new diffuse BRDF $B_c$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
+
+\begin{equation}
+B_{\text{diffuse}}(\mathbf{v}, \mathbf{l}; r_u, r_v, s, F_0, \rho_s) = \frac{1}{\pi}(1-s) + s B_c(\mathbf{v}, \mathbf{l}; r_u, r_v, F_0, \rho_s)
+\end{equation}
+
+For fabrics like velvet, diffuse behavior is not sufficient. We account for that by introducing an additional sheen BRDF that is blended into the diffuse-like BRDF according to weight $b$. This simulates the effect of rim lighting resulting from both forward and backward scattering at grazing angles. The blending is controlled by the parameter $b$.
+
+\begin{equation}
+\label{sheen-weighting}
+B_{\text{sheen}}(\mathbf{v}, \mathbf{l}; b) = \frac{1}{\pi}\hat{b} + (1 - \hat{b}) M_b(\mathbf{v}, \mathbf{l}; b)
+\end{equation}
+
+with $\hat{b} = (1-b)^5$. $M_b$ is given in Section [In-depth look at the BSDFs].
+
+Finally, we arrive at the base BSDF $B$ by multiplying diffuse and sheen:
+
+\begin{equation}
+B = B_{\text{diffuse}} \, B_{\text{sheen}}
+\end{equation}
+
+### Putting It All Together
+
+The complete material is a linear combination of the BSDF, weighted by $m$ (metallic) and $t$ (transparency). By sharing a lot of parameters of the individual BSDFs, we significantly reduce the amount of parameters of the complete material.
+
+\begin{eqnarray}
+&\text{Core}(\rho, s, \eta, \rho_s, b) &=&\\
+&&m           & \text{Metallic}(\rho) \nonumber\\
+&+&(1-m)(1-t) & \text{OpaqueDielectric}(\rho, s, \eta, \rho_s, b) \nonumber\\
+&+&(1-m)t     & \text{TransparentDielectric}(\rho, s, \eta, \rho_s) \nonumber
+\end{eqnarray}
+
+$\text{TransparentDielectric}$ is either the thin-walled or the volumetric version, depending on the corresponding material parameter.
+
+Evaluating the complete material as sum of all BSDFs is expensive, as each BSDF contains a microfacet model and, therefore, we would have to compute the microfacet distribution multiple times. In order to avoid this overhead, we merge the microfacet models and put the weights $m$ and $t$ into the Fresnel term. This optimization is possible because we use Schlick's Fresnel approximation, see Section [In-Depth Look at the BSDFs].
+
+In case the material is thin-walled, $F = F_d$, i.e., the metallic and the dielectric BSDF use the same Fresnel term. The BSDF looks as follows, omitting parameters that are equal in all functions for brevity. The complete derivation can be found in Section [Combining Metallic and Dielectric BSDFs].
+
+\begin{equation}
+\begin{aligned}
+&\text{ThinCore}(\rho, s, \rho_s, b) = \\
+&\quad\quad\quad\quad M_r \, F(\rho_{s,r,0}, \rho_{s,r,90}) \, \\
+&\quad\quad\quad +M_{r,ms} \, F_{ms}(\rho_{s,r,0}, \rho_{s,r,90}) \\
+&\quad\quad\quad +\rho_t {M_t}^\prime(1 - s F(F_0 \rho_s, 1)) \\
+&\quad\quad\quad +\rho_d \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right] \left[\frac{1}{\pi}\hat{b} + (1 - \hat{b}) M_b\right]
+\end{aligned}
+\end{equation}
+
+with
+
+\begin{eqnarray}
+\rho_{s,r,0} &=& (1-m) F_0 s \rho_s + m \rho \\
+\rho_{s,r,90} &=& (1-m) s + m \\
+\rho_t &=& \rho (1-m) t \\
+\rho_d &=& \rho (1-m) (1-t)
+\end{eqnarray}
+
+If the material is volumetric, the dielectric Fresnel term handles refraction and total internal reflection. Therefore, we cannot simplify as much as before:
+
+\begin{equation}
+\begin{aligned}
+&\text{VolumetricCore}(\rho, s, \eta, \rho_s, b) = \\
+&\quad\quad\quad\quad M_r \, [m \, F(\rho, 1) + (1-m) s F_d(F_0 \rho_s, 1)]\, \\
+&\quad\quad\quad +M_{r,ms} \, F_{ms}(\rho_{s,r,0}, \rho_{s,r,90}) \\
+&\quad\quad\quad +\rho_t M_t(1 - s F_d(F_0 \rho_s, 1)) \\
+&\quad\quad\quad +\rho_d \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right] \left[\frac{1}{\pi}\hat{b} + (1 - \hat{b}) M_b\right]
+\end{aligned}
+\end{equation}
+
+### In-Depth Look at the BSDFs
+
+#### Microfacet BSDF
+
+Reflection and transmission are based on microfacet BSDFs [#Wal07]. As in [#Bur12] we square the roughness $(r_u, r_v)$ to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_o$, respectively.
+
+\begin{eqnarray}
+M_r(\mathbf{v},\mathbf{l}; r_u, r_v) &=& \frac{D(\mathbf{h},r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})} \\
+M_t(\mathbf{v},\mathbf{l}; r_u, r_v, \eta_i, \eta_o) &=& \frac{|\mathbf{l} \cdot \mathbf{h}_t| |\mathbf{v} \cdot \mathbf{h}_t|}{|\mathbf{l} \cdot \mathbf{n}| |\mathbf{v} \cdot \mathbf{n}|} \frac{\eta_o^2 D(\mathbf{h}_t,r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{\eta_i(\mathbf{l} \cdot \mathbf{h}_t) + (\eta_o(\mathbf{v} \cdot \mathbf{h}_t))^2} \\
 \end{eqnarray}
 
 To allow for anisotropic materials we derive roughnesses in tangent ($r_u$) and bitangent ($r_v$) direction from the isotropic roughness $r$ and anisotropy strength $o$. In addition we support anisotropy rotation by rotating the local tangent space counter-clockwise around the normal with the anisotropy rotation parameter $\beta$.
@@ -59,24 +242,6 @@ To allow for anisotropic materials we derive roughnesses in tangent ($r_u$) and 
 \begin{equation}
 \begin{pmatrix}\mathbf{t}_\text{rot} \\ \mathbf{b}_\text{rot} \\ \mathbf{n}_\text{rot}\end{pmatrix}^\top = \begin{pmatrix}\cos(2\pi\beta)\mathbf{t}+\sin(2\pi\beta)\mathbf{b} \\ -\sin(2\pi\beta)\mathbf{t}+\cos(2\pi\beta)\mathbf{b} \\ \mathbf{n}\end{pmatrix}^\top
 \end{equation}
-
-For performance reasons Schlick's Fresnel approximation is used. It is a lot easier to compute than the full Fresnel equations.
-
-\begin{eqnarray}
-F(\theta) &=&
-\begin{cases}
-\rho_{s,r,0} + (\rho_{s,r,90} - \rho_{s,r,0}) (1 - |\cos\theta|)^5 & \text{if }
-\eta_t >= \eta_i
- \\
-\rho_{s,r,0} + (\rho_{s,r,90} - \rho_{s,r,0}) (1 - |\cos\theta_t|)^5 & \text{if }
-\eta_t < \eta_i \land \sin^2\theta_t < 1
- \\
-1 & \text{if }
-\eta_t < \eta_i \land \sin^2\theta_t >= 1 \text{ (total internal reflection)}
-\end{cases}
-\end{eqnarray}
-
-where $\theta_t$ is the angle of transmission, computed from the angle of incidence via $\sin^2\theta_t = \left(\frac{\eta_i}{\eta_t}\right)^2 (1 - \cos^2\theta_i)$ [#Lag13]. Note that in case of total internal reflection, the Fresnel does not depend on $\rho_{s,r,90}$ anymore, so it is impossible to disable the reflection in this situation. This allows users to change the specular component of a refractive object without introducing artifacts, i.e., dark appearance in areas where total internal reflection occurs.
 
 For the microfacet distribution, the material uses the Generalized Trowbridge-Reitz GTR model (generalized anisotropic GGX) [#Bur12] with $\gamma=2$
 
@@ -97,6 +262,21 @@ G(\mathbf{v},\mathbf{l},\alpha_x,\alpha_y) &=& \frac{2}{\sqrt{1-a_l+\frac{a_l}{(
 a_{\{v,l\}} &=& \cos^2\Phi_{\{v,l\}}\alpha_x^2 + \sin^2\Phi_{\{v,l\}}\alpha_y^2
 \end{eqnarray}
 
+#### Fresnel
+
+We use Schlick's Fresnel approximation for performance reasons (Section [Putting It All Together]). For thin-walled materials and the metallic BSDF we ignore refraction and total internal reflection, leading to a very simple form of the Fresnel term $F$. Taking both into account results in $F_d$, which is used for volumetric materials.
+
+\begin{eqnarray}
+F(\theta; f_0, f_{90}) &=& f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 \\
+F_d(\theta; f_0, f_{90}) &=& 
+\begin{cases}
+f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 & \text{if } \eta_o \geq \eta_i \\
+f_0 + (f_{90} - f_0) (1 - |\cos\theta_o|)^5 & \text{if } \eta_o < \eta_i \land \sin^2\theta_o < 1 \\
+1 & \text{if } \eta_o < \eta_i \land \sin^2\theta_o \geq 1
+\end{cases}
+\end{eqnarray}
+
+where $\theta_o$ is the angle of transmission, computed from the angle of incidence via $\sin^2\theta_o = \left(\frac{\eta_i}{\eta_o}\right)^2 (1 - \cos^2\theta_i)$ [#Lag13]. Note that in case of total internal reflection, the Fresnel does not depend on $f_{90}$ anymore, so it is impossible to disable the reflection in this situation. This allows users to change the specular component of a refractive object without introducing artifacts, i.e., dark appearance in areas where total internal reflection occurs.
 
 #### Energy Preservation
 
@@ -104,49 +284,50 @@ The standard microfacet model does not account for scattering occuring between m
 
 ![Figure [energycomp-microfacet-metallic]: Left: Metallic surface with roughness 0. Middle: Non-energy preserving metallic surface with roughness 1. Right: Energy-preserving metallic surface with roughness 1 by accounting for multiple scattering. Note that the surface in the middle looks significantly darker than the others.](img/energycomp_metallic.png)
 
-In the Enterprise PBR Shading Model, the missing energy is added to the specular component by the energy compensation term $M_{r,ms}(\mathbf{v},\mathbf{l})\,F_{ms}$.
+In the Enterprise PBR Shading Model, the missing energy is added to the specular component by the energy compensation term $M_{r,ms}(\mathbf{v},\mathbf{l}; \alpha_{uv})\,F_{ms}(f_0, f_{90})$.
 
-\begin{eqnarray}
-M_{r,ms}(\mathbf{v},\mathbf{l})\,F_{ms} &=& \underbrace{\frac{(1-E_m(\mathbf{v}\cdot\mathbf{n}))(1-E_m(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{m,avg})}}_{\text{Multiple scattering GGX}} \underbrace{\frac{{F_{m,avg}}^2 E_{m,avg}}{{1 - F_{m,avg}(1 - E_{m,avg})}}}_{\text{Multiple scattering Fresnel}}
-\end{eqnarray}
+\begin{equation}
+\begin{aligned}
+&M_{r,ms}(\mathbf{v},\mathbf{l}; \alpha_{uv})\,F_{ms}(f_0, f_{90}) = \\
+&\quad\quad\quad\underbrace{\frac{(1-E_m(\mathbf{v}\cdot\mathbf{n}))(1-E_m(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{m,avg})}}_{\text{Multiple scattering GGX}} \underbrace{\frac{{F_{m,avg}}^2 E_{m,avg}}{{1 - F_{m,avg}(1 - E_{m,avg})}}}_{\text{Multiple scattering Fresnel}}
+\end{aligned}
+\end{equation}
 
 We measured the directional albedo $E_m(\theta)$ and average albedo $E_{m,avg}$ by integrating the cosine-weighted single-scattering GGX microfacet model as described in [#KC17]. The results are stored in lookup tables and fetched at runtime. The derivation of the lookup tables and the resulting data is shown in Section [Multiple-Scattering GGX BRDFs].
 
-Instead of lookup tables, it is also possible to use a numerical fit for the data. As an alternative to the fit in [#KC17], we found the following with higher error, but less computational effort:
+Instead of lookup tables, it is also possible to use a numerical fit for the data. As an alternative to the fit in [#KC17], we found the following that has higher error, but less computational effort:
 
 \begin{eqnarray}
 \label{energycomp-ggx-fit}
-E_m(\theta) &=& 1 - 1.4594\alpha_{uv}\cos\theta \\
+E_m(\theta; \alpha_{uv}) &=& 1 - 1.4594\alpha_{uv}\cos\theta \\
  &&* \left(-0.20277 + \alpha_{uv} (2.772 + \alpha_{uv} (-2.6175 + 0.73343 \alpha_{uv}))\right) \nonumber\\
  &&* \left(3.09507 + \cos\theta (-9.11369 + \cos\theta (15.8884 + \cos\theta (-13.70343 + 4.51786 \cos\theta)))\right) \nonumber\\
- \alpha_{uv} &=& \alpha_u \alpha_v \\
+ \alpha_{uv} &=& \alpha_u \alpha_v = r_u^2 r_v^2\\
  \nonumber\\
-E_{m,avg} &=& 1.0 + \alpha_{uv} (-0.113 + \alpha_{uv} (-1.8695 + \alpha_{uv} (2.2268 - 0.83397 \alpha_{uv})))
+E_{m,avg}(\alpha_{uv}) &=& 1.0 + \alpha_{uv} (-0.113 + \alpha_{uv} (-1.8695 + \alpha_{uv} (2.2268 - 0.83397 \alpha_{uv})))
  \\
-F_{m,avg} &=& \frac{1}{21} \rho_{s,r,90} + \frac{20}{21} \rho_{s,r,0}
+F_{m,avg}(f_0, f_{90}) &=& \frac{1}{21} f_0 + \frac{20}{21} f_{90}
 \end{eqnarray}
 
 Note that we convert from anisotropic to isotropic roughness $\alpha_{uv}$ to simplify the function.
 
-### Diffuse Component
+#### Diffuse BRDF
 
-The diffuse contribution of the material is modeled with a simple Lambertian BRDF. Based on the amount of specular contribution from the microfacet components, the diffuse contribution needs to be multiplied with a directional-dependent factor to ensure energy conservation and energy preservation. Following the approach of [#Kel01] and [#KC17], the factor is calculated from the missing energy after specular reflection.
+Following the approach of [#Kel01] and [#KC17], the missing energy after reflection from the microfacet BRDF defines the diffuse-like BRDF $B_c$. Using the two BRDFs in combination results in a energy-conserving and energy-preserving material (Figure [energycomp-plastic]).
 
 ![Figure [energycomp-plastic]: Combination of diffuse and specular component with energy compensation for roughness 0 (left) and 1 (right). Note that the combination is energy-conserving (no energy is produced, even at multiple bounces inside the object) and energy-preserving (especially at grazing angles).](img/energycomp_plastic.png)
 
 The diffuse BRDF looks as follows:
 
 \begin{eqnarray}
-B(\mathbf{v}, \mathbf{l}) &=&
+B_c(\mathbf{v}, \mathbf{l}; \alpha_{uv}, F_0, \rho_s) &=&
 \begin{cases}
-\frac{1}{\pi}(1-s) + s \frac{(1-E(\mathbf{v}\cdot\mathbf{n}))(1-E(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{avg})} & \ \\
+\frac{(1-E(\mathbf{v}\cdot\mathbf{n}))(1-E(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{avg})} & \ \\
  0 & \text{if total internal reflection wrt.} \mathbf{v} \text{ or }\mathbf{l}
 \end{cases}
 \end{eqnarray}
 
-The factor $s$ can be used to decrease the contribution of the microfacet model, as described in Section [Parameters]. In this case, the diffuse component blends to a constant Lambertian BRDF.
-
-The directional albedo $E(\theta)$ and average albedo $E_{avg}$ are expensive to compute, as it involves integrating the Fresnel-weighted GGX microfacet model over all light directions on the hemisphere. As in Section [Energy Preservation], the result of the integration can be fetched from a lookup table (Section [Diffuse BRDF]) or calculated using the following approximation:
+The directional albedo $E(\theta)$ and average albedo $E_{avg}$ are expensive to compute, as it involves integrating the Fresnel-weighted GGX microfacet model over all light directions on the hemisphere. As described in Section [Energy Preservation], the result of the integration can be fetched from a lookup table (Section [Diffuse BRDF]) or calculated using the following approximation:
 
 \begin{eqnarray}
 \label{energycomp-base-fit}
@@ -154,39 +335,42 @@ E(\cos\theta) &=& \operatorname{lerp}(E_0 + (1.0 - E_0)(1 - \cos\theta)^5, 0.047
 E_{avg} &=& E_0 + (-0.33263 \alpha_{uv} - 0.072359) (1 - E_0) E_0
 \end{eqnarray}
 
-with $E_0 = F_0 \rho_{s,\text{max}}$, where $\rho_{s,\text{max}}$ denotes the maximum value of the wavelength-dependent color $\rho_s$. The maximum is used because the color is subtracted, leading to unexpected behavior if this is done per channel. Section [Parameters] describes these parameters in more detail.
+with $E_0 = F_0 \rho_{s,\text{max}}$, where $\rho_{s,\text{max}}$ denotes the maximum value of the wavelength-dependent color $\rho_s$ in linear sRGB,E color space. The maximum is used because the color is subtracted, leading to unexpected behavior if this is done per channel. Section [Parameters] describes these parameters in more detail.
+
+#### Sheen BRDF
+
+For sheen effects we use the Ashikhmin BRDF with the "inverted Gaussian distribution" [#AP07] [#NP13].
+
+\begin{eqnarray}
+M_b(\mathbf{v},\mathbf{l}; b) &=& \frac{D_{inv}(b,\mathbf{h})}{4 \left[(\mathbf{n}\cdot\mathbf{l}) + (\mathbf{n}\cdot\mathbf{v}) - (\mathbf{n}\cdot\mathbf{l})(\mathbf{n}\cdot\mathbf{v})\right]} \\
+D_{inv}(b,\mathbf{h}) &=& \frac{1}{\pi (1 + 4b^2)} \left(1 + \frac{4 \exp\left(\frac{-\cot^2\theta_h}{b^2}\right)}{\sin^4\theta_h}\right)
+\end{eqnarray}
+
+$b$ controls the shape of the inverse Gaussian distribution and, therefore, could be considered as its roughness. As shown in Equation [sheen-weighting], it is not only used to control the roughness of the Ashikhmin BRDF, but also to interpolate between the two BRDFs. The reason for reusing the parameter is the fact that the Ashikhmin BRDF looks almost like a Lambertian BRDF for small values of $b$. However, as this similarity quickly disappears, $b$ is not directly used as mixing weight, but instead $\hat{b}$ is derived from $b$.
+
+Besides that, sheen also makes use of the overall albedo of the material. In effect that means increasing $b$ distributes the color to grazing angles, making the material appear darker if the incident angle is close to the surface normal.
 
 ### Parameters
 
-In order to simplify usage of the model and to ensure energy conservation, the weights $\rho_d$, $\rho_{s,r,0}$, $\rho_{s,r,90}$, and $\rho_t$ of the individual components of the model are not directly given by the user, but instead computed from a set of user parameters $\rho$, $\rho_s$, $m$, $t$, $s$ as follows:
-
-\begin{eqnarray}
-\rho_d &=& \rho (1-m) (1-t) \\
-\rho_t &=& \rho (1-m) t \\
-\rho_{s,r,0} &=& (1-m) F_0 s \rho_s + m \rho \\
-\rho_{s,r,90} &=& (1-m) s + m \\
-\end{eqnarray}
-
-where $F_0 = \left(\frac{\eta_i - \eta_o}{\eta_i + \eta_o}\right)^2$.
-
-Table [core-parameters] describes the user parameters in more detail. The parameters $s$, $m$ and $t$ make the model very flexible. Table [mst] shows a list of all available combinations and explains their meaning.
+Table [core-parameters] describes the user parameters of the Enterprise PBR Shading Model. The parameters $s$, $m$ and $t$ make the model very flexible. Table [mst] shows a list of all available combinations and explains their meaning.
 
  Name        | Type          | Default | Range  | Description
 -------------|---------------|---------|--------|-------------
 $\mu$        | uniform bool  | true    |        | Material describes volume boundary (false) or thin, two-sided object (true).
-$\rho$       | color         | 1       | 0-1    | Albedo of the material.
-$\rho_{s}$   | color         | 1       | 0-1    | Specular tint to adjust the color of the specular lobe near $\theta=0^\circ$.
-$m$          | float         | 0       | 0-1    | Metallic-ness (0 = dielectric, 1 = metallic).
-$s$          | float         | 1       | 0-1    | Directional-independent amount of specular contribution to fine-tune the effect of the index of refraction.
-$t$          | float         | 0       | 0-1    | Transparency (0 = opaque, 1 = transparent).
-$\eta$       | uniform float | 1.5     | 1-inf  | Index of refraction of the volume (t=1) or the dielectric coating (m=0).
-$r$          | float         | 0       | 0-1    | Roughness of microfacet distribution.
-$o$          | float         | 0       | 0-1    | Anisotropy strength.
-$\beta$      | float         | 0       | 0-1    | Anisotropy rotation angle (counter-clockwise rotation of the tangent space around local normal, where $0.25\equiv90^\circ$, $0.5\equiv180^\circ$, $1.0\equiv360^\circ$.
+$\rho$       | color         | 1       | 0..1   | Albedo of the material.
+$\rho_{s}$   | color         | 1       | 0..1   | Specular tint to adjust the color of the specular lobe near $\theta=0^\circ$.
+$m$          | float         | 0       | 0..1   | Metallic-ness (0 = dielectric, 1 = metallic).
+$s$          | float         | 1       | 0..1   | Directional-independent amount of specular contribution to fine-tune the effect of the index of refraction.
+$t$          | float         | 0       | 0..1   | Transparency (0 = opaque, 1 = transparent).
+$\eta$       | uniform float | 1.5     | 1..inf | Index of refraction of the volume (t=1) or the dielectric coating (m=0).
+$r$          | float         | 0       | 0..1   | Roughness of microfacet distribution.
+$o$          | float         | 0       | 0..1   | Anisotropy strength.
+$\beta$      | float         | 0       | 0..1   | Anisotropy rotation angle (counter-clockwise rotation of the tangent space around local normal, where $0.25\equiv90^\circ$, $0.5\equiv180^\circ$, $1.0\equiv360^\circ$.
 $\mathbf{n}$ | float3        | (0,0,1) $\lVert\mathbf{n}\rVert=1$ | | Normal for normal mapping.
+$b$          | float         | 0       | 0..1   | Sheen (0 = none, 1 = full).
 [Table [core-parameters]: List of core parameters.]
 
-![Figure [core-parameters-fig]: Result for various values of core parameters.](img/params_core.png)
+![Figure [core-parameters-fig]: Examples for various values of core parameters.](img/params_core.png)
 
 $m$ | $s$ | $t$ | Active Components | Use this for | Description
 ----|-----|-----|-------------------|--------------|-------------
@@ -208,63 +392,20 @@ For more fine-grained artistic control, the material can now be tweaked even fur
 4. Fine-tune amount of specular contribution via $s$.
 5. Fine-tune specular color near $\theta=0^\circ$ via $\rho_s$.
 
-Sheen
------
-
-This extension adds rim lighting (or sheen) resulting from both forward and backward scattering to the Enterprise PBR Shading Model, controlled by a single parameter $b$. This is useful for some fabrics like, for example, velvet.
-
-\begin{equation}
-f(\mathbf{v},\mathbf{l}) = f'_d(\mathbf{v},\mathbf{l}) + f_r(\mathbf{v},\mathbf{l}) + f_t(\mathbf{v},\mathbf{l}) + f_b(\mathbf{v},\mathbf{l})
-\end{equation}
-
-The new component $f_b(\mathbf{v},\mathbf{l})$ is mixed into the diffuse component of the core material, modifying $f_d(\mathbf{v},\mathbf{l})$ accordingly:
-
-\begin{eqnarray}
-f'_d(\mathbf{v},\mathbf{l}) &=& \rho'_d B(\mathbf{v}, \mathbf{l}) \\
-f_b(\mathbf{v},\mathbf{l}) &=& \rho_b M_b(\mathbf{v},\mathbf{l}) B(\mathbf{v}, \mathbf{l})
-\end{eqnarray}
-
-Both components are weighted the same with regard to the Fresnel, making the retro-reflective component also part of the base layer. It uses the Ashikhmin BRDF with the "inverted Gaussian distribution" [#AP07] [#NP13].
-
-\begin{eqnarray}
-M_b(\mathbf{v},\mathbf{l}) &=& \frac{D_{inv}(b,\mathbf{h})}{4 \left[(\mathbf{n}\cdot\mathbf{l}) + (\mathbf{n}\cdot\mathbf{v}) - (\mathbf{n}\cdot\mathbf{l})(\mathbf{n}\cdot\mathbf{v})\right]} \\
-D_{inv}(b,\mathbf{h}) &=& \frac{1}{\pi (1 + 4b^2)} \left(1 + \frac{4 \exp\left(\frac{-\cot^2\theta_h}{b^2}\right)}{\sin^4\theta_h}\right)
-\end{eqnarray}
-
-$b$ controls the shape of the inverse Gaussian distribution and, therefore, could be considered as its roughness.
-
-The mixing into the diffuse component is important to achieve energy conservation. The parameter $b$ is not only used to control the roughness of the Ashikhmin BRDF, but also to interpolate between the two BRDFs:
-
-\begin{eqnarray}
-\rho'_d &=& \rho (1-m) (1-t) \hat{b} \\
-\rho_b &=& \rho (1-m) (1-t) (1-\hat{b})
-\end{eqnarray}
-
-The reason for reusing the parameter is the fact that the Ashikhmin BRDF looks almost like a Lambertian BRDF for small values of $b$. However, as this similarity quickly disappears, $b$ is not directly used as mixing weight, but instead $\hat{b}$ is derived from $b$ via $\hat{b} = (1-b)^5$.
-
-Besides that, the retro-reflective component also makes use of the overall albedo of the material, it does not introduce another color. In effect that means that by increasing $b$, the color gets distributed to grazing angles, making the material appear darker if the incident angle is close to the surface normal.
-
-In conclusion, the sheen effect introduces only one additional parameter to the material, shown in the following table.
-
- Name        | Type          | Default | Range  | Description
--------------|---------------|---------|--------|-------------
-$b$          | float         | 0       | 0-1    | Sheen (0 = none, 1 = full).
-[Table [sheen-parameters]: List of sheen parameters.]
-
-![Figure [sheen-parameters-fig]: Result for various values of sheen parameters.](img/params_sheen.png)
-
 Clearcoat
 ---------
 
-The clearcoat extension adds a dielectric coating as a layer on top of the Enterprise PBR Shading Model. The base material $f(\mathbf{v},\mathbf{l})$ and the coating layer are weighted with a Fresnel term. The parameter $c$ determines the strength of the effect.
+The clearcoat extension adds a dielectric coating as a layer on top of the core described in Section [Core]. $\text{Core}(\mathbf{v},\mathbf{l})$ and coating are weighted with a Fresnel term. The parameter $c$ determines the strength of the effect.
 
-\begin{eqnarray}
-f_{coated}(\mathbf{v},\mathbf{l}) &=& f_\text{flaky_base}(\mathbf{v},\mathbf{l}) + f_{coating}(\mathbf{v},\mathbf{l}) \\ \nonumber\\
-f_\text{flaky_base}(\mathbf{v},\mathbf{l}) &=& f(\mathbf{v},\mathbf{l}) (1 - c \ \max(F_c(\mathbf{n}_c \cdot \mathbf{v}), F_c(\mathbf{n}_c \cdot \mathbf{l})) \\
-f_{coating}(\mathbf{v},\mathbf{l}) &=& M_c(\mathbf{v},\mathbf{l}) \ c \ F_c(\mathbf{h} \cdot \mathbf{v})
-\end{eqnarray}
+\begin{equation}
+\begin{aligned}
+&\text{Coated}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b, c, \alpha_c, \mathbf{n}_c) = \\
+&\quad\quad\quad\quad \text{Core}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b) \,(1 - c \ \max(F_c(\mathbf{n}_c \cdot \mathbf{v}), F_c(\mathbf{n}_c \cdot \mathbf{l})) \, \\
+&\quad\quad\quad +M_c(\mathbf{v},\mathbf{l}; \alpha_c, \mathbf{n}_c) \, c \ F_c(\mathbf{h} \cdot \mathbf{v}) \, \\
+\end{aligned}
+\end{equation}
 
-The coating is based on a microfacet BRDF with an isotropic GGX distribution and squared roughness, similar to the reflection component in the core material.
+The coating is based on a microfacet BRDF with an isotropic GGX distribution and squared roughness, similar to the reflection component in the core material (Section [Microfacet BSDF]).
 
 \begin{eqnarray}
 M_c(\mathbf{v},\mathbf{l}) &=& \frac{D(\mathbf{h},\alpha_c^2) G(\mathbf{v},\mathbf{l})}{4 (\mathbf{v} \cdot \mathbf{n}_c) (\mathbf{l} \cdot \mathbf{n}_c)}
@@ -280,8 +421,8 @@ As shown in Table [clearcoat-parameters], the clearcoat is parametrized via two 
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
-$c$            | float         | 0       | 0-1    | Clearcoat reflectivity (0 = no clearcoat, 1 = full clearcoat).
-$\alpha_c$     | float         | 0       | 0-1    | Roughness of clearcoat's microfacet distribution.
+$c$            | float         | 0       | 0..1   | Clearcoat reflectivity (0 = no clearcoat, 1 = full clearcoat).
+$\alpha_c$     | float         | 0       | 0..1   | Roughness of clearcoat's microfacet distribution.
 $\mathbf{n}_c$ | float3        | (0,0,1) | $\lVert\mathbf{n}_c\rVert=1$ | Clearcoat normal for normal mapping.
 [Table [clearcoat-parameters]: List of clearcoat parameters.]
 
@@ -294,7 +435,7 @@ The cut-out acts like an alpha channel for the surface. It makes parts of the su
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
-$\nu$          | float         | 0       | 0-1    | Cut-out opacity value (0 = transparent, 1 = opaque).
+$\nu$          | float         | 0       | 0..1   | Cut-out opacity value (0 = transparent, 1 = opaque).
 [Table [cutout-parameters]: List of cut-out parameters.]
 
 ![Figure [cutout-parameters-fig]: Result for various values of cut-out parameters.](img/params_cutout.png)
@@ -329,7 +470,7 @@ $l_\text{norm}$| uniform bool  | false   |        | Normalize emission color.
 
 Lights are defined in photometric units. This means, the energy is spectrally weighted with the response curve of the human eye.
 
-The emission is provided as a color $l_c$ and a energy value $l_v$. We expect the color to be in linear sRGB color space with a D65 whitepoint. If the energy normalization flag $l_\text{norm}$ is enabled, the color will be normalized by its luminance. This behavior is needed for physical workflows and it guarantees that the light exactly emits the specified value in its respective physical unit.
+The emission is provided as color $l_c$ and energy value $l_v$. We expect the color to be in linear sRGB color space with a D65 whitepoint. If the energy normalization flag $l_\text{norm}$ is enabled, the color will be normalized by its luminance. This behavior is needed for physical workflows and it guarantees that the light exactly emits the specified value in its respective physical unit.
 
 The following equations show how to compute $\rho_e$ from these parameters. $\text{area}$ denotes the area of the entire surface of an object in square meters.
 
@@ -369,9 +510,9 @@ When a particle is hit, the light color gets multiplied by the single-scattering
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
-$a$            | uniform color | 1       | 0-1    | Attenuation color.
-$d$            | uniform float | inf     | 0-inf  | Attenuation distance. A value of 0 will make to surface opaque.
-$\rho_{ms}$    | uniform color | 0       | 0-1    | Subsurface color. Subsurface scattering is disabled if $\rho_{ms}=0$.
+$a$            | uniform color | 1       | 0..1   | Attenuation color.
+$d$            | uniform float | inf     | 0..inf | Attenuation distance. A value of 0 will make to surface opaque.
+$\rho_{ms}$    | uniform color | 0       | 0..1   | Subsurface color. Subsurface scattering is disabled if $\rho_{ms}=0$.
 [Table [volume-parameters]: List of volume parameters.]
 
 ![Figure [volume-parameters-fig]: Result for various values of volume parameters.](img/params_volume.png)
@@ -426,6 +567,88 @@ Not all real-world effects can be rendered with the Enterprise PBR Shading Model
 
 Appendix
 ========
+
+Combining Metallic and Dielectric BSDFs
+---------------------------------------
+
+The core of the Enterprise PBR Material is a weighted sum of three BSDFs, the metallic BSDF, the opaque and the transparent dielectric BSDF. The similarity between the BSDFs allows us to simplify the material significantly. We start from the sum of the three BSDFs:
+
+\begin{eqnarray}
+&\text{ThinCore}(\rho, s, \eta, \rho_s, b) &=&\\
+&&m           & \text{Metallic}(\rho) \nonumber\\
+&+&(1-m)(1-t) & \text{OpaqueDielectric}(\rho, s, \eta, \rho_s, b) \nonumber\\
+&+&(1-m)t     & \text{ThinTransparentDielectric}(\rho, s, \eta, \rho_s) \nonumber
+\end{eqnarray}
+
+Note that we omitted some parameters here to make the equations shorter. These do not influence the weighting.
+
+\begin{eqnarray}
+\text{ThinCore}(\rho, s, \eta, \rho_s, b) &=& \text{ThinCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b) \\
+\text{Metallic}(\rho) &=& \text{Metallic}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho) \\
+\text{OpaqueDielectric}(\rho, s, \eta, \rho_s, b) &=& \text{OpaqueDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b) \\
+\text{ThinTransparentDielectric}(\rho, s, \eta, \rho_s) &=& \text{ThinTransparentDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s)
+\end{eqnarray}
+
+Substituting all terms leads to
+
+\begin{eqnarray}
+&\text{ThinCore}(\rho, s, \eta, \rho_s, b) &=& \\
+&&m           & M_r \, F(\cos\theta_r; \rho, 1) \nonumber\\
+&+&m          & M_{r,ms} \, F_{ms}(\rho, 1) \nonumber\\
+&+&(1-m)(1-t) & \rho \, B(\mathbf{v}, \mathbf{l}; s, F_0, \rho_s, b) \nonumber\\
+&+&(1-m)(1-t) & s\,M_r \, F(\cos\theta_r; F_0 \rho_s, 1) \nonumber\\
+&+&(1-m)(1-t) & s\,M_{r,ms} \, F_{ms}(F_0 \rho_s, 1) \nonumber\\
+&+&(1-m)t     & s \, M_r \, F(\cos\theta_r; F_0 \rho_s, 1) \nonumber\\
+&+&(1-m)t     & \rho\,{M_t}^\prime \, (1 - s \, F(\cos\theta_t; F_0 \rho_s, 1)) \nonumber\\
+&+&(1-m)t     & s\,M_{r,ms} \, F_{ms}(F_0 \rho_s, 1) \nonumber \\
+\end{eqnarray}
+
+and after rearranging we get
+
+\begin{eqnarray}
+&=&& M_r \left[
+        m \, F(\cos\theta_r; \rho, 1) +
+        (1-m) (1-t) s \,F(\cos\theta_r; F_0 \rho_s, 1) +
+        (1-m) t s \, F(\cos\theta_r; F_0 \rho_s, 1)
+    \right] \nonumber\\
+&&+& M_{r,ms} \left[
+        m \, F_{ms}(\rho, 1) +
+        (1-m) (1-t) s \, F_{ms}(F_0 \rho_s, 1) +
+        (1-m) t s F_{ms}(F_0 \rho_s, 1)
+    \right] \nonumber\\
+&&+& (1-m)t \rho\,{M_t}^\prime \, (1 - s \, F(\cos\theta_t; F_0 \rho_s, 1)) \nonumber\\
+&&+& (1-m)(1-t) \rho \, B(\mathbf{v}, \mathbf{l}; s, F_0, \rho_s, b)
+\end{eqnarray}
+
+With the Schlick approximation for the Fresnel term
+
+\begin{equation}
+F(\cos\theta,f_0,f_{90}) = f_0 + (f_{90} - f_0) (1 - \cos\theta)^5
+\end{equation}
+
+the following properties hold
+
+\begin{eqnarray}
+a \, F(\cos\theta,f_0,f_{90}) &=& F(\cos\theta, a \, f_0, a \, f_{90}) \\
+F(\cos\theta, a, b) + F(\cos\theta, c, d) &=& F(\cos\theta, a+c, b+d)
+\end{eqnarray}
+
+Approximately, that is also the case for the multi-scattering Fresnel $F_{ms}$, so we assume
+
+\begin{eqnarray}
+a \, F_{ms}(f_0,f_{90}) &\approx& F_{ms}( a \, f_0, a \, f_{90}) \\
+F_{ms}(a, b) + F_{ms}(c, d) &\approx& F_{ms}(a+c, b+d)
+\end{eqnarray}
+
+This allows us to simplify the combined BSDFs and we arrive at the final form:
+
+\begin{eqnarray}
+\text{ThinCore}(\rho, s, \eta, \rho_s, b)&=&& M_r F(\cos\theta_r; (1-m) s F_0 \rho_s + m \rho, (1-m)s + m) \nonumber\\
+&&+& M_{r,ms} F_{ms}((1-m) s F_0 \rho_s + m \rho, (1-m)s + m)) \nonumber\\
+&&+& (1-m)t \rho\,{M_t}^\prime \, (1 - s \, F(\cos\theta_t; F_0 \rho_s, 1)) \nonumber\\
+&&+& (1-m)(1-t) \rho \, B(\mathbf{v}, \mathbf{l}; s, F_0, \rho_s, b)
+\end{eqnarray}
+
 
 Energy Compensation
 -------------------
@@ -541,7 +764,7 @@ Bibliography
 
 [#AP07]: Michael Ashikhmin, Simon Premože. Distribution-based BRDFs., Technical Report, University of Utah, 2007.
 
-[#Bur12]: Brent Burley. Physically-Based Shading at Disney., SIGGRAPH 2012.
+[#Bur12]: Brent Burley. Physically-Based Shading at Disney, SIGGRAPH 2012.
 
 [#Bur15]: Brent Burley. Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering., SIGGRAPH 2015.
 
