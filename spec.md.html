@@ -139,7 +139,7 @@ The diffuse BRDF looks as follows:
 \begin{eqnarray}
 B(\mathbf{v}, \mathbf{l}) &=&
 \begin{cases}
-(1-s) + s \frac{(1-E(\mathbf{v}\cdot\mathbf{n}))(1-E(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{avg})} & \ \\
+\frac{1}{\pi}(1-s) + s \frac{(1-E(\mathbf{v}\cdot\mathbf{n}))(1-E(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{avg})} & \ \\
  0 & \text{if total internal reflection wrt.} \mathbf{v} \text{ or }\mathbf{l}
 \end{cases}
 \end{eqnarray}
