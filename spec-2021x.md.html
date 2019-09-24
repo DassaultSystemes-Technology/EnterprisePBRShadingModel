@@ -446,6 +446,16 @@ The cut-out parameter is primarily used in conjunction with textures to fake det
 
 ![Figure [cutout-geometry]: Cut-out texture applied to a sphere.](img/params_cutout_geometry.png)
 
+Displacement
+------------
+
+Displacement mapping modifies the position of surface points to add details to geometry. The displacement parameter $h$ is a vector, specifying the length and direction of the displacement in local surface coordinates defined by normal $\mathbf{n}$, tangent $\mathbf{x}$, and bitangent $\mathbf{y}$.
+
+ Name          | Type          | Default | Range     | Description
+---------------|---------------|---------|-----------|-------------
+$h$            | float3        | 0       | -inf..inf | Displacement in the direction of the surface normal.
+[Table [displacement-parameters]: List of displacement parameters.]
+
 Emission
 --------
 
@@ -531,6 +541,7 @@ We recommend to display the parameters to users in the UI in the following order
   - Anisotropy
   - Anisotropy Rotation
   - Normal Map
+  - Displacement Map
   - Transparency
   - Cut-Out Opacity
   - Sheen
