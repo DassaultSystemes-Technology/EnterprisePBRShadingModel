@@ -4,7 +4,9 @@
 
 The [Dassault Systèmes](https://www.3ds.com/) Enterprise PBR Shading Model (DSPBR) is an easy-to-use, renderer-independent PBR material for a large variety of industries and use-cases, ranging from high-performance VR applications to high-quality GI renderings.
 
-* [Specification](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec.md.html)
+* Specification
+  * [Version 2021x - work in progress](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec-2021x.md.html)
+  * [Version 2020x - stable](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec-2020x.md.html)
 * [User Guide](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/user_guide.md.html)
 
 ## Raytraced Examples
