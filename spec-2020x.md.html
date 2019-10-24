@@ -433,7 +433,7 @@ $\mathbf{n}_c$ | float3        | (0,0,1) | $\lVert\mathbf{n}_c\rVert=1$ | Clearc
 Cut-out
 -------
 
-The cut-out acts like an alpha channel for the surface. It makes parts of the surface transparent, independent of Fresnel terms, view and light direction or any parameters.
+The cut-out acts like an alpha channel for the surface. It makes parts of the surface transparent, independent of Fresnel terms, view and light direction or parameters.
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
@@ -463,8 +463,8 @@ $\rho_e$ is luminance given in $\frac{\text{lm}}{\text{m}^2 \text{ sr}}$. It is 
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
-$l_c$          | color         | 1       | 0-inf  | Emission color.
-$l_v$          | uniform float | 0       | 0-inf  | Emission value in $\text{lx}$ ($=\frac{\text{lm}}{\text{m}^2}$) (luminous emittance, the relative power leaving the object per surface area) or $\text{lm}$ (luminous power, the absolute power leaving the object).
+$l_c$          | color         | 1       | 0..inf | Emission color.
+$l_v$          | uniform float | 0       | 0..inf | Emission value in $\text{lx}$ ($=\frac{\text{lm}}{\text{m}^2}$) (luminous emittance, the relative power leaving the object per surface area) or $\text{lm}$ (luminous power, the absolute power leaving the object).
 $l_\text{norm}$| uniform bool  | false   |        | Normalize emission color.
 [Table [emission-parameters]: List of emission parameters.]
 
