@@ -134,7 +134,7 @@ The Fresnel angles $\cos\theta_r$ and $\cos\theta_t$ are based on the half-vecto
 \mathbf{h}_{t,v} = \frac{-\mathbf{v} \eta_i - \mathbf{l} \eta_o}{\lVert -\mathbf{v} \eta_i - \mathbf{l} \eta_o \rVert}
 \end{eqnarray}
 
-Refraction only takes place if the material is configured to be volumetric, see Section [Volume]. In this case, and if the surface is transparent, light rays are refracted through the surface into the volume beneath the object (Figure [bsdf-transparent-dielectric-volumetric]). The BSDF has to consider refraction and total internal reflection, affecting the outgoing direction and the dielectric Fresnel term $F_d$. This closely follows [#Wal07].
+Refraction only takes place if the material is configured to be volumetric, see Section [Volume]. In this case, and if the surface is transparent, light rays are refracted through the surface into the volume beneath the object (Figure [bsdf-transparent-dielectric-volumetric]). The BSDF has to consider refraction and total internal reflection, affecting the outgoing direction and the dielectric Fresnel term $F_d$. This closely follows [#WMLT07].
 
 The Fresnel term at normal incidence depends on the index of refraction: $F_0 = \left(\frac{\eta_i - \eta_o}{\eta_i + \eta_o}\right)^2$. $\eta_i$ and $\eta_o$ determine the index of refraction of the current medium and the medium on the other side of the surface, respectively, and have to be setup properly by the renderer, taking into account the material's $\eta$
 
@@ -159,7 +159,7 @@ The BSDF looks as follows:
 
 ![Figure [bsdf-opaque-dielectric]: The dielectric BSDF for opaque surfaces is composed of a diffuse lobe and a specular lobe.](img/bsdf_opaque_dielectric.png)
 
-Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#Kel01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF out of it. Controlled by the parameter $s$ (i.e., the amount of specular contribution), we gradually blend to this new diffuse BRDF $B_c$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
+Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#KS01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF out of it. Controlled by the parameter $s$ (i.e., the amount of specular contribution), we gradually blend to this new diffuse BRDF $B_c$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
 
 \begin{equation}
 B(\mathbf{v}, \mathbf{l}; r_u, r_v, s, F_0, \rho_s) = \frac{1}{\pi}(1-s) + s B_c(\mathbf{v}, \mathbf{l}; r_u, r_v, F_0, \rho_s)
@@ -218,7 +218,7 @@ If the material is volumetric, the dielectric Fresnel term handles refraction an
 
 #### Microfacet BSDF
 
-Reflection and transmission are based on microfacet BSDFs [#Wal07]. As in [#Bur12] we square the roughness $(r_u, r_v)$ to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_o$, respectively.
+Reflection and transmission are based on microfacet BSDFs [#WMLT07]. As in [#Bur12] we square the roughness $(r_u, r_v)$ to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_o$, respectively.
 
 \begin{eqnarray}
 M_r(\mathbf{v},\mathbf{l}; r_u, r_v) &=& \frac{D(\mathbf{h},r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})} \\
@@ -272,7 +272,7 @@ where $\theta_o$ is the angle of transmission, computed from the angle of incide
 
 #### Energy Preservation
 
-The standard microfacet model does not account for scattering occuring between microfacets on the microsurface. As the surface becomes rougher, the multiple scattering becomes stronger, effectively resulting in high energy loss if this is not accounted for (see Figure [energycomp-microfacet-metallic]). [#KC17] describes a method based on [#Kel01] to approximate multiple scattering for microfacet models that can be adapted for real-time rendering [#Fde19].
+The standard microfacet model does not account for scattering occuring between microfacets on the microsurface. As the surface becomes rougher, the multiple scattering becomes stronger, effectively resulting in high energy loss if this is not accounted for (see Figure [energycomp-microfacet-metallic]). [#KC17] describes a method based on [#KS01] to approximate multiple scattering for microfacet models that can be adapted for real-time rendering [#Fde19].
 
 ![Figure [energycomp-microfacet-metallic]: Left: Metallic surface with roughness 0. Middle: Non-energy preserving metallic surface with roughness 1. Right: Energy-preserving metallic surface with roughness 1 by accounting for multiple scattering. Note that the surface in the middle looks significantly darker than the others.](img/energycomp_metallic.png)
 
@@ -305,7 +305,7 @@ Note that we convert from anisotropic to isotropic roughness $\alpha_{uv}$ to si
 
 #### Diffuse BRDF
 
-Following the approach of [#Kel01] and [#KC17], the missing energy after reflection from the microfacet BRDF defines the diffuse-like BRDF $B_c$. Using the two BRDFs in combination results in a energy-conserving and energy-preserving material (Figure [energycomp-plastic]).
+Following the approach of [#KS01] and [#KC17], the missing energy after reflection from the microfacet BRDF defines the diffuse-like BRDF $B_c$. Using the two BRDFs in combination results in a energy-conserving and energy-preserving material (Figure [energycomp-plastic]).
 
 ![Figure [energycomp-plastic]: Combination of diffuse and specular component with energy compensation for roughness 0 (left) and 1 (right). Note that the combination is energy-conserving (no energy is produced, even at multiple bounces inside the object) and energy-preserving (especially at grazing angles).](img/energycomp_plastic.png)
 
@@ -373,7 +373,7 @@ For more fine-grained artistic control, the material can now be tweaked even fur
 Sheen
 -----
 
-For rendering cloth-like materials diffuse and specular BRDFs are not sufficient. Fibers standing perpendicular to the surface lead to backscattering, brightening the rims of objects. We simulate this effect with a microfacet-based sheen BRDF $M_b$, layered on top of the core described in Section [Core]. Its distribution with roughness $r_b$ generates micro-fiber normals, centered around grazing directions. The intensity and color are controlled via parameters $b$ and $\rho_b$, respectively. The BRDF and layering technique is taken from [#Est17].
+For rendering cloth-like materials diffuse and specular BRDFs are not sufficient. Fibers standing perpendicular to the surface lead to backscattering, brightening the rims of objects. We simulate this effect with a microfacet-based sheen BRDF $M_b$, layered on top of the core described in Section [Core]. Its distribution with roughness $r_b$ generates micro-fiber normals, centered around grazing directions. The intensity and color are controlled via parameters $b$ and $\rho_b$, respectively. The BRDF and layering technique is taken from [#CK17].
 
  Name        | Type          | Default | Range  | Description
 -------------|---------------|---------|--------|-------------
@@ -382,7 +382,7 @@ $\rho_b$     | color         | 1       | 0..1   | Sheen color.
 $r_b$        | float         | 0.3     | 0..1   | Roughness of sheen microfacet distribution.
 [Table [sheen-parameters]: List of sheen parameters.]
 
-Sheen is layered on top of the core like a coating [#Est17]. Similar to the diffuse BRDF (Section [Diffuse BRDF]), we scale the bottom layer via the directional albedo of the top layer, resulting in an energy-conserving and (almost) energy-preserving mix of the BSDFs. The directional albedo of the sheen BRDF is fetched from a lookup table.
+Sheen is layered on top of the core like a coating [#CK17]. Similar to the diffuse BRDF (Section [Diffuse BRDF]), we scale the bottom layer via the directional albedo of the top layer, resulting in an energy-conserving and (almost) energy-preserving mix of the BSDFs. The directional albedo of the sheen BRDF is fetched from a lookup table.
 
 \begin{equation}
 \begin{aligned}
@@ -400,7 +400,7 @@ The sheen BRDF follows the usual microfacet equation:
 M_b(\mathbf{v},\mathbf{l}; r_b) = \frac{D_b(\mathbf{h},r_b) G_b(\mathbf{v},\mathbf{l},r_b)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})}
 \end{equation}
 
-The distribution of normals and the shadowing-masking term as given in [#Est17] :
+The distribution of normals and the shadowing-masking term as given in [#CK17] :
 
 \begin{eqnarray}
 D_b(\mathbf{h},r_b) &=& \frac{(2+1/r_b) \sin^{1/r_b}\theta_b}{2\pi} \\
@@ -419,7 +419,7 @@ $r_b$ |     $a$ |     $b$ |     $c$ |      $d$ |      $e$
 ------|---------|---------|---------|----------|----------
  0.0  | 25.3245 | 3.32435 | 0.16801 | -1.27393 | -4.85967
  1.0  | 21.5473 | 3.82987 | 0.19823 | -1.97760 | -4.32054
- [Table [sheen-lambda-fit]: Values for $\Lambda$ curve fitting. Parameters are interpolated according to $P = (1-r_b)^2 P_{0.0} + (1-(1-r_b)^2) P_{1.0}$ [#Est17].]
+ [Table [sheen-lambda-fit]: Values for $\Lambda$ curve fitting. Parameters are interpolated according to $P = (1-r_b)^2 P_{0.0} + (1-(1-r_b)^2) P_{1.0}$ [#CK17].]
 
 We clamp the roughness to range [0.07;1] to avoid numerical issues and because we observed that the directional albedo at grazing angles becomes larger than 1 if roughness is below 0.07.
 
@@ -714,7 +714,7 @@ Version 2021x
 -------------
 
 * Displacement mapping.
-* New sheen effect based on "Charlie" Sheen BRDF, layered on top of core material via albedo-scaling [#Est17].
+* New sheen effect based on "Charlie" Sheen BRDF, layered on top of core material via albedo-scaling [#CK17].
 
 Version 2020x
 -------------
@@ -915,7 +915,7 @@ We provide the lookup tables for download in our Github repository:
 
 ### Sheen BRDF
 
-We use the albedo-scaling technique described in [#Kel01] and [#Est17] to layer the sheen BRDF on top of the core material. As the technique supports arbitrary BSDFs as base layer, it does not depend on the parameters of the core material.
+We use the albedo-scaling technique described in [#KS01] and [#CK17] to layer the sheen BRDF on top of the core material. As the technique supports arbitrary BSDFs as base layer, it does not depend on the parameters of the core material.
 
 As before, we precompute the directional albedo of the sheen BRDF (Equation [sheen-brdf-directional-albedo]). This results in a 16x16 2D lookup table (Figure [energy-compensation-sheen-e]).
 
@@ -938,45 +938,27 @@ We provide the lookup table for download in our Github repository:
 Bibliography
 ============
 
-[#AS00]: Michael Ashikhmin, Peter Shirley. An Anisotropic Light Reflection Model., Technical Report, University of Utah, 2000.
-
-[#AP07]: Michael Ashikhmin, Simon Premože. Distribution-based BRDFs., Technical Report, University of Utah, 2007.
-
 [#Bur12]: Brent Burley. Physically-Based Shading at Disney, SIGGRAPH 2012.
 
 [#Bur15]: Brent Burley. Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering., SIGGRAPH 2015.
 
-[#Kar13]: Brian Karis. Real Shading in Unreal Engine 4., SIGGRAPH 2013.
-
-[#Kel01]: Csaba Keleman, Lazlo Szirmay-Kalos. A Microfacet Based Coupled Specular-Matte BRDF Model with Importance Sampling, Eurographics 2001.
-
-[#Wal07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
-
-[#Hei14]: Eric Heitz. Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs., Journal of Computer Graphics Techniques Vol. 3, No. 2, 2014.
-
-[#Pen11]: Eric Penner. Pre-integrated skin shading. 2011.
-
-[#JWSG10]: Jorge Jimenez, David Whelan, Veronica Sundstedt, and Diego Gutierrez. Real-time realistic skin translucency. 2010.
-
-[#JMLH]: Henrik Wann Jensen, Stephen R. Marschner, Marc Levoy, Pat Hanrahan. A Practical Model for Subsurface Light Transport.
-
-[#NP13]: David Neubelt and Matt Pettineo. Crafting a Next-Gen Material Pipeline for The Order: 1886. 2013.
-
-[#D10]: Joachim De Deken. A BRDF Analysis of Cloth. 2010.
-
-[#KC17]: Christopher Kulla and Alejandro Conty. Revisiting Physically Based Shading at Imageworks. 2017.
-
-[#Jak14]: Wenzel Jakob et al. Discrete Stochastic Microfacet Models, ACM Transactions on Graphics (ACM SIGGRAPH 2014).
-
-[#AK16]: Asen Atanasov and Vladimir Koylazov. A Practical Stochastic Algorithm for Rendering Mirror-Like Flakes. 2016.
-
-[#Lag13]: Sébastien Lagarde. Memo on Fresnel equations, 2013. https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
+[#CK17]: Alejandro Conty Estevez, Christopher Kulla. Production Friendly Microfacet Sheen BRDF, SIGGRAPH 2017.
 
 [#Fde19]: Carmelo J. Fdez-Agüera. A Multiple-Scattering Microfacet Model for Real-Time Image-based Lighting., Journal of Computer Graphics Techniques Vol. 8, No. 1, 2019.
 
+[#Hei14]: Eric Heitz. Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs., Journal of Computer Graphics Techniques Vol. 3, No. 2, 2014.
+
 [#Hil18]: Stephen Hill. A Multi-Faceted Exploration, 2018. https://blog.selfshadow.com/2018/05/13/multi-faceted-part-1/
 
-[#Est17]: Alejandro Conty Estevez, Christopher Kulla. Production Friendly Microfacet Sheen BRDF, SIGGRAPH 2017.
+[#Kar13]: Brian Karis. Real Shading in Unreal Engine 4., SIGGRAPH 2013.
+
+[#KC17]: Christopher Kulla, Alejandro Conty. Revisiting Physically Based Shading at Imageworks. 2017.
+
+[#KS01]: Csaba Keleman, Lazlo Szirmay-Kalos. A Microfacet Based Coupled Specular-Matte BRDF Model with Importance Sampling, Eurographics 2001.
+
+[#Lag13]: Sébastien Lagarde. Memo on Fresnel equations, 2013. https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
+
+[#WMLT07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
 
 License
 =======
