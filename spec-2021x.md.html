@@ -222,7 +222,7 @@ Reflection and transmission are based on microfacet BSDFs [#WMLT07]. As in [#Bur
 
 \begin{eqnarray}
 M_r(\mathbf{v},\mathbf{l}; r_u, r_v) &=& \frac{D(\mathbf{h},r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})} \\
-M_t(\mathbf{v},\mathbf{l}; r_u, r_v, \eta_i, \eta_o) &=& \frac{|\mathbf{l} \cdot \mathbf{h}_t| |\mathbf{v} \cdot \mathbf{h}_t|}{|\mathbf{l} \cdot \mathbf{n}| |\mathbf{v} \cdot \mathbf{n}|} \frac{\eta_o^2 D(\mathbf{h}_t,r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{\eta_i(\mathbf{l} \cdot \mathbf{h}_t) + (\eta_o(\mathbf{v} \cdot \mathbf{h}_t))^2} \\
+M_t(\mathbf{v},\mathbf{l}; r_u, r_v, \eta_i, \eta_o) &=& \frac{|\mathbf{l} \cdot \mathbf{h}_t| |\mathbf{v} \cdot \mathbf{h}_t|}{|\mathbf{l} \cdot \mathbf{n}| |\mathbf{v} \cdot \mathbf{n}|} \frac{\eta_o^2 D(\mathbf{h}_t,r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{(\eta_i(\mathbf{v} \cdot \mathbf{h}_t) + \eta_o(\mathbf{l} \cdot \mathbf{h}_t))^2} \\
 \end{eqnarray}
 
 To allow for anisotropic materials we derive roughnesses in tangent ($r_u$) and bitangent ($r_v$) direction from the isotropic roughness $r$ and anisotropy strength $o$. In addition we support anisotropy rotation by rotating the local tangent space counter-clockwise around the normal with the anisotropy rotation parameter $\beta$.
