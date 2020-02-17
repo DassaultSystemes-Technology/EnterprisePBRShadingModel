@@ -420,8 +420,17 @@ $r_b$ |     $a$ |     $b$ |     $c$ |      $d$ |      $e$
  0.0  | 25.3245 | 3.32435 | 0.16801 | -1.27393 | -4.85967
  1.0  | 21.5473 | 3.82987 | 0.19823 | -1.97760 | -4.32054
  [Table [sheen-lambda-fit]: Values for $\Lambda$ curve fitting. Parameters are interpolated according to $P = (1-r_b)^2 P_{0.0} + (1-(1-r_b)^2) P_{1.0}$ [#CK17].]
+ 
+If performance is a concern, due to the computation cost of the term above, we propose an alternative visibility term, given in [#NP13]:
+
+\begin{equation}
+M_b(\mathbf{v},\mathbf{l}; r_b) = \frac{D_b(\mathbf{h},r_b)}{4 ((\mathbf{v} \cdot \mathbf{n}) + (\mathbf{l} \cdot \mathbf{n}) - (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n}))}
+\end{equation}
+
+The visual differences between the main model and the alternative model can be observed on the following ShaderToy: https://www.shadertoy.com/view/wl3SWs.
 
 We clamp the roughness to range [0.07;1] to avoid numerical issues and because we observed that the directional albedo at grazing angles becomes larger than 1 if roughness is below 0.07.
+
 
 Clearcoat
 ---------
@@ -959,6 +968,8 @@ Bibliography
 [#Lag13]: Sébastien Lagarde. Memo on Fresnel equations, 2013. https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
 
 [#WMLT07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
+
+[#NP13]: David Neubelt and Matt Pettineo. Crafting a Next-Gen Material Pipeline for The Order: 1886. 2013.
 
 License
 =======
