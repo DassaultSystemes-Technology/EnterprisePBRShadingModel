@@ -91,7 +91,7 @@ See Section [In-Depth Look at the BSDFs] for more details about the Fresnel term
 
 ### Dielectric BSDF for Transparent Surfaces
 
-The Fresnel-weighted combination of a microfacet BRDF $M_r$ and a microfacet BTDF $M_t$ forms the BSDF for transparent dielectric surfaces. As before, $r_u$ and $r_v$ change the anisotropic roughness of the BSDF. In addition, we now provide a parameter to change the index of refraction $\eta$, which determines how the light ray is refracted when entering the volume beneath the surface, and how the amount of incoming light is distributed to reflection and transmission. $s$ and $\rho_s$ allow fine-tuning the amount of reflection and its color. $\rho$ changes the color of the transmissive component.
+The Fresnel-weighted combination of a microfacet BRDF $M_r$ and a microfacet BTDF $M_t$ forms the BSDF for transparent dielectric surfaces like glass, oil, water, or air. As before, $r_u$ and $r_v$ change the anisotropic roughness of the BSDF. In addition, we now provide a parameter to change the index of refraction $\eta$, which determines how the light ray is refracted when entering the volume beneath the surface, and how the amount of incoming light is distributed to reflection and transmission. $s$ and $\rho_s$ allow fine-tuning the amount of reflection and its color. $\rho$ changes the color of the transmissive component.
 
 We again compensate for energy-loss of the reflection component via $M_{r,ms}$ and $F_{ms}$. Energy compensation for transmission may be added in a future revision. The complete equation is given as follows:
 
@@ -142,7 +142,9 @@ The Fresnel term at normal incidence depends on the index of refraction: $F_0 = 
 
 ### Dielectric BSDF for Opaque Surfaces
 
-In opaque dielectric surfaces (Figure [bsdf-opaque-dielectric]), we replace the BTDF by a diffuse-like BRDF that models the interaction of the light not reflected from the specular BRDF. This results in a combination of a diffuse-like base BRDF $B$ and a Fresnel-weighted microfacet BRDF $M_r$. Parameter $\rho$ controls the color of $B$, all other parameters behave consistent to the transparent BSDF: The amount of specular contribution from the microfacet BRDF is determined by the parameters for specular tint $\rho_s$ and the index of refraction $\eta$, which both influence the Fresnel term. In addition, there is a directional-independent scaling factor $s$. $r_u$ and $r_v$ change the anisotropic roughness of the microfacet BRDF.
+A lot of dielectric materials, like the majority of plastics, appear semi-transparent or opaque. This results from the strong subsurface scattering due to particles in the volume below the surface that interact with the transmitted light. A diffuse BRDF is a simple approximation for this effect. Consequently, we replace the BTDF introduced before by a diffuse-like BRDF (Figure [bsdf-opaque-dielectric]), resulting in a combination of a diffuse-like base BRDF $B$ and a Fresnel-weighted microfacet BRDF $M_r$. Parameter $\rho$ controls the color of $B$, all other parameters behave consistent to the transparent BSDF: The amount of specular contribution from the microfacet BRDF is determined by the parameters for specular tint $\rho_s$ and the index of refraction $\eta$, which both influence the Fresnel term. In addition, there is a directional-independent scaling factor $s$. $r_u$ and $r_v$ change the anisotropic roughness of the microfacet BRDF.
+
+Paper, leaves of plants and other thin, dielectric objects transmit some of the incoming light into a random direction to the backside of the surface, the material looks translucent. To achieve this effect, we provide the parameter $l$ that blends from the diffuse BRDF to a diffuse BTDF. Besides thin objects, this can be useful for objects with subsurface scattering and short scattering distances. By scattering the light not only inside the volume, but also already when passing the interface, objects look more blurry and may converge much faster in a ray tracer.
 
 As in the metallic BSDF, the energy loss of the microfacet term is compensated via $M_{r,ms}\,F_{ms}$.
 
@@ -151,7 +153,7 @@ The BSDF looks as follows:
 \begin{equation}
 \begin{aligned}
 &\text{OpaqueDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s) = \\
-&\quad\quad\quad\quad \rho \, B(\mathbf{v}, \mathbf{l}; r_u, r_v, s, F_0, \rho_s) \\
+&\quad\quad\quad\quad \rho \, B(\mathbf{v}, \mathbf{l}; r_u, r_v, l, s, F_0, \rho_s) \\
 &\quad\quad\quad + s\,M_r(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F(\cos\theta_r; F_0 \rho_s, 1) \\
 &\quad\quad\quad + s\,M_{r,ms}(\mathbf{v}, \mathbf{l}; r_u, r_v) \, F_{ms}(F_0 \rho_s, 1)
 \end{aligned}
@@ -159,12 +161,11 @@ The BSDF looks as follows:
 
 ![Figure [bsdf-opaque-dielectric]: The dielectric BSDF for opaque surfaces is composed of a diffuse lobe and a specular lobe.](img/bsdf_opaque_dielectric.png)
 
-Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#KS01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF out of it. Controlled by the parameter $s$ (i.e., the amount of specular contribution), we gradually blend to this new diffuse BRDF $B_c$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
+Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#KS01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF/BTDF out of it. Controlled by the parameter $s$ (i.e., the amount of specular contribution), we gradually blend between this new diffuse BSDF $B_c$ and the classic Lambertian BSDF $B_u$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
 
 \begin{equation}
-B(\mathbf{v}, \mathbf{l}; r_u, r_v, s, F_0, \rho_s) = \frac{1}{\pi}(1-s) + s B_c(\mathbf{v}, \mathbf{l}; r_u, r_v, F_0, \rho_s)
+B(\mathbf{v}, \mathbf{l}; r_u, r_v, l, s, F_0, \rho_s) = B_u(\mathbf{v}, \mathbf{l}; l) (1-s) + s B_c(\mathbf{v}, \mathbf{l}; r_u, r_v, l, F_0, \rho_s)
 \end{equation}
-
 
 ### Putting It All Together
 
@@ -189,7 +190,7 @@ In case the material is thin-walled, $F = F_d$, i.e., the metallic and the diele
 &\quad\quad\quad\quad M_r \, F(\rho_{s,r,0}, \rho_{s,r,90}) \, \\
 &\quad\quad\quad +M_{r,ms} \, F_{ms}(\rho_{s,r,0}, \rho_{s,r,90}) \\
 &\quad\quad\quad +\rho_t {M_t}^\prime(1 - s F(F_0 \rho_s, 1)) \\
-&\quad\quad\quad +\rho_d \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right]
+&\quad\quad\quad +\rho_d \left[B_u (1-s) + s B_c(F_0 \rho_s)\right]
 \end{aligned}
 \end{equation}
 
@@ -212,7 +213,7 @@ If the material is volumetric, the dielectric Fresnel term handles refraction an
 &\quad\quad\quad\quad\quad\quad + (1-m) t s F_d(F_0 \rho_s, 1)]\, \\
 &\quad\quad\quad +M_{r,ms} \, F_{ms}(\rho_{s,r,0}, \rho_{s,r,90}) \\
 &\quad\quad\quad +\rho_t M_t(1 - s F_d(F_0 \rho_s, 1)) \\
-&\quad\quad\quad +\rho_d \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right]
+&\quad\quad\quad +\rho_d \left[B_u (1-s) + s B_c(F_0 \rho_s)\right]
 \end{aligned}
 \end{equation}
 
@@ -291,7 +292,15 @@ We measured the directional albedo $E_m(\theta)$ and average albedo $E_{m,avg}$ 
 
 #### Diffuse BRDF
 
-Following the approach of [#KS01] and [#KC17], the missing energy after reflection from the microfacet BRDF defines the diffuse-like BRDF $B_c$. Using the two BRDFs in combination results in a energy-conserving and energy-preserving material (Figure [energycomp-plastic]).
+The Lambertian diffuse BRDF/BTDF $B_u(\mathbf{v}, \mathbf{l}; l)$ is given as
+
+\begin{equation}
+B_u(\mathbf{v}, \mathbf{l}; l) = \frac{1}{\pi} \left( (1-l) B^{+} + l B^{-} \right)
+\end{equation}
+
+where $B^{+} = 1$ if $\mathbf{v}$ and $\mathbf{l}$ point into the same hemisphere wrt. $\mathbf{n}$, or $B^{+} = 0$ otherwise. $B^{-} = 1$ if $\mathbf{v}$ and $\mathbf{l}$ point into different hemispheres wrt. $\mathbf{n}$.
+
+Following the approach of [#KS01] and [#KC17], the missing energy after reflection from the microfacet BRDF $M_r$ defines the diffuse-like BRDF $B_c$. Using the two BRDFs in combination results in a energy-conserving and energy-preserving material (Figure [energycomp-plastic]). Note that the diffuse-like BTDF is constructed in the same way as $B_u$ by flipping the BRDF lobe to the opposite hemisphere.
 
 ![Figure [energycomp-plastic]: Combination of diffuse and specular component with energy compensation for roughness 0 (left) and 1 (right). Note that the combination is energy-conserving (no energy is produced, even at multiple bounces inside the object) and energy-preserving (especially at grazing angles).](img/energycomp_plastic.png)
 
@@ -318,6 +327,7 @@ $\rho$       | color         | 1       | 0..1   | Albedo of the material.
 $\rho_{s}$   | color         | 1       | 0..1   | Specular tint to adjust the color of the specular lobe near $\theta=0^\circ$.
 $m$          | float         | 0       | 0..1   | Metallic-ness (0 = dielectric, 1 = metallic).
 $s$          | float         | 1       | 0..1   | Directional-independent amount of specular contribution to fine-tune the effect of the index of refraction.
+$l$          | float         | 0       | 0..1   | Translucency (0 = opaque, 1 = translucent).
 $t$          | float         | 0       | 0..1   | Transparency (0 = opaque, 1 = transparent).
 $\eta$       | uniform float | 1.5     | 1..inf | Index of refraction of the volume (t=1) or the dielectric coating (m=0).
 $r$          | float         | 0       | 0..1   | Roughness of microfacet distribution.
@@ -565,6 +575,7 @@ We recommend to display the parameters to users in the UI in the following order
   - Anisotropy Rotation
   - Normal Map
   - Displacement Map
+  - Translucency
   - Transparency
   - Cut-Out Opacity
   - Specular
