@@ -207,7 +207,9 @@ If the material is volumetric, the dielectric Fresnel term handles refraction an
 \begin{equation}
 \begin{aligned}
 &\text{VolumetricCore}(\rho, s, \eta, \rho_s, b) = \\
-&\quad\quad\quad\quad M_r \, [m \, F(\rho, 1) + (1-m) s F_d(F_0 \rho_s, 1)]\, \\
+&\quad\quad\quad\quad M_r \, [\quad m \, F(\rho, 1) \\
+&\quad\quad\quad\quad\quad\quad + (1-m) (1-t) s F(F_0 \rho_s, 1) \\
+&\quad\quad\quad\quad\quad\quad + (1-m) t s F_d(F_0 \rho_s, 1)]\, \\
 &\quad\quad\quad +M_{r,ms} \, F_{ms}(\rho_{s,r,0}, \rho_{s,r,90}) \\
 &\quad\quad\quad +\rho_t M_t(1 - s F_d(F_0 \rho_s, 1)) \\
 &\quad\quad\quad +\rho_d \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right]
