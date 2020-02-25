@@ -912,7 +912,7 @@ and store the result of the integration in a table with 16x16 pixels (Figure [en
 ![Figure [energy-compensation-base-e-avg]: Average albedo of Fresnel-weighted multi-scattering microfacet GGX BRDF for different values of $\rho_{s,r,0}$.](img/energycomp_base_e_avg.png)
 
 
-It is possible to use the following approximation instead of a look up table:
+It is possible to use the following approximations instead of the look up tables:
 
 \begin{eqnarray}
 \label{energycomp-base-fit}
@@ -947,8 +947,6 @@ E_b(\mu_v) = \int_{0}^{2\pi} \int_{0}^{1} M_b(\mu_l, \phi, \mu_v) \, \mu_l \, \m
 \end{equation}
 
 ![Figure [energy-compensation-sheen-e]: Directional albedo of the sheen BRDF.](img/energycomp_sheen_e.png)
-
-![Figure [white-furnace-sheen-e]: White furnace test of the sheen BRDF.](img/furnace_estevezkulla.png)
 
 Using the directional albedo, it is possible to combine the sheen BRDF $f_b$ with an arbitrary BRDF $f$ as follows:
 
