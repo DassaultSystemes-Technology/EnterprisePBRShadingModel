@@ -466,7 +466,11 @@ The cut-out parameter is primarily used in conjunction with textures to fake det
 Displacement
 ------------
 
-Displacement mapping modifies the position of surface points to add details to geometry. The displacement parameter $h$ is a vector, specifying the length and direction of the displacement in local surface coordinates defined by normal $\mathbf{n}$, tangent $\mathbf{x}$, and bitangent $\mathbf{y}$.
+Displacement mapping modifies the position $\mathbf{p}$ of surface points to add details to geometry. The displacement parameter $h$ is a vector, specifying the length and direction of the displacement in local surface coordinates defined by normal $\mathbf{n}$, tangent $\mathbf{x}$, and bitangent $\mathbf{y}$. The new position $\mathbf{p}^{\prime}$ is given as
+
+\begin{eqnarray}
+\mathbf{p}^{\prime} = \mathbf{p} + \mathbf{x} h_x + \mathbf{y} h_y + \mathbf{n} h_z
+\end{eqnarray}
 
  Name          | Type          | Default | Range     | Description
 ---------------|---------------|---------|-----------|-------------
