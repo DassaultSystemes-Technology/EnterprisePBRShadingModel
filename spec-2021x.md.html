@@ -423,6 +423,88 @@ The directional albedo changes can be found in Section [Alternative Sheen BRDF]
 
 We clamp the roughness to range [0.07;1] to avoid numerical issues and because we observed that the directional albedo at grazing angles becomes larger than 1 if roughness is below 0.07.
 
+Flakes
+------
+
+Some materials, such as car paint or grainy metals, exhibit shifting random patterns of bright sparkles or glints. These glints may suddenly appear or disappear if light or view direction changes. In car paints, for example, this phenomenon comes from small mirror-like flakes distributed in the material below its coating. This can be modeled with the flakes layer of the Enterprise PBR Shading Model.
+
+### Overview
+
+Our method is inspired by [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The main idea is to create a procedural voronoi texture of GGX distributed normals, which is used as a normal map for a cone BSDF (constant albedo in a fixed cone angle) that we can probe without any texture fetches. Instead of a precomputed texture in memory we use a hash-based 'seed'-texture, which is computed on-the-fly, whose seed is then used to seed an LCG PRNG, which provides the random numbers to compute the position, direction and visibility of a fixed number (we use 4) of flake/voronoi cell centers. We do this for the closest seed pixel and its 8 neighbours to determine the closest voronoi cell center and use its GGX-sampled direction as a normal for our cone BSDF.
+
+### Parameters
+
+ Name        | Type          | Default | Range  | Description
+-------------|---------------|---------|--------|-------------
+$s_d$        | float         | 0.      | 0.-1.  | Flake coverage (0 = no flakes, 1 = only flakes).
+$s_s$        | float         | 0.      | 0.-1.  | Flake size (diameter) in mm.
+$\alpha_s$   | float         | 0.      | 0.-1.  | Roughness of distribution that controls flake orientation.
+$\rho_s$     | color         | 1.      | 0.-1.  | Flake color.
+[Table [flakes-parameters]: List of flakes parameters]
+
+![Figure [flakes-parameters-fig]: Result for various values of flakes parameters](img/params_flakes.png)
+
+Flake coverage $s_d$ determines the probability for a flake/voronoi cell to be opaque. Cells are always either 100% opaque or 100% transparent.
+
+Flake size $s_s$ chooses the average flake diameter in `mm`. Thus the conversion factor from scene unit to physical length unit must be known by the renderer in order to guarantee the correct appearance.
+
+The total roughness $\alpha_s$ is distributed mostly to the orientation roughness of the normals and to a smaller part to the cone angle of the cone BSDF used for the individual flakes. To determine the distribution of flake orientations we sample from a GGX normal distribution function. For details see subsection [Distributing Total Roughness over Cone Angle and Flake Orientation Roughness].
+
+The cone BSDF used in opaque flakes is tinted/multiplied with $\rho_s$ to allow choice of a global flake color for the material.
+
+### Evaluating the procedural Voronoi Flake texture
+
+The flake component provides a procedural $1\text{m}^2$ normal map which is mapped onto each object via triplanar mapping (see Flakes Implementation Details subsection [Triplanar Mapping]). The way we generate the flakes was at first based on a quad tree structure as described in [#Jak14] and [#AK16], where flakes are distributed in a top-down fashion to ensure the correct specified total number of flakes as well as a uniform distribution of flakes across the texture space. This worked but the quad-tree data structure didn't have good performance characteristics on GPU in our implementation and we came up with the idea to skip the top levels of the quad tree and directly generate the flakes at the lowest level. To come close to the uniform distribution quality which is preserved in [#Jak14] we first sampled the number of flakes in the lowest level quad tree cells (from now on called seed pixels) from a Poisson-distribution with the correct expected number of flakes, which still provided a variance in the local flake number per seed pixel. With further experimenting we found out that even letting the number of flakes per seed pixel be constant (we generate 4 flakes per seed pixel) looks sufficiently random and the variance that is lost in the forced stratification of flake positions can be compensated by the user by increasing the flake roughness parameter. This saves us the time for the extra poisson sampling and maximizes coherence in the different GPU threads.
+
+#### The Seed Pixel Grid
+
+We compute the total number of flakes $N$ to be distributed over $1\text{m}^2$ texture space from the user-given flake size $s_s$
+
+\begin{eqnarray}
+  r_\text{flake}  & = & \frac{1}{1000}\left(\frac{s_s}{2}\right) \qquad &\text{flake radius in m}\\
+  A_\text{avgcell} & = & \frac{3\sqrt{3}}{2} r_\text{flake}^2 \qquad &\text{average hexagonal cell area in m^2}\\
+  N & = & 1/A_\text{avgcell} \qquad &\text{number of voronoi cells per m^2}\\
+    & \approx & \frac{1.5396 \cdot 10^6}{s_s^2}
+\end{eqnarray}
+
+Now with the number of flakes $N$ in place we determine the resolution of a virtual seed pixel texture where each pixel will be responsible for generating a fixed number $n$ of flakes per seed pixels
+
+\begin{eqnarray}
+  \text{res} = \max\left(4,\left\lceil{ \sqrt{\frac{N}{n}} }\right\rceil \right)
+\end{eqnarray}
+
+We chose $n=4$ but this can be changed to optimize performance and/or for getting more randomness due to less stratified flake positions at higher $n$.
+
+Now that we have the resolution to house all $n\cdot \text{res}^2\approx N$ flakes, each seed pixel needs to be able to be probed for its flakes. In order to do that each seed pixel creates an initial seed value by inputting its integer coordinates
+\begin{eqnarray}
+  \begin{pmatrix}i \\ j\end{pmatrix} & = & \begin{pmatrix} \left\lfloor{ \text{res}\cdot \text{mod}(u,1) }\right\rfloor\\ \left\lfloor{ \text{res}\cdot \text{mod}(v,1) }\right\rfloor\end{pmatrix} \qquad \in \left[0, \text{res}-1\right]\times\left[0, \text{res}-1\right] \\
+\end{eqnarray}
+into a hash function. The hash is then used to seed an LCG PRNG which is then used to produce all random numbers needed to produce the flake position, flake direction and opacity for each of the $n$ flakes in the seed pixel. In pseudocode we have:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TODO
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here we used a 6 round Tiny Encryption Algorithm hash (see section [TEA] for details), which is guaranteed to provide enough randomness to avoid generating visible patterns, but TEA can be exchanged for a cheaper hash function, which allows for further performance optimization.
+
+#### Generating Flakes per Seed Pixel
+
+To generate flake position, flake direction and opaqueness we do
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// TODO - example code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here we used an LCG with period $m=2^32$ from [#PE99] and a GGX normal distribution function for generating the flake normal direction.
+
+
+#### Determining Closest Voronoi Cell Center
+
+### Flake BSDF
+
+#### Distributing Total Roughness over Cone Angle and Flake Orientation Roughness
+
+
 Clearcoat
 ---------
 
@@ -595,6 +677,11 @@ We recommend to display the parameters to users in the UI in the following order
   - Sheen
   - Sheen Color
   - Sheen Roughness
+* Flakes
+  - Flake Coverage
+  - Flake Color
+  - Flake Size
+  - Flake Roughness
 * Coating
   - Clearcoat
   - Clearcoat Roughness
@@ -997,6 +1084,32 @@ We precompute the directional albedo of the alternative sheen BRDF using Equatio
 The lookup table is also provided for download in our Github repository:
 * [res/Sheen_ash_E.exr](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/tree/master/res/Sheen_ash_E.exr)
 
+
+Flakes Implementation Details
+-----------------------------
+
+### TEA
+
+TODO
+
+
+### Triplanar Mapping
+
+TODO
+
+
+The triplanar mapping takes the normal (in world coordinates) and the shading point position as parameters. Optionally, it also takes the derivatives of the shading point with respect to camera image pixel coordinates to provide a mapped pixel footprint `uv_ddx`/`uv_ddy` in texture space. This can be used to implement a multiscale BRDF version of the flakes model as described in ([#Jak14] Section 3.1). In a GI renderer usually the pixel footprint is computed by starting from a camera ray with differentials of pixel width/height for the camera ray origin, which is then propagated forward through AutoDiff computation rules through the shading point interpolation code to get a shading point with differentials included. In glsl (or similaraly for rasterizers in general) one would use `float3 p_ddx = dFdx(pos);`, `float3 p_ddy = dFdy(pos);` to compute them.
+
+The reason to do the `dFdx` computation on the shading point instead of the uv coordinates after triplanar mapping is, that the shading point is continuous, which produces correct differentials over the whole surface, whereas if we did it after the triplanar mapping (and the wrapping of `u`/`v` coordinates through `fract`) we would need special case handling for the borders of uv space or live with border artifacts because of discontinuities in the differentials.
+
+### GI Implementation details
+
+For a GI implementation it's advisable to have some form of caching of the generated flakes in the footprint. This allows for efficient sampling of the BRDF. In principle smooth microfacet BRDF sampling also works but is not efficient.
+
+### IBL in Rasterizer
+
+We use preconvolved IBL lighting in rasterizer which requires only one environment texture lookup. Handling flake reflections under environment lighting in a stable way is a hard problem because individual flakes have different directions which means that the pixel BRDF lobe can have a very difficult shape. Taking multiple samples in order to sample the BRDF lobe is too costly and might still give some flickering artifacts so instead we decided to keep the naive preconvolved IBL method which does only one environment texture lookup in the main direction of the BRDF lobe and we handle all flakes inside the BRDF evaluation. This gives very stable and smooth results during animations and still remains fast. The limitation of this method is that it doesn't account for light which contributes from the side of the BRDF so it doesn't have a strong glittering effect. Artists can still achieve strong glittering effects and stable flake appearance if they combine IBL with directional light(s).
+
 Bibliography
 ============
 
@@ -1018,6 +1131,10 @@ Bibliography
 
 [#KC17]: Christopher Kulla, Alejandro Conty. Revisiting Physically Based Shading at Imageworks. 2017.
 
+[#Jak14]: Wenzel Jakob et al. Discrete Stochastic Microfacet Models, ACM Transactions on Graphics (ACM SIGGRAPH 2014).
+
+[#AK16]: Asen Atanasov and Vladimir Koylazov. A Practical Stochastic Algorithm for Rendering Mirror-Like Flakes. 2016.
+
 [#KS01]: Csaba Keleman, Lazlo Szirmay-Kalos. A Microfacet Based Coupled Specular-Matte BRDF Model with Importance Sampling, Eurographics 2001.
 
 [#Lag13]: Sébastien Lagarde. Memo on Fresnel equations, 2013. https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
@@ -1025,6 +1142,8 @@ Bibliography
 [#WMLT07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
 
 [#NP13]: David Neubelt and Matt Pettineo. Crafting a Next-Gen Material Pipeline for The Order: 1886. 2013.
+
+[#PE99]: L’Ecuyer, Pierre. (1999). Tables of linear congruential generators of different sizes and good lattice structure. Math. Comput.. 68. 249-260. 10.1090/S0025-5718-99-00996-5.
 
 License
 =======
