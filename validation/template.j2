@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>Validation: {{img}} | {{ref}}</title>
+<style>
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #181E23;
+    color: #94a0aa;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+    border: 1px solid #2C3139;
+    width: 100%;
+    text-align: center;
+    background-color: #1E2931;
+}
+td, th {
+    border-bottom: 1px solid #2C3139;
+    font-size: inherit;
+    margin: 0;
+    overflow: visible;
+    padding: 0.5em 1em;
+}
+th {
+    vertical-align: top;
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    background-color: #2C3139;
+}
+thead {
+    background-color: #2C3139;
+    color: #94a0aa;
+    text-align: center;
+    vertical-align: bottom;
+}
+.hint {
+    font-style: italic;
+    font-weight: lighter;
+    font-size: small;
+}
+h1, p {
+    text-align: center;
+}
+td {
+    position: relative;
+}
+td.result div {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    font-size: small;
+    color: rgb(228, 56, 56);
+}
+.hdr {
+    font-size: small;
+    font-weight: lighter;
+    font-style: italic;
+}
+</style>
+</head>
+<body>
+<h1>{{img}} | {{ref}}</h1>
+<p>{{created_at}}</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>RMSE</th>
+<th>Reference</th>
+<th>Result<br/><span class="hint">Click on image to toggle result/reference.</span></th>
+<th>Difference<br/><span class="hint">Threshold: {{threshold}}</span></th>
+</tr>
+</thead>
+<tbody>
+{% for result in results %}
+<tr>
+    <td>{{result.scene}}<br/>{{result.name}}<br/><span class="hdr">{{'HDR' if result.hdr}}</span></td>
+    <td>{{'%0.6f' % result.rmse}}</td>
+    <td class="reference"><img src="{{result.reference}}" /></td>
+    <td class="result"><img src="{{result.result}}" /></td>
+    <td class="diff"><img src="{{result.difference}}" /></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<script>
+document.querySelectorAll('.result img').forEach(element => {
+    element.onclick = function() {
+        if (this.hasAttribute('data-result')) {
+            this.src = this.getAttribute('data-result');
+            this.removeAttribute('data-result');
+            this.nextSibling.remove();
+        } else {
+            this.setAttribute('data-result', this.src);
+            const div = document.createElement('div');
+            var text = document.createTextNode('ref');
+            div.appendChild(text)
+            this.parentNode.append(div)
+            var ref = this.closest('tr').querySelector('td.reference img');
+            this.src = ref.src;
+        }
+    }
+});
+</script>
+</body>
+</html>

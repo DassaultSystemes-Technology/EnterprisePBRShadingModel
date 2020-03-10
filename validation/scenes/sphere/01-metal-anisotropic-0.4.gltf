@@ -1,0 +1,209 @@
+{
+    "asset" : {
+        "generator" : "Khronos glTF Blender I/O v1.0.5. Modified by DS Enterprise PBR Validation Suite Scene Generator.", 
+        "version" : "2.0"
+    }, 
+    "extensionsUsed" : [
+        "KHR_lights_punctual"
+    ], 
+    "extensionsRequired" : [
+        "KHR_lights_punctual"
+    ], 
+    "extensions" : {
+        "KHR_lights_punctual" : {
+            "lights" : [
+                {
+                    "color" : [
+                        1, 
+                        1, 
+                        1
+                    ], 
+                    "intensity" : 100, 
+                    "type" : "point", 
+                    "name" : "Light"
+                }
+            ]
+        }
+    }, 
+    "scene" : 0, 
+    "scenes" : [
+        {
+            "name" : "Scene", 
+            "nodes" : [
+                1, 
+                3, 
+                4
+            ]
+        }
+    ], 
+    "nodes" : [
+        {
+            "extensions" : {
+                "KHR_lights_punctual" : {
+                    "light" : 0
+                }
+            }, 
+            "name" : "Light_Orientation", 
+            "rotation" : [
+                -0.7071067690849304, 
+                0, 
+                0, 
+                0.7071067690849304
+            ]
+        }, 
+        {
+            "children" : [
+                0
+            ], 
+            "name" : "Light", 
+            "translation" : [
+                2, 
+                4, 
+                2
+            ]
+        }, 
+        {
+            "camera" : 0, 
+            "name" : "Camera_Orientation", 
+            "rotation" : [
+                -0.7071067690849304, 
+                0, 
+                0, 
+                0.7071067690849304
+            ]
+        }, 
+        {
+            "children" : [
+                2
+            ], 
+            "name" : "Camera", 
+            "rotation" : [
+                0.7071067690849304, 
+                0, 
+                0, 
+                0.7071067690849304
+            ], 
+            "translation" : [
+                0, 
+                0, 
+                3
+            ]
+        }, 
+        {
+            "mesh" : 0, 
+            "name" : "Sphere"
+        }
+    ], 
+    "cameras" : [
+        {
+            "name" : "Camera", 
+            "perspective" : {
+                "yfov" : 0.6911112070083618, 
+                "zfar" : 100, 
+                "znear" : 0.10000000149011612
+            }, 
+            "type" : "perspective"
+        }
+    ], 
+    "materials" : [
+        {
+            "doubleSided" : true, 
+            "name" : "testmaterial", 
+            "pbrMetallicRoughness" : {
+                "baseColorFactor" : [
+                    1, 
+                    1, 
+                    1, 
+                    1
+                ], 
+                "metallicFactor" : 1, 
+                "roughnessFactor" : 0.3
+            }, 
+            "extensions" : {
+                "3DS_materials_anisotropy" : {
+                    "anisotropyFactor" : 0.4
+                }
+            }
+        }
+    ], 
+    "meshes" : [
+        {
+            "name" : "Sphere", 
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 0, 
+                        "NORMAL" : 1, 
+                        "TEXCOORD_0" : 2
+                    }, 
+                    "indices" : 3, 
+                    "material" : 0
+                }
+            ]
+        }
+    ], 
+    "accessors" : [
+        {
+            "bufferView" : 0, 
+            "componentType" : 5126, 
+            "count" : 8383, 
+            "max" : [
+                0.9999982714653015, 
+                1, 
+                0.9999966621398926
+            ], 
+            "min" : [
+                -0.9999975562095642, 
+                -1, 
+                -1
+            ], 
+            "type" : "VEC3"
+        }, 
+        {
+            "bufferView" : 1, 
+            "componentType" : 5126, 
+            "count" : 8383, 
+            "type" : "VEC3"
+        }, 
+        {
+            "bufferView" : 2, 
+            "componentType" : 5126, 
+            "count" : 8383, 
+            "type" : "VEC2"
+        }, 
+        {
+            "bufferView" : 3, 
+            "componentType" : 5123, 
+            "count" : 48384, 
+            "type" : "SCALAR"
+        }
+    ], 
+    "bufferViews" : [
+        {
+            "buffer" : 0, 
+            "byteLength" : 100596, 
+            "byteOffset" : 0
+        }, 
+        {
+            "buffer" : 0, 
+            "byteLength" : 100596, 
+            "byteOffset" : 100596
+        }, 
+        {
+            "buffer" : 0, 
+            "byteLength" : 67064, 
+            "byteOffset" : 201192
+        }, 
+        {
+            "buffer" : 0, 
+            "byteLength" : 96768, 
+            "byteOffset" : 268256
+        }
+    ], 
+    "buffers" : [
+        {
+            "byteLength" : 365024, 
+            "uri" : "sphere.bin"
+        }
+    ]
+}
