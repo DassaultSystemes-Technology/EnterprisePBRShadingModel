@@ -6,6 +6,17 @@ The Enterprise PBR Validation Suite consists of reference images and scripts to 
 
 Validation is a two-step process: rendering the scenes and comparing the resulting images against the reference images. We provide a Python script for rendering the test scenes with the [glTF 2.0 sample viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer) and a skeleton that can be used as a starting point for custom renderers.
 
+### Setup
+
+The Python scripts require [Pillow](https://pillow.readthedocs.io/en/stable/]), [imageio](https://imageio.readthedocs.io/en/stable/) (with [Freeimage binary](https://imageio.readthedocs.io/en/stable/format_exr-fi.html#exr-fi-ilm-openexr)) and [Jinja2](https://palletsprojects.com/p/jinja/). Install the libraries with the following commands:
+
+```
+pip install Pillow
+pip install jinja2
+pip install imageio
+imageio_download_bin freeimage
+```
+
 ### Rendering with the glTF 2.0 Sample Viewer
 
 The following command renders all glTF files with the glTF 2.0 sample viewer and places the output into `images_sampleviewer/`.
