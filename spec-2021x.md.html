@@ -418,7 +418,11 @@ Some materials, such as car paint or grainy metals, exhibit shifting random patt
 
 ### Overview
 
-Our method is based on [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The common idea is to procedurally generate individual flakes instead of using a texture (e.g. a high resolution normal map). This reduces texture fetching by trading them for a bit of extra computation to generate the flake positions and orientations on the fly. Also the BRDF is not evaluated pointwise but instead is understood to return the integral over the whole pixel foot print (see Section 3.1 "Multiscale BRDFs" in [#Jak14]), thus allowing to efficiently account for the contribution of many flakes in one evaluation which results in positionally and temporally stable flakes without flickering.
+Our method is inspired by [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The common idea is to procedurally generate individual flakes instead of using a texture (e.g. a high resolution normal map). This reduces texture fetching by trading them for a bit of extra computation to generate the flake positions and orientations on the fly. We experimented with Multiscale BRDFs (see Section 3.1 "Multiscale BRDFs" in [#Jak14]) which are not evaluated pointwise but instead return the integral over the whole pixel foot print, which has the advantage of efficiently accounting for the contribution of many flakes in one evaluation which results in positionally and temporally stable flakes without flickering. Even though this worked great from a convergence standpoint, it requires extra work to calibrate the transition to a smooth microfacet model BSDF or a close-up model BSDF, where individual flakes are visible. This also produces a lot more code, and we found, that for our application, a pure close-up model with visible flakes worked best for our GPU path tracer, since its simplicity combined with the framerate the GPU can produce leads to quickly converging images in most practical cases.
+
+Thus in this specification we will show the closeup model that we use. 
+
+
 
 For stable and efficient handling of flakes the method requires approximation of pixel footprint on the directly visible surface which can be given by position and two vectors defining parallogramm in 3D space. Once we have the pixel footprint we can convert it to texture space, build and iterate the full list of flake positions and directions within the footprint and calculates the final radiance.
 
