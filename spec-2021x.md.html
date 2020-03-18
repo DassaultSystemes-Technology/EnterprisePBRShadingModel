@@ -418,15 +418,7 @@ Some materials, such as car paint or grainy metals, exhibit shifting random patt
 
 ### Overview
 
-Our method is inspired by [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The common idea is to procedurally generate individual flakes instead of using a texture (e.g. a high resolution normal map). This reduces texture fetching by trading them for a bit of extra computation to generate the flake positions and orientations on the fly. We experimented with Multiscale BRDFs (see Section 3.1 "Multiscale BRDFs" in [#Jak14]) which are not evaluated pointwise but instead return the integral over the whole pixel foot print, which has the advantage of efficiently accounting for the contribution of many flakes in one evaluation which results in positionally and temporally stable flakes without flickering. Even though this worked great from a convergence standpoint, it requires extra work to calibrate the transition to a smooth microfacet model BSDF or a close-up model BSDF, where individual flakes are visible. This also produces a lot more code, and we found, that for our application, a pure close-up model with visible flakes worked best for our GPU path tracer, since its simplicity combined with the framerate the GPU can produce leads to quickly converging images in most practical cases.
-
-Thus in this specification we will show the closeup model that we use. 
-
-
-
-For stable and efficient handling of flakes the method requires approximation of pixel footprint on the directly visible surface which can be given by position and two vectors defining parallogramm in 3D space. Once we have the pixel footprint we can convert it to texture space, build and iterate the full list of flake positions and directions within the footprint and calculates the final radiance.
-
-Converting pixel footprint into texture space is done using triplanar mapping (for details see Section [Triplanar Mapping]). Additionally we also repeat the texture by wrapping coordinates of the footprint in [0, 1) range.
+Our method is inspired by [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The main idea is to create a procedural voronoi texture of GGX distributed normals, which is used as a normal map for a cone BSDF (constant albedo in a fixed cone angle) that we can probe without any texture fetches. Instead of a precomputed texture in memory we use a hash-based 'seed'-texture, which can be computed on demand, whose seed is then used to seed an LCG PRNG, which provides the random numbers to compute the position, direction and visibility of a fixed number (we use 4) of flake/voronoi cell centers. We do this for the closest seed pixel and its 8 neighbours to determine the closest voronoi cell center and use its GGX-sampled direction as a normal for our cone BSDF.
 
 ### Parameters
 
