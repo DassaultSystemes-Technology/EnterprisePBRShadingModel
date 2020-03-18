@@ -432,43 +432,13 @@ $\rho_s$     | color         | 1.      | 0.-1.  | Flake color.
 
 ![Figure [flakes-parameters-fig]: Result for various values of flakes parameters](img/params_flakes.png)
 
-### BRDF Evaluation
+Flake coverage $s_d$ determines the probability for a flake/voronoi cell to be opaque. Cells are always either 100% opaque or 100% transparent.
 
-Flakes are added to the base material using a weighted average of base and flakes layer. The flake coverage parameter controls the blending. Here the flake coverage parameter functions as a linear blend parameter (e.g. alpha) in a lerp between the base albedo $\rho$ and the flake color $\rho_s$.
+Flake size $s_s$ chooses the average flake diameter in `mm`. Thus the conversion factor from scene unit to physical length unit must be known by the renderer in order to guarantee the correct appearance.
 
-\begin{eqnarray}
-f_\text{flaky_base}(\mathbf{v},\mathbf{l}) &=& f_\text{base}(\mathbf{v},\mathbf{l}) + f_\text{flakes}(\mathbf{v},\mathbf{l}) \\ \\
-f_\text{base}(\mathbf{v},\mathbf{l}) &=& f(\mathbf{v},\mathbf{l}) \ (1 - s_d) \\
-f_\text{flakes}(\mathbf{v},\mathbf{l}) &=& \rho_s M_s(\mathbf{v},\mathbf{l}) s_d
-\end{eqnarray}
+To determine the distribution of flake orientations we sample from a GGX normal distribution function with roughness $\alpha_s$ when choosing the normal direction of individual flakes.
 
-The flake layer is an alpha blend between a stochastic flakes BRDF (see next section) and a smooth microfacet BRDF with the same roughness $\alpha_s$ and color $\rho_s$.
-
-\begin{eqnarray}
-M_s(\alpha_s,\mathbf{v},\mathbf{l}) &=& (1-b)M_\text{stoch}(\alpha_s, \mathbf{v},\mathbf{l}) + b\, M_\text{smooth}(\alpha_s, \mathbf{v},\mathbf{l}) \\
-M_\text{smooth}(\alpha_s,\mathbf{v},\mathbf{l}) &=& \frac{ D(\alpha_s, \mathbf{h}) G(\alpha_s, \mathbf{v}, \mathbf{l})}{4 (\mathbf{v}\cdot\mathbf{n})(\mathbf{l}\cdot\mathbf{n}) } \\
-b &=& \text{smoothstep}\left(\frac{N_\text{exp}-\text{blend_min}}{\text{blend_max}-\text{blend_min}}\right) \\
-N_\text{exp} &=& A_\text{footprint} N \\
-A_\text{footprint} &=& \lVert\mathbf{u}\times\mathbf{v}\rVert \\
-\text{smoothstep}(x) &=& y^2(3-2y) \quad \text{where}\quad y=\text{clamp}(x,0,1)
-\end{eqnarray}
-
-Here $A_\text{footprint}$ is the area of the pixel footprint (parallelogram) in texture space and $\mathbf{u},\mathbf{v}$ are its base vectors. $\mathbf{h}$ is the regular half vector $\left(=\left(\mathbf{v} + \mathbf{l}\right) / \left\Vert\mathbf{v}+\mathbf{l}\right\Vert\right)$.
-
-$M_\text{smooth}$ is the Cook-Torrance microfacet BRDF with the Fresnel term set to one.
-
-In the limit of high number of flakes the stochastic flakes BRDF should match the smooth microfacet BRDF. For performance reasons we evaluate only the smooth microfacet model when the number of expected flakes in the footprint $N_\text{exp}$ exceeds an internal fixed parameter $\text{blend_max}$. How this should be set depends on the hardware to guarantee best performance, but we had good results setting it to 64. $\text{blend_min}=1$. When $N_\text{exp}$ lies between $\text{blend_min}$ and $\text{blend_max}$ we return a blended mix between the stochastic flakes and the smooth microfacet BRDF. When $N_\text{exp}$ is below $\text{blend_min}$ we only evaluate the stochastic flakes BRDF.
-
-### Stochastic Flake BRDF Evaluation
-
-In accordance to [#Jak14] Section 3.1 the model is a Cook Torrance microfacet BRDF with two modifications. Instead of a smooth normal distribution function, the distribution function consists of a sum of procedurally generated flakes with specific positions and orientations, that have a nearly specular appearance, approximated by a cone BRDF. Secondly in the model the BRDF is integrated over the pixel footprint in texture space and over solid angle inside a cone around the light vector with a fixed low cone angle (we found $\gamma=7$ degree to be a good value), meaning that all flakes inside the pixel footprint whose orientation is close to the halfvector contribute to the result. In [#Jak14] this is called a multiscale BRDF, in contrast to a regular BRDF evaluated pointwise in texture and orientation space, which could only catch a single flake at maximum at each evaluation. The formula of the resulting multiscale BRDF we use in accordance to ([#Jak14], 3.1, formula (5)+(6)) is
-
-\begin{eqnarray}
-M_\text{stoch}(\alpha_s,\mathbf{v},\mathbf{l}) &=& \frac{ (\mathbf{v}\cdot\mathbf{h}) \hat{D}(A,\Omega_h) G(\alpha_s, \mathbf{v}, \mathbf{l})}{A_\text{footprint} N*2\pi(1-\cos(\gamma)) (\mathbf{v}\cdot\mathbf{n})(\mathbf{l}\cdot\mathbf{n}) } \\
-\hat{D}(A,\Omega_h) &=& \sum_{k=1}^N \mathbf{1}_{\Omega_h}(\mathbf{h}^k)\mathbf{1}_A(\mathbf{p}^k)
-\end{eqnarray}
-
-where $\mathbf{1}_A(\mathbf{p}^k)$ and $\mathbf{1}_{\Omega_h}(\mathbf{h}^k)$ are indicator functions, which are one when the $k$-th flake position is inside the pixel footprint and the $k$-th flake is oriented so that the reflected view direction is inside a cone with opening angle $2\gamma$. In effect the sum is counting the flakes which are in the footprint and oriented so that view reflects to the light direction within $\gamma$ degrees. $G(\alpha_s, \mathbf{v}, \mathbf{l})$ is the microfacet shadowing masking function (we use height correlated Smith). Compared to the classic Cook Torrance microfacet formula we omit the Fresnel term for simplicity and we gain a factor of $4(\mathbf{v}\cdot\mathbf{\omega}_h)$ to account for the change of variables from half vector direction to light direction in $\hat{D}(A,\Omega_h)$. Additionally we have three normalization factors in the denominator in the form of the pixel footprint area $A_\text{footprint}$, the total number of flakes $N$ and the cone solid angle $2\pi(1-\cos(\gamma))$ that are introduced by the multiscale BRDF integration over pixel footprint and solid angle in a cone around the light direction. $A_\text{footprint} N$ together can also be interpreted as the expected number of flakes inside the pixel footprint, which is needed in other parts as well.
+The cone BSDF used in opaque flakes is tinted/multiplied with $\rho_s$ to allow choice of a global flake color for the material.
 
 ### Flake Generation
 
