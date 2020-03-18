@@ -418,7 +418,7 @@ Some materials, such as car paint or grainy metals, exhibit shifting random patt
 
 ### Overview
 
-Our method is inspired by [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The main idea is to create a procedural voronoi texture of GGX distributed normals, which is used as a normal map for a cone BSDF (constant albedo in a fixed cone angle) that we can probe without any texture fetches. Instead of a precomputed texture in memory we use a hash-based 'seed'-texture, which can be computed on demand, whose seed is then used to seed an LCG PRNG, which provides the random numbers to compute the position, direction and visibility of a fixed number (we use 4) of flake/voronoi cell centers. We do this for the closest seed pixel and its 8 neighbours to determine the closest voronoi cell center and use its GGX-sampled direction as a normal for our cone BSDF.
+Our method is inspired by [#Jak14] and [#AK16] and some own ideas to make it perform well in a rasterizer setting. The main idea is to create a procedural voronoi texture of GGX distributed normals, which is used as a normal map for a cone BSDF (constant albedo in a fixed cone angle) that we can probe without any texture fetches. Instead of a precomputed texture in memory we use a hash-based 'seed'-texture, which is computed on-the-fly, whose seed is then used to seed an LCG PRNG, which provides the random numbers to compute the position, direction and visibility of a fixed number (we use 4) of flake/voronoi cell centers. We do this for the closest seed pixel and its 8 neighbours to determine the closest voronoi cell center and use its GGX-sampled direction as a normal for our cone BSDF.
 
 ### Parameters
 
@@ -440,55 +440,18 @@ To determine the distribution of flake orientations we sample from a GGX normal 
 
 The cone BSDF used in opaque flakes is tinted/multiplied with $\rho_s$ to allow choice of a global flake color for the material.
 
-### Flake Generation
+### Evaluating the procedural Voronoi Flake texture
 
-To procedurally generate the flake positions we deviate from previous approaches (traversing a 4D structure and a multinomial stochastic process to distribute the flakes in [#Jak14] or traversing a quad tree with a normal approximation to a multinomial distribution for the flake count in [#AK16]) and use a much easier method that is well suited for the rasterizer:
+#### The Seed Pixel Grid
 
-First we compute the number of flakes per area (in texture uv space assuming $1m^2$ for the unit square) as
+#### Generating Flakes per Seed Pixel
 
-\begin{equation}
-N = \frac{s_d}{s_s^2}
-\end{equation}
+#### Determining Closest Voronoi Cell Center
 
-and then we distribute the $N$ flakes in a stratified grid over the texture space so that each grid cell contains the same (small) number of flakes (currently we use $N_\text{cell} = 4$ flakes per grid cell). This results in a grid resolution of
+### Flake BSDF
 
-\begin{equation}
-\text{seed_res} = \text{max}\left(4,  \left \lfloor \sqrt{ \frac{N}{N_\text{cell}} } \right \rfloor \right)
-\end{equation}
+#### Distributing Total Roughness over Cone Angle and Flake Orientation Roughness
 
-which can be seen as the (virtual) seed texture resolution (the `max(4,...)` construct is there to make sure we don't hit zero resolution, the 4 is arbitrarily chosen).
-We use the [Tiny Encryption Algorithm](https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm) with six rounds as a hash function (see Section [TEA] for more information) to generate a random number generator seed for a linear congruential generator with the parameters
-
-\begin{eqnarray}
-r_0 &=& \text{TEA}((i+\text{seed_res})\;\text{mod}\;\text{seed_res}, (j+\text{seed_res})\;\text{mod}\;\text{seed_res}) \\
-r_{n+1} &\equiv& 1103515245 r_n + 12345 \quad(\text{mod}\; 2^{32})
-\end{eqnarray}
-
-Here we give seed pixel coordinates $i,j$ modulo seed_res to our hash functions to make the flake texture consistent w.r.t. uv space wrap around. The added offset of seed_res makes sure that we don't have to take modulo of a negative number, which in general would resultin a wrong wrap around behaviour (modulo of the unsigned twos complement instead of integers decreasing with steps of one).
-
-From the generated seed $r_0 = 4$ we generate four uniform random float numbers $u_{1...4}\in[0,1]$ per flake which are then used to generate the flake position and orientations.
-
-\begin{eqnarray}
-\mathbf{p}^k &=& \frac{1}{\text{seed_res}}\left(\begin{pmatrix}i\\j\end{pmatrix}+\begin{pmatrix}u^k_1\\u^k_2\end{pmatrix}\right) \\
-\mathbf{h}^k &=& \text{ggx_sample}(\mathbf{v}=(0,0,1), \alpha_s, \begin{pmatrix}u^k_3\\u^k_4\end{pmatrix})
-\end{eqnarray}
-
-where $i,j$ are the current (integer) row/column indices in the seed grid, which *can go outside the usual* $i,j\in\{0,1,\ldots,\text{seed_res}-1\}$ case, because pixel footprint parallelograms can protrude outside the seed pixel rectangle from their starting point. For the case of computing flake positions and later checking if they are inside of the pixel footprint they *should not be wrapped or clamped*. This makes the parallelogram test easier and avoids artifacts at the borders. $k\in\{0,1,\ldots,N_\text{cell}-1\}$ is the index for the current flake in the cell and $\mathbf{p}^k$, $\mathbf{h}^k$ are the $k$-th flake position and orientation, respectively. The orientations are sampled from a smooth microfacet normal distribution function, in our case GGX.
-
-### Counting Contributing Flakes
-
-Because we want to know which flakes are within the pixel foot print, it is necessary to calculate which grid cells are actually intersected by the pixel footprint first. Flake positions for those grid cells which are partially intersected by the footprint need to be checked explicitly against parallelogram. Those flakes inside a grid cell, which is fully contained by the footprint, don't require this extra check. For both checks we use the *unclamped* and *unwrapped* flake positions, which can go outside the original $u\in(0,1) \wedge v\in(0,1)$ uv-space. This makes the following parallelogram test easier and avoids border artifacts. Finally we generate the reflection direction for all the flakes within the paralellogram and count flakes which are within cone around light direction.
-
-\begin{eqnarray}
-  \mathbf{1}_A(\mathbf{p}^k) &=& \begin{cases} 1 & \begin{pmatrix}0\\0\end{pmatrix}\leq\begin{pmatrix}u_x&v_x\\u_y&v_y\end{pmatrix}^{-1}\cdot\begin{pmatrix}p_x^k-f_x\\p_y^k-f_y\end{pmatrix} \leq \begin{pmatrix}1\\1\end{pmatrix} \\ 0 & \text{otherwise} \end{cases} \\
-  \mathbf{1}_{\Omega_h}(\mathbf{v}, \mathbf{l}, \mathbf{h}^k) &=& \begin{cases} 1 & \text{dot}(\mathbf{r},\mathbf{l}) > \cos(\gamma) \\ 0 & \text{otherwise} \end{cases} \quad \text{where} \quad \mathbf{r}=2 \text{dot}(\mathbf{v}, \mathbf{h}^k) \mathbf{h}^k - \mathbf{v}
-\end{eqnarray}
-
-where $\mathbf{f},\mathbf{u},\mathbf{v}$ are the origin and two vectors which span the footprint parallelogram and $\mathbf{p}^k$ is the $k$-th flake position in texture space. Since flakes only contribute when they pass both checks (inside footprint and inside cone), we can exchange the order of the checks, which can benefit performance, because the cone test might be less costly than testing against the footprint. We recommend to use rasterization (e.g scan line fill algorithm) to efficiently determine grid cells which are partially or fully intersected with parallelogram.
-
-![Figure [flakes-grid-footprint]: Pixel Footprint Rasterization](img/flakes_grid_footprint.png)
-
-For more details and code examples, see Section [Flakes Implementation Details].
 
 Clearcoat
 ---------
