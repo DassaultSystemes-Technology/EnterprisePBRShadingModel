@@ -442,6 +442,8 @@ The cone BSDF used in opaque flakes is tinted/multiplied with $\rho_s$ to allow 
 
 ### Evaluating the procedural Voronoi Flake texture
 
+The flake component provides a procedural $1\text{m}^2$ normal map which is mapped onto each object via triplanar mapping (see Flakes Implementation Details subsection [Triplanar Mapping])
+
 #### The Seed Pixel Grid
 
 #### Generating Flakes per Seed Pixel
@@ -1040,27 +1042,26 @@ Flakes Implementation Details
 ### Triplanar Mapping
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-triplanar_mapping = function(float3 pos, float3 p_ddx, float3 p_ddy, float3 normal, float scale) {
-	if (abs(n.x) >= abs(n.y) && abs(n.x) >= abs(n.z)) {
-    uv = float2(-p.z,-p.y);
-    uv_ddx = float2(-p_ddx.z, -p_ddx.y);
-    uv_ddy = float2(-p_ddy.z, -p_ddy.y);
+triplanar_mapping = function(float3 p, float3 p_ddx, float3 p_ddy, float3 n) {
+  sign = mix(float3(-1.0), float3(1.0), n >= float3(0.0));
+  if (abs(n.x) >= abs(n.y) && abs(n.x) >= abs(n.z)) {
+    uv = float2(sign.x * p.y, p.z);
+    uv_ddx = float2(sign.x * p_ddx.y, p_ddx.z);
+    uv_ddy = float2(sign.x * p_ddy.y, p_ddy.z);
   } else if (abs(n.y) >= abs(n.z)) {
-    uv = float2(p.x, p.z);
-    uv_ddx = float2(p_ddx.x, p_ddx.z);
-    uv_ddy = float2(p_ddy.x, p_ddy.z);
+    uv = float2(-sign.y * p.x, p.z);
+    uv_ddx = float2(-sign.y * p_ddx.x, p_ddx.z);
+    uv_ddy = float2(-sign.y * p_ddy.x, p_ddy.z);
   } else {
-    uv = float2(p.x,-p.y);
-    uv_ddx = float2(p_ddx.x, -p_ddx.y);
-    uv_ddy = float2(p_ddy.x, -p_ddy.y);
+    uv = float2(sign.z * p.x, p.y);
+    uv_ddx = float2(sign.z * p_ddx.x, p_ddx.y);
+    uv_ddy = float2(sign.z * p_ddy.x, p_ddy.y);
   }
-  return (fract(float2(scale) * uv)
-         ,float2(scale) * uv_ddx
-         ,float2(scale) * uv_ddy );
+  return (fract(uv + float2(0.5)), uv_ddx, uv_ddy); // The float2(0.5) shift is so that on a cube face our 1m^2 has extent [-0.5,0.5]x[-0.5,0.5] instead of [0,1]x[0,1] to eliminate a '+'-shaped wrap border artifact in the middle of each cube face.
 };
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The triplanar mapping takes the normal (in world coordinates) and the shading point position as parameters. It also takes the derivatives of the shading point with respect to camera image pixel coordinates. In a GI renderer usually the pixel footprint is computed by starting from a camera ray with differentials of pixel width/height for the camera ray origin, which is then propagated forward through AutoDiff computation rules through the shading point interpolation code to get a shading point with differentials included. In glsl (or similaraly for rasterizers in general) one would use `float3 p_ddx = dFdx(pos);`, `float3 p_ddy = dFdy(pos);` to compute them.
+The triplanar mapping takes the normal (in world coordinates) and the shading point position as parameters. Optionally, it also takes the derivatives of the shading point with respect to camera image pixel coordinates to provide a mapped pixel footprint `uv_ddx`/`uv_ddy` in texture space. This can be used to implement a multiscale BRDF version of the flakes model as described in ([#Jak14] Section 3.1). In a GI renderer usually the pixel footprint is computed by starting from a camera ray with differentials of pixel width/height for the camera ray origin, which is then propagated forward through AutoDiff computation rules through the shading point interpolation code to get a shading point with differentials included. In glsl (or similaraly for rasterizers in general) one would use `float3 p_ddx = dFdx(pos);`, `float3 p_ddy = dFdy(pos);` to compute them.
 
 The reason to do the `dFdx` computation on the shading point instead of the uv coordinates after triplanar mapping is, that the shading point is continuous, which produces correct differentials over the whole surface, whereas if we did it after the triplanar mapping (and the wrapping of `u`/`v` coordinates through `fract`) we would need special case handling for the borders of uv space or live with border artifacts because of discontinuities in the differentials.
 
