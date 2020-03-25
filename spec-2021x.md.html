@@ -436,7 +436,7 @@ Flake coverage $s_d$ determines the probability for a flake/voronoi cell to be o
 
 Flake size $s_s$ chooses the average flake diameter in `mm`. Thus the conversion factor from scene unit to physical length unit must be known by the renderer in order to guarantee the correct appearance.
 
-To determine the distribution of flake orientations we sample from a GGX normal distribution function with roughness $\alpha_s$ when choosing the normal direction of individual flakes.
+The total roughness $\alpha_s$ is distributed mostly to the orientation roughness of the normals and to a smaller part to the cone angle of the cone BSDF used for the individual flakes. To determine the distribution of flake orientations we sample from a GGX normal distribution function. For details see subsection [Distributing Total Roughness over Cone Angle and Flake Orientation Roughness].
 
 The cone BSDF used in opaque flakes is tinted/multiplied with $\rho_s$ to allow choice of a global flake color for the material.
 
