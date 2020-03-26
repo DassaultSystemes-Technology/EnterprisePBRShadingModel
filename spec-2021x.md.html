@@ -442,9 +442,26 @@ The cone BSDF used in opaque flakes is tinted/multiplied with $\rho_s$ to allow 
 
 ### Evaluating the procedural Voronoi Flake texture
 
-The flake component provides a procedural $1\text{m}^2$ normal map which is mapped onto each object via triplanar mapping (see Flakes Implementation Details subsection [Triplanar Mapping])
+The flake component provides a procedural $1\text{m}^2$ normal map which is mapped onto each object via triplanar mapping (see Flakes Implementation Details subsection [Triplanar Mapping]). The way we generate the flakes was at first based on a quad tree structure as described in [#Jak14] and [#AK16], where flakes are distributed in a top-down fashion to ensure the correct specified total number of flakes as well as a uniform distribution of flakes across the texture space. This worked but the quad-tree data structure didn't have good performance characteristics on GPU in our implementation and we came up with the idea to skip the top levels of the quad tree and directly generate the flakes at the lowest level. To come close to the uniform distribution quality which is preserved in [#Jak14] we first sampled the number of flakes in the lowest level quad tree cells (from now on called seed pixels) from a Poisson-distribution with the correct expected number of flakes, which still provided a variance in the local flake number per seed pixel. With further experimenting we found out that even letting the number of flakes per seed pixel be constant (we generate 4 flakes per seed pixel) looks sufficiently random and the variance that is lost in the forced stratification of flake positions can be compensated by the user by increasing the flake roughness parameter. This saves us the time for the extra poisson sampling and maximizes coherence in the different GPU threads.
 
 #### The Seed Pixel Grid
+
+We compute the total number of flakes $N$ to be distributed over $1\text{m}^2$ texture space from the user-given flake size $s_s$
+
+\begin{eqnarray}
+  r_\text{flake}  & = & \frac{1}{1000}\left(\frac{s_s}{2}\right) \qquad &\text{flake radius in m}\\
+  A_\text{avgcell} & = & \frac{3\sqrt{3}}{2} r_\text{flake}^2 \qquad &\text{average hexagonal cell area in m^2}\\
+  N & = & 1\text{m}^2/A_\text{avgcell} \qquad &\text{number of voronoi cells per m^2}\\
+    & \approx & \frac{1.5396*10^6}{s_s^2}
+\end{eqnarray}
+
+Now with the number of flakes $N$ in place we determine the resolution of a virtual seed pixel texture where each pixel will be responsible for generating a fixed number $n$ of flakes per seed pixels
+
+\begin{eqnarray}
+  \text{res} = \max\left(4,\left\lceil{ \sqrt{\frac{N}{n}} }\right\rceil \right)
+\end{eqnarray}
+
+We chose $n=4$ but this can be changed to optimize performance and/or for getting more randomness due to less stratified flake positions at higher $n$.
 
 #### Generating Flakes per Seed Pixel
 
