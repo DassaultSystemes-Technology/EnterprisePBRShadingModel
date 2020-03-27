@@ -451,8 +451,8 @@ We compute the total number of flakes $N$ to be distributed over $1\text{m}^2$ t
 \begin{eqnarray}
   r_\text{flake}  & = & \frac{1}{1000}\left(\frac{s_s}{2}\right) \qquad &\text{flake radius in m}\\
   A_\text{avgcell} & = & \frac{3\sqrt{3}}{2} r_\text{flake}^2 \qquad &\text{average hexagonal cell area in m^2}\\
-  N & = & 1\text{m}^2/A_\text{avgcell} \qquad &\text{number of voronoi cells per m^2}\\
-    & \approx & \frac{1.5396*10^6}{s_s^2}
+  N & = & 1/A_\text{avgcell} \qquad &\text{number of voronoi cells per m^2}\\
+    & \approx & \frac{1.5396 \cdot 10^6}{s_s^2}
 \end{eqnarray}
 
 Now with the number of flakes $N$ in place we determine the resolution of a virtual seed pixel texture where each pixel will be responsible for generating a fixed number $n$ of flakes per seed pixels
@@ -463,7 +463,83 @@ Now with the number of flakes $N$ in place we determine the resolution of a virt
 
 We chose $n=4$ but this can be changed to optimize performance and/or for getting more randomness due to less stratified flake positions at higher $n$.
 
+Now that we have the resolution to house all $n\cdot \text{res}^2\approx N$ flakes, each seed pixel needs to be able to be probed for its flakes. In order to do that each seed pixel creates an initial seed value by inputting its integer coordinates
+\begin{eqnarray}
+  \begin{pmatrix}i \\ j\end{pmatrix} & = & \begin{pmatrix} \left\lfloor{ \text{res}\cdot \text{mod}(u,1) }\right\rfloor\\ \left\lfloor{ \text{res}\cdot \text{mod}(v,1) }\right\rfloor\end{pmatrix} \qquad \in \left[0, \text{res}-1\right]\times\left[0, \text{res}-1\right] \\
+\end{eqnarray}
+into a hash function. The hash is then used to seed an LCG PRNG which is then used to produce all random numbers needed to produce the flake position, flake direction and opacity for each of the $n$ flakes in the seed pixel. In pseudocode we have:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+hash(i,j) = encrypt_tea(915927258,1547188273, int4(i,j,0,0), 6).y;
+lcg_seed = hash(i, j);
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here we used a 6 round Tiny Encryption Algorithm hash (see section [TEA] for details), which is guaranteed to provide enough randomness to avoid generating visible patterns, but TEA can be exchanged for a cheaper hash function, which allows for further performance optimization.
+
 #### Generating Flakes per Seed Pixel
+
+To generate flake position, flake direction and opaqueness we do
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(float, uint32) lcg_sample1d(uint32 s) {
+  s = 32310901 * s + 1;
+  r = int32_to_float_0_1(s);
+  return (r, s);
+};
+
+(float2, uint32) lcg_sample2d(uint32 s) {
+  // Using sample1d twice results in the same sequence.
+  //
+  // As the generator is linear and the computation is done (mod 32) we can simply
+  // pre compute the constants for an LCG which computes the second result.
+  s01 = uint2(  32310901 * s +        1,
+              3737891193 * s + 32310902);
+  r01 = float2(int32_to_float_0_1(s01.x)
+              ,int32_to_float_0_1(s01.y));
+  return (r01, s01.y);
+};
+
+generate_cell_position = function(uint32 s) {
+  (uv, s1) = lcg_sample2d(s);
+  return (uv, s1);
+};
+
+generate_flake_orientation = function(float flake_orientation_roughness, uint32 s) {
+  (uv, s1) = lcg_sample2d(s);
+
+  // GGX ndf D(w_h) sampling
+  w = (1.0 - uv.u) / (1.0 - (1.0 - sqr(flake_orientation_roughness))*uv.u);
+  w = clamp(w, 0.0, 1.0); // makes up for numeric instabilities and possible NaNs.
+  o = float3(sqrt(1.0 - w) * cos(2.0*pi*uv.v), sqrt(1.0 - w) * sin(2.0*pi*uv.v), sqrt(w));
+
+  return (o, s1);
+};
+
+generate_cell_opaqueness = function(float opaqueness_probability, uint32 s) {
+  (u, s1) = Samplers.LCG.sample1d(s);
+
+  is_opaque = u < opaqueness_probability;
+
+  return (is_opaque, s1);
+};
+
+generate_cell = function(float flake_orientation_roughness, float flake_coverage, uint32 s) {
+  (pos, s1) = generate_cell_position(s);
+  (o, s2) = generate_flake_orientation(flake_orientation_roughness, s1);
+  (is_opaque, s3) = generate_cell_opaqueness(flake_coverage, s2);
+  return (pos, o, is_opaque, s3);
+};
+
+
+flakes_in_seed_pixel = 4;
+s = lcg_seed;
+for(k = 0; k < flakes_in_seed_pixel; k += 1) {
+  (cell_pos, o, is_opaque, s) = generate_cell(flake_orientation_roughness, flake_coverage, s);
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here we used an LCG with period $m=2^32$ from [#PE99] and a GGX normal distribution function for generating the flake normal direction.
+
 
 #### Determining Closest Voronoi Cell Center
 
@@ -1120,6 +1196,8 @@ Bibliography
 [#WMLT07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
 
 [#NP13]: David Neubelt and Matt Pettineo. Crafting a Next-Gen Material Pipeline for The Order: 1886. 2013.
+
+[#PE99]: L’Ecuyer, Pierre. (1999). Tables of linear congruential generators of different sizes and good lattice structure. Math. Comput.. 68. 249-260. 10.1090/S0025-5718-99-00996-5.
 
 License
 =======
