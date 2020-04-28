@@ -45,7 +45,7 @@ Afterwards, run `npm run build` to rebuild to sample viewer.
 
 ### Custom Renderers
 
-Edit the `render_custom.py` script so that it outputs the images into the appropriate directory. Make sure that the images have a size of 400x400 pixels and 3 color channels (RGB). High-dynamic range images in EXR format are preferred, but PNG is also supported. Note that for PNG a custom tone-mapper has to be implemented, as the reference images are provided only as EXR files.
+Edit the `render_custom.py` script so that it outputs the images into the appropriate directory. Make sure that the images have a size of 400x400 pixels and 3 color channels (RGB). High-dynamic range images in EXR format are preferred, but PNG is also supported. Note that for PNG a custom tone-mapper has to be implemented. The EXR reference images are tone-mapped on demand to match the tone-mapping of the renderer.
 
 ### Validation
 

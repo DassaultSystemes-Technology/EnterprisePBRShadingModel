@@ -12,6 +12,7 @@ for file in glob.glob('scenes/*/*.gltf'):
   image = os.path.join(args.out, scene_type, os.path.basename(file))
   image = os.path.splitext(image)[0]
   os.makedirs(os.path.dirname(image), exist_ok=True)
+  ibl = os.path.join(os.path.dirname(file), 'environment.hdr')
 
   print('Rendering ' + file + '...')
   
