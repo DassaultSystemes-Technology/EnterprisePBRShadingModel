@@ -14,14 +14,14 @@ Versions: [2020x](spec-2020x.md.html) 2021x</a>
 Components
 ==========
 
-At its core, the Enterprise PBR Shading Model is a linear blend of a metallic BSDF and a dielectric BSDF, see Figure [components-diagram]. The dielectric BSDF can be either opaque or transparent. The former is used for materials like simple plastics, wood, or stone. The latter makes the surface transparent, allowing light rays to refract into the object, resulting in attenuation and subsurface scattering. This is needed, for example, for glass, water, ice, more complex plastics, or wax. Section [Core] explains the BSDFs in more detail.
+At its core, the Enterprise PBR Shading Model is a linear blend of a metallic BSDF and a dielectric BSDF, see Figure [components-diagram]. The dielectric BSDF can be either opaque or transparent. The former is used for materials like plastics, wood, or stone, and translucent materials like wax or skin. The latter makes the surface transparent, allowing light rays to refract into the object, resulting in attenuation and subsurface scattering. This is needed, for example, for glass, water, or ice. Section [Core] explains the BSDFs in more detail.
 
 ************************************************************************
+* .-----------------------------------------------------------.        *
+* |                          Clearcoat                        |        *
+* '-----------------------------------------------------------'        *
+*                                                                      *
 * .----------------------------------------------. .----------.        *
-* |                  Clearcoat                   | |          |        *
-* '----------------------------------------------' |          |        *
-*                                                  |          |        *
-* .----------------------------------------------. |          |        *
 * |                    Sheen                     | |          |        *
 * '----------------------------------------------' |          |        *
 *                                                  |          |        *
@@ -31,10 +31,10 @@ At its core, the Enterprise PBR Shading Model is a linear blend of a metallic BS
 * |             |   Opaque     |   Transparent   | |          |        *
 * |             |              |                 | |          |        *
 * |             |   - Plastic  |   - Glass       | |          |        *
-* |             |   - Wood     |   - Plastic     | |          |        *
-* |             |   - Stone    |   - Water       | |          |        *
-* |             |              |   - Ice         | |          |        *
-* |             |              |   - Wax         | |          |        *
+* |             |   - Wood     |   - Water       | |          |        *
+* |             |   - Stone    |   - Ice         | |          |        *
+* |             |   - Wax      |                 | |          |        *
+* |             |   - Plastic  |                 | |          |        *
 * '-------------+--------------+-----------------+ '----------'        *
 *                              |     Volume      |                     *
 *                              '-----------------'                     *
@@ -492,12 +492,12 @@ $h$            | float3        | 0       | -inf..inf | Displacement in the direc
 Emission
 --------
 
-In addition to the reflective and transmissive components, the material contains an emissive component that turns surfaces into diffuse area lights. Light is emitted into the upper hemisphere with regard to the normal.
+In addition to the reflective and transmissive components, the material contains an emissive component that turns surfaces into diffuse area lights. Light is emitted into the upper hemisphere with regard to the normal. The emission component is below the clearcoat in the layering stack, and thus it is scaled by clearcoat reflectivity $c$ and clearcoat Fresnel $F_c$, see Section [clearcoat].
 
 \begin{eqnarray}
 L_e(v) =
 \begin{cases}
-\rho_e & \text{if } (\mathbf{v} \cdot \mathbf{n}) > 0 \\
+\rho_e \, (1 - c \, F_c(\mathbf{v} \cdot \mathbf{n}_c)) & \text{if } (\mathbf{v} \cdot \mathbf{n}) > 0 \\
 0 & \text{otherwise}
 \end{cases}
 \end{eqnarray}
@@ -722,6 +722,7 @@ Version 2021x
 * Translucency.
 * New sheen effect based on "Charlie" Sheen BRDF, layered on top of core material via albedo-scaling [#CK17].
 * Alternative visibility term for "Charlie" Sheen BRDF [#NP13].
+* Emission is now below clearcoat in the layering stack.
 
 Version 2020x
 -------------
