@@ -72,8 +72,8 @@
                 "roughnessFactor" : 0.6
             }, 
             "extensions" : {
-                "3DS_materials_transmission" : {
-                    "transmissionFactor" : 1
+                "3DS_materials_transparency" : {
+                    "transparencyFactor" : 1
                 }
             }
         }

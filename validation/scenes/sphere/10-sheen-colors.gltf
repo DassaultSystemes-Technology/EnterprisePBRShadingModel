@@ -121,13 +121,13 @@
             }, 
             "extensions" : {
                 "3DS_materials_sheen" : {
-                    "intensityFactor" : 1.0, 
-                    "colorFactor" : [
+                    "sheenFactor" : 1.0, 
+                    "sheenColorFactor" : [
                         1, 
                         0.75, 
                         0.33
                     ], 
-                    "roughnessFactor" : 0.2
+                    "sheenRoughnessFactor" : 0.2
                 }
             }
         }

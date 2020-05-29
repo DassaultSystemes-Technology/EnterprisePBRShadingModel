@@ -75,8 +75,8 @@
                 "3DS_materials_specular" : {
                     "specularFactor" : 0.0
                 }, 
-                "3DS_materials_transmission" : {
-                    "transmissionFactor" : 1
+                "3DS_materials_transparency" : {
+                    "transparencyFactor" : 1
                 }
             }
         }

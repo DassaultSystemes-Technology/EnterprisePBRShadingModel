@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "title": "3DS_materials_specular glTF extension",
+    "type": "object",
+    "description": "glTF extension that defines the strength of the specular reflection.",
+    "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+    "properties": {
+        "specularFactor": {
+            "type": "number",
+            "description": "Strength of the specular reflection.",
+            "default": 1.0,
+            "minimum": 0.0,
+            "maximum": 1.0
+        },
+        "specularColorFactor": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+            },
+            "description": "F0 RGB color of the specular reflection.",
+            "default": [ 1.0, 1.0, 1.0 ],
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "specularTexture": {
+            "allOf": [ { "$ref": "textureInfo.schema.json" } ],
+            "description": "4-channel texture that defines the F0 color of the specular reflection (RGB) and the specular factor (A)."
+        }
+    }
+}

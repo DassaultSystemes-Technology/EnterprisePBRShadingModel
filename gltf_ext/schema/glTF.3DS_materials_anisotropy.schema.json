@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "title": "3DS_materials_anisotropy glTF extension",
+    "type": "object",
+    "description": "glTF extension that defines the parameters for the anisotropy of the specular reflection of the material.",
+    "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+    "properties": {
+        "ansiotropyFactor": {
+            "type": "number",
+            "description": "Strength of the specular highlight's anisotropy effect.",
+            "default": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0
+        },
+        "anisotropyRotationFactor": {
+            "type": "number",
+            "description": "Controls the orientation of the anisotropic highlight, from 0 degree (0) to 360 degree (1).",
+            "default": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0
+        },
+        "anisotropyTexture": {
+            "allOf": [ { "$ref": "textureInfo.schema.json" } ],
+            "description": "2-channel texture that defines the anisotropy strength (R) and the anisotropy rotation (G). This will be multiplied by ansiotropyFactor and anisotropyRotationFactor."
+        }
+    }
+}

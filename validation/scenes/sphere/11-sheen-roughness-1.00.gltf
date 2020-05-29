@@ -124,13 +124,13 @@
                     "specularFactor" : 0
                 }, 
                 "3DS_materials_sheen" : {
-                    "intensityFactor" : 1, 
-                    "colorFactor" : [
+                    "sheenFactor" : 1, 
+                    "sheenColorFactor" : [
                         1, 
                         1, 
                         1
                     ], 
-                    "roughnessFactor" : 1.0
+                    "sheenRoughnessFactor" : 1.0
                 }
             }
         }

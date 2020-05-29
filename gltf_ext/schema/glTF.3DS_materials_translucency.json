@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "title": "3DS_materials_translucency glTF extension",
+    "type": "object",
+    "description": "glTF extension that defines the translucency of a material.",
+    "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+    "properties": {
+        "translucencyFactor": {
+            "type": "number",
+            "description": "Translucency of the surface.",
+            "default": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0,
+        },
+        "translucencyTexture": {
+            "allOf": [ { "$ref": "textureInfo.schema.json" } ],
+            "description": "1-channel texture that defines the translucency of the surface. This will be multiplied by translucencyFactor.",
+        }
+    }
+}

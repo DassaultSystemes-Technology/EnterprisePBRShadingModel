@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "title": "3DS_materials_emission glTF extension",
+    "type": "object",
+    "description": "glTF extension that defines the parameters for the emission mode of a material.",
+    "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+    "properties": {
+        "emissionMode": {
+            "description": "Emission mode of the emitted light.",
+            "default": "LUMINOUS_EMITTANCE",
+            "type": "string",
+            "enum": [ "LUMINOUS_EMITTANCE", "LUMINOUS_POWER" ]
+        },
+        "emissionEnergyNormalization": {
+            "description": "Normalize emission color.",
+            "default": false,
+            "type": "boolean"
+        }
+    }
+}

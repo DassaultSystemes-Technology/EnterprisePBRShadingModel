@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "title": "3DS_materials_sheen glTF extension",
+    "type": "object",
+    "description": "glTF extension that defines a sheen layer.",
+    "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+    "properties": {
+        "sheenIntensityFactor": {
+            "type": "number",
+            "description": "Intensity of the sheen layer.",
+            "default": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0
+        },
+        "sheenIntensityTexture": {
+            "allOf": [ { "$ref": "textureInfo.schema.json" } ],
+            "description": "1-channel texture that defines sheen intensity."
+        },
+        "sheenColorFactor": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "Color of the sheen layer (in linear space).",
+            "default": [0, 0, 0]
+        },
+        "sheenRoughnessFactor": {
+            "type": "number",
+            "description": "Roughness of the sheen layer.",
+            "default": 0.0,
+            "minimum": 0.0,
+            "maximum": 1.0
+        },
+        "sheenTexture": {
+            "allOf": [ { "$ref": "textureInfo.schema.json" } ],
+            "description": "4-channel texture that defines sheen color (RGB) and roughness (A)."
+        }
+    }
+}

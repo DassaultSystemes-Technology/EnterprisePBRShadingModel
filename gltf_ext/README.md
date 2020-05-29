@@ -1,26 +1,16 @@
-# 3DS_materials_enterprise_pbr
-
-## Status
-
-Draft 
-
-## Dependencies
-
-Written against the glTF 2.0 spec.
+# Dassault Systèmes Enterprise PBR Shading Model (DSPBR) 2021x extensions
 
 ## Overview
 
-This extension defines the Dassault Systèmes Enterprise PBR Shading Model (DSPBR) for glTF. 
+This set of extensions defines the Dassault Systèmes Enterprise PBR Shading Model (DSPBR) 2021x for glTF.
 
-* The [Specification](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec.md.html) 
+* The [Specification](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec-2021x.md.html) 
 * The [User Guide](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/user_guide.md.html) 
 
-## Extending Materials
-
-The Dassault Systèmes Enterprise PBR material is defined by adding the `3DS_materials_enterprise_pbr` extension to any glTF material. 
-The extension reuses the `pbrMetallicRoughness` parameters for parameterization of a new energy conserving microfacet roughness model. It further introduces additional parameters for new effects as defined by the [Specification](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec.md.html). 
+The Dassault Systèmes Enterprise PBR material is defined by adding the respective `3DS_` extension(s) to any glTF material. The extensions reuse the `pbrMetallicRoughness` parameters for parameterization of a new energy conserving microfacet roughness model.
 
 ### `pbrMetallicRoughness` Parameter Mappings
+
 ```
 baseColorFactor.xyz -> albedo
 metallicFactor -> metallic
@@ -38,9 +28,6 @@ emissiveFactor -> emissionColor * emissionValue
                 "baseColorFactor": [ 1.000, 0.766, 0.336, 1.0 ],
                 "metallicFactor": 1.0,
                 "roughnessFactor": 0.0
-            },
-            "extensions": {
-                "3DS_materials_enterprise_pbr": {}
             }
         }
     ]
@@ -67,32 +54,37 @@ emissiveFactor -> emissionColor * emissionValue
         }
     },
     "extensions": {
-        "3DS_materials_enterprise_pbr": {
-            "anisotropy": 0.0,
-            "anisotropyRotation": 0.0,
-            "transparency": 0.0,
-            "sheen": 0.0,
-            "specular": 1.0,
-            "specularTint": [
-                1.0,
-                1.0,
-                1.0
-            ],
-            "clearcoat": 0.0,
-            "clearcoatRoughness": 0.0,
-            "ior": 1.5,
-            "thinWalled": true,
-            "attenuationColor": [
-                1.0,
-                1.0,
-                1.0
-            ],
-            "attenuationDistance": 100000.0,
-            "subsurfaceColor": [
-                0.0,
-                0.0,
-                0.0
-            ]
+        "KHR_materials_clearcoat": {
+            "clearcoatFactor": 0.0,
+            "clearcoatRoughnessFactor": 0.0,
+        },
+        "3DS_materials_anisotropy": {
+            "anisotropyFactor": 0.0,
+            "anisotropyRotationFactor": 0.0
+        },
+        "3DS_materials_transparency": {
+            "transparencyFactor": 0.0
+        },
+        "3DS_materials_translucency": {
+            "translucencyFactor": 0.0
+        },
+        "3DS_materials_sheen": {
+            "sheenFactor": 0.0,
+            "sheenColorFactor": [ 1.0, 1.0, 1.0 ],
+            "sheenRoughnessFactor": 0.2
+        },
+        "3DS_materials_specular": {
+            "specularFactor": 1.0,
+            "specularColorFactor": [ 1.0, 1.0, 1.0 ]
+        },
+        "3DS_materials_ior": {
+            "ior": 1.5
+        },
+        "3DS_materials_volume": {
+            "thinWalled": false,
+            "attenuationColor": [ 1.0, 1.0, 1.0 ],
+            "attenuationDistance": 200.0,
+            "subsurfaceColor": [ 0.0, 0.0, 0.0 ]
         }
     }
 }
@@ -117,23 +109,10 @@ emissiveFactor -> emissionColor * emissionValue
         "metallicFactor": 0.0
     },
     "extensions": {
-        "3DS_materials_enterprise_pbr": {
-            "anisotropy": 0.0,
-            "anisotropyRotation": 0.0,
-            "transparency": 0.0,
-            "sheen": 0.0,
-            "specular": 0.0,
-            "specularTint": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "clearcoat": 0.0,
-            "clearcoatRoughness": 0.0,
-            "ior": 1.5,
-            "thinWalled": true,          
-            "emissionMode": "POWER"
+        "3DS_materials_emission": {
+            "emissionMode": "POWER",
+            "emissionEnergyNormalization": false
         }
     }
-}    
+}
 ```
