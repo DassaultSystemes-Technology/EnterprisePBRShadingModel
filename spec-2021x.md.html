@@ -535,7 +535,9 @@ l_v \frac{l_c}{l_c \cdot \begin{pmatrix}0.2126729 \\ 0.7151522 \\ 0.0721750\end{
 Volume
 ------
 
-If the material is configured to behave as a volume boundary, i.e., if the thin-walled flag is set to false, light rays may enter the volume below the surface, scatter and eventually leave at another place. This process is called subsurface scattering and it is controlled by the absorption coefficient $\sigma_a$ and the scattering coefficient $\sigma_s$. Both coefficients are wavelength-dependent values in range $0..\inf$. As this is hard to parametrize for users, we first map from more user-friendly attenuation color $a$ and attenuation distance $d$ to the mean free path length $\text{mfp}$ (or its inverse, the attenuation or extinction coefficient $\sigma_t$), and from subsurface color $\rho_{ms}$ to the single-scattering albedo $\rho_{ss}$ [#KC17].
+If the material is configured to behave as a volume boundary, i.e., if the thin-walled flag is set to false, light rays may enter the volume below the surface, scatter and eventually leave at another place. This process is called subsurface scattering and it is controlled by the absorption coefficient $\sigma_a$, the scattering coefficient $\sigma_s$ and the phase function $p(\mathbf{v},\mathbf{l})$.
+
+The coefficients $\sigma_a$ and $\sigma_s$ are wavelength-dependent values in range $0..\inf$. As this is hard to parametrize for users, we first map from more user-friendly attenuation color $a$ and attenuation distance $d$ to the mean free path length $\text{mfp}$ (or its inverse, the attenuation or extinction coefficient $\sigma_t$), and from subsurface color $\rho_{ms}$ to the single-scattering albedo $\rho_{ss}$ [#KC17].
 
 \begin{eqnarray}
 \sigma_t &=& \frac{1}{\text{mfp}} = \frac{-\log(a)}{d} \\
@@ -551,13 +553,22 @@ From this we derive the absorption and scattering coefficient.
 
 Intuitively, the mean free path length describes the reciprocal of the density of the medium. The denser the medium, the shorter the distance until a particle is hit and, therefore, the more light is absorbed or scattered out. In our case, after the light traveled $d$ units into the medium, all that remains is the color $a$.
 
-When a particle is hit, the light color gets multiplied by the single-scattering color $\rho_{ss}$. On the surface, the color $\rho_{ms}$ can be observed from the multiple scattering events occuring in the medium.
+When a particle is hit, the light color gets multiplied by the single-scattering color $\rho_{ss}$. On the surface, the color $\rho_{ms}$ can be observed from the multiple scattering events occurring in the medium.
+
+In addition the phase function $p(\mathbf{v},\mathbf{l})$ determines the probability density of outgoing directions $\mathbf{l}$ given an incident direction $\mathbf{v}$ at a scattering event. We use the phase function developed by Henyey-Greenstein [#HG41]. It is controlled by a single parameter $g$ in the range $-1..1$, the *anisotropy parameter*.
+
+\begin{eqnarray}
+p(\mathbf{v},\mathbf{l}; g) = \frac{1}{4 \pi} \frac{1-g^2}{(1+g^2+2g(\mathbf{v} \cdot \mathbf{l}))^{3/2}}
+\end{eqnarray}
+
+Negative values of $g$ correspond to backward scattering and positive values to forward scattering. $g=0$ results in isotropic scattering.
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
 $a$            | uniform color | 1       | 0..1   | Attenuation color.
 $d$            | uniform float | inf     | 0..inf | Attenuation distance. A value of 0 will make to surface opaque.
 $\rho_{ms}$    | uniform color | 0       | 0..1   | Subsurface color. Subsurface scattering is disabled if $\rho_{ms}=0$.
+$g$            | uniform float | 0       | -1..1  | Subsurface anisotropy (<0:&#160;backward, =0:&#160;isotropic, >0:&#160;forward scattering).
 [Table [volume-parameters]: List of volume parameters.]
 
 ![Figure [volume-parameters-fig]: Result for various values of volume parameters.](img/params_volume_2021x.png)
@@ -723,6 +734,7 @@ Version 2021x
 * New sheen effect based on "Charlie" Sheen BRDF, layered on top of core material via albedo-scaling [#CK17].
 * Alternative visibility term for "Charlie" Sheen BRDF [#NP13].
 * Emission is now below clearcoat in the layering stack.
+* Henyey-Greenstein phase function for volume scattering [#HG41].
 
 Version 2020x
 -------------
@@ -997,6 +1009,8 @@ Bibliography
 [#Fde19]: Carmelo J. Fdez-Agüera. A Multiple-Scattering Microfacet Model for Real-Time Image-based Lighting., Journal of Computer Graphics Techniques Vol. 8, No. 1, 2019.
 
 [#Hei14]: Eric Heitz. Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs., Journal of Computer Graphics Techniques Vol. 3, No. 2, 2014.
+
+[#HG41]: Louis G. Henyey and Jesse L. Greenstein. Diffuse radiation in the galaxy. Astrophysical Journal 93, 70–83, 1941.
 
 [#Hil18]: Stephen Hill. A Multi-Faceted Exploration, 2018. https://blog.selfshadow.com/2018/05/13/multi-faceted-part-1/
 
