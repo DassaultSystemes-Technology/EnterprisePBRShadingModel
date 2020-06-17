@@ -53,7 +53,7 @@ The weights $m$ (metallic) and $t$ (transparency) control the blending between t
 *               +---+         *
 *          1-m /     \  m     *
 *         .---+       \       *
-*        |  +  |     Metal    *
+*        |  +  |    Metallic  *
 *         +---+               *
 *    1-t /     \ t            *
 *       /       \             *
@@ -91,7 +91,7 @@ We parameterize the Fresnel $F(\cos\theta_r; f_0, f_{90})$ (Schlick approximatio
 
 See Section [In-Depth Look at the BSDFs] for more details about the Fresnel term.
 
-![Figure [bsdf-metallic]: The metallic BSDF, a single specular lobe.](img/bsdf_metallic.png)
+![Figure [bsdf-metallic]: The metallic BSDF is a single specular lobe.](img/bsdf_metallic.png)
 
 ### Dielectric BSDF for Transparent Surfaces
 
@@ -116,9 +116,9 @@ M_t(\mathbf{v}, \mathbf{l}; r_u, r_v, \eta_i, \eta_o) & \text{ otherwise}
 \end{cases}
 \end{eqnarray}
 
-with ${\mathbf{l}}^\prime = \mathbf{l} + 2 \mathbf{n} (-\mathbf{l} \cdot \mathbf{n})$ to flip the light direction from lower to upper hemisphere in thin-walled case to be able to reuse the microfacet reflection function for transmission (Figure [bsdf-transparent-dielectric-thin]). 
+with ${\mathbf{l}}^\prime = \mathbf{l} + 2 \mathbf{n} (-\mathbf{l} \cdot \mathbf{n})$ to flip the light direction from lower to upper hemisphere in thin-walled case to be able to reuse the microfacet reflection function for transmission (Figure [bsdf-transparent-dielectric], left). 
 
-![Figure [bsdf-transparent-dielectric-thin]: The dielectric BSDF for transparent surfaces is composed of a reflective lobe and a transmissive lobe.](img/bsdf_transparent_dielectric_thin.png)
+![Figure [bsdf-transparent-dielectric]: The dielectric BSDF for transparent surfaces is composed of a reflective lobe and a transmissive lobe. The material is configured (left) thin-walled or (right) volumetric. Note the different refraction angles.](img/bsdf_transparent_dielectric.png)
 
 The Fresnel angles $\cos\theta_r$ and $\cos\theta_t$ are based on the half-vector.
 
@@ -138,11 +138,9 @@ The Fresnel angles $\cos\theta_r$ and $\cos\theta_t$ are based on the half-vecto
 \mathbf{h}_{t,v} = \frac{-\mathbf{v} \eta_i - \mathbf{l} \eta_o}{\lVert -\mathbf{v} \eta_i - \mathbf{l} \eta_o \rVert}
 \end{eqnarray}
 
-Refraction only takes place if the material is configured to be volumetric, see Section [Volume]. In this case, and if the surface is transparent, light rays are refracted through the surface into the volume beneath the object (Figure [bsdf-transparent-dielectric-volumetric]). The BSDF has to consider refraction and total internal reflection, affecting the outgoing direction and the dielectric Fresnel term $F_d$. This closely follows [#WMLT07].
+Refraction only takes place if the material is configured to be volumetric, see Section [Volume]. In this case, and if the surface is transparent, light rays are refracted through the surface into the volume beneath the object (Figure [bsdf-transparent-dielectric], right). The BSDF has to consider refraction and total internal reflection, affecting the outgoing direction and the dielectric Fresnel term $F_d$. This closely follows [#WMLT07].
 
 The Fresnel term at normal incidence depends on the index of refraction: $F_0 = \left(\frac{\eta_i - \eta_o}{\eta_i + \eta_o}\right)^2$. $\eta_i$ and $\eta_o$ determine the index of refraction of the current medium and the medium on the other side of the surface, respectively, and have to be setup properly by the renderer, taking into account the material's $\eta$
-
-![Figure [bsdf-transparent-dielectric-volumetric]: The dielectric BSDF for transparent surfaces is composed of a reflective lobe and a transmissive lobe.](img/bsdf_transparent_dielectric_volumetric.png)
 
 ### Dielectric BSDF for Opaque Surfaces
 
@@ -266,8 +264,8 @@ a_{\{v,l\}} &=& \cos^2\Phi_{\{v,l\}}\alpha_x^2 + \sin^2\Phi_{\{v,l\}}\alpha_y^2
 We use Schlick's Fresnel approximation for performance reasons (Section [Putting It All Together]). For thin-walled materials and the metallic BSDF we ignore refraction and total internal reflection, leading to a very simple form of the Fresnel term $F$. Taking both into account results in $F_d$, which is used for volumetric materials.
 
 \begin{eqnarray}
-F(\theta; f_0, f_{90}) &=& f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 \\
-F_d(\theta; f_0, f_{90}) &=& 
+F(\cos\theta; f_0, f_{90}) &=& f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 \\
+F_d(\cos\theta; f_0, f_{90}) &=& 
 \begin{cases}
 f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 & \text{if } \eta_o \geq \eta_i \\
 f_0 + (f_{90} - f_0) (1 - |\cos\theta_o|)^5 & \text{if } \eta_o < \eta_i \land \sin^2\theta_o < 1 \\
@@ -275,7 +273,7 @@ f_0 + (f_{90} - f_0) (1 - |\cos\theta_o|)^5 & \text{if } \eta_o < \eta_i \land \
 \end{cases}
 \end{eqnarray}
 
-where $\theta_o$ is the angle of transmission, computed from the angle of incidence via $\sin^2\theta_o = \left(\frac{\eta_i}{\eta_o}\right)^2 (1 - \cos^2\theta_i)$ [#Lag13]. Note that in case of total internal reflection, the Fresnel does not depend on $f_{90}$ anymore, so it is impossible to disable the reflection in this situation. This allows users to change the specular component of a refractive object without introducing artifacts, i.e., dark appearance in areas where total internal reflection occurs.
+where $\theta_o$ is the angle of transmission, computed from the angle of incidence via $\sin^2\theta_o = \left(\frac{\eta_i}{\eta_o}\right)^2 (1 - \cos^2\theta)$ [#Lag13]. Note that in case of total internal reflection, the Fresnel does not depend on $f_{90}$ anymore, so it is impossible to disable the reflection in this situation. This allows users to change the specular component of a refractive object without introducing artifacts, i.e., dark appearance in areas where total internal reflection occurs.
 
 #### Energy Preservation
 
@@ -283,11 +281,11 @@ The standard microfacet model does not account for scattering occuring between m
 
 ![Figure [energycomp-microfacet-metallic]: Left: Metallic surface with roughness 0. Middle: Non-energy preserving metallic surface with roughness 1. Right: Energy-preserving metallic surface with roughness 1 by accounting for multiple scattering. Note that the surface in the middle looks significantly darker than the others.](img/energycomp_metallic.png)
 
-In the Enterprise PBR Shading Model, the missing energy is added to the specular component by the energy compensation term $M_{r,ms}(\mathbf{v},\mathbf{l}; \alpha_{uv})\,F_{ms}(f_0, f_{90})$.
+In the Enterprise PBR Shading Model, the missing energy is added to the specular component by the energy compensation term $M_{r,ms}(\mathbf{v},\mathbf{l}; \alpha_{uv})\,F_{ms}(f_0, f_{90}, \alpha_{uv})$.
 
 \begin{equation}
 \begin{aligned}
-&M_{r,ms}(\mathbf{v},\mathbf{l}; \alpha_{uv})\,F_{ms}(f_0, f_{90}) = \\
+&M_{r,ms}(\mathbf{v},\mathbf{l}; \alpha_{uv})\,F_{ms}(f_0, f_{90}, \alpha_{uv}) = \\
 &\quad\quad\quad\underbrace{\frac{(1-E_m(\mathbf{v}\cdot\mathbf{n}))(1-E_m(\mathbf{l}\cdot\mathbf{n}))}{\pi(1-E_{m,avg})}}_{\text{Multiple scattering GGX}} \underbrace{\frac{{F_{m,avg}}^2 E_{m,avg}}{{1 - F_{m,avg}(1 - E_{m,avg})}}}_{\text{Multiple scattering Fresnel}}
 \end{aligned}
 \end{equation}
@@ -442,7 +440,7 @@ $r_f$        | float         | 0       | 0..1   | Roughness of distribution that
 $\rho_f$     | color         | 1       | 0..1   | Flake color.
 [Table [flakes-parameters]: List of flakes parameters]
 
-![Figure [flakes-parameters-fig]: Result for various values of flakes parameters](img/params_flakes.png)
+![Figure [flakes-parameters-fig]: Result for various values of flakes parameters](img/params_flakes_2021x.png)
 
 Flake coverage $f$ determines the probability for a flake to be opaque. Flakes are layered on top of the sheen as seen on the Figure [components-diagram]. It's a boolean layering operation which either shows flakes or the underlying material depending on the transparency of individual flakes.
 
@@ -493,7 +491,7 @@ Now that we have the resolution to house all $k\cdot \text{res}^2\approx N$ flak
 \end{eqnarray}
 into a hash function. The hash is then used to seed an PRNG which is then used to produce all random numbers needed to produce the flake position, flake direction and opacity for each of the $k$ flakes in the grid cell.
 Procedural normal map is mapped onto each object via triplanar mapping (Equation [tr-mapping]).
-Triplanar mapping does surface parametrization based on a object space shading point $\mathbf{p}$ and bumped surface normal $\mathbf{n}$ simply by projecting it along the dominant orthogonal direction of $\mathbf{n}$ and returns parametric coordinates (u, v) on a surface.
+Triplanar mapping does surface parameterization based on a object space shading point $\mathbf{p}$ and bumped surface normal $\mathbf{n}$ simply by projecting it along the dominant orthogonal direction of $\mathbf{n}$ and returns parametric coordinates (u, v) on a surface.
 \begin{eqnarray}
   \label{tr-mapping}
   T_\text{map}(p, n) =
@@ -642,7 +640,7 @@ The index of refraction in Schlick's Fresnel term is fixed to 1.5 to resemble a 
 F_c(\theta) &=& 0.04 + 0.96 \ (1 - \cos\theta)^5
 \end{eqnarray}
 
-As shown in Table [clearcoat-parameters], the clearcoat is parametrized via two scalar values and a normal.
+As shown in Table [clearcoat-parameters], the clearcoat is parameterized via two scalar values and a normal.
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
@@ -729,9 +727,11 @@ l_v \frac{l_c}{l_c \cdot \begin{pmatrix}0.2126729 \\ 0.7151522 \\ 0.0721750\end{
 Volume
 ------
 
-If the material is configured to behave as a volume boundary, i.e., if the thin-walled flag is set to false, light rays may enter the volume below the surface, scatter and eventually leave at another place. This process is called subsurface scattering and it is controlled by the absorption coefficient $\sigma_a$, the scattering coefficient $\sigma_s$ and the phase function $p(\mathbf{v},\mathbf{l})$.
+If the thin-walled material parameter is set to false, the surface to which the material is applied is treated as the volume boundary. Light rays falling to such a boundary may enter the volume, depending on the transparency or translucency of the surface's BSDF. Inside the volume light might be absorbed or scattered by particles, and eventually hit some surface from inside the volume. It can be a different surface and will most probably be a different point in space compared to the entrance point. At this exit point, if the material properties of the surface allow, light may leave the volume.
 
-The coefficients $\sigma_a$ and $\sigma_s$ are wavelength-dependent values in range $0..\inf$. As this is hard to parametrize for users, we first map from more user-friendly attenuation color $a$ and attenuation distance $d$ to the mean free path length $\text{mfp}$ (or its inverse, the attenuation or extinction coefficient $\sigma_t$), and from subsurface color $\rho_{ms}$ to the single-scattering albedo $\rho_{ss}$ [#KC17].
+Absorption is controlled by the absorption coefficient $\sigma_a$; subsurface scattering by the scattering coefficient $\sigma_s$ and the phase function $p(\mathbf{v},\mathbf{l})$. The coefficients $\sigma_a$ and $\sigma_s$ are wavelength-dependent values in range $0..\inf$. Such an infinite range makes them hard to be controlled by the users.
+
+To provide convenient parameterization for users we introduce three new user-friendly parameters: attenuation color $a$, attenuation distance $d$, and subsurface color $\rho_{ms}$. Attenuation color and distance are mapped to the attenuation coefficient $\sigma_t$ (or its inverse, the mean free path length $\text{mfp}$). Subsurface color is mapped to the single-scattering albedo $\rho_{ss}$ [#KC17].
 
 \begin{eqnarray}
 \sigma_t &=& \frac{1}{\text{mfp}} = \frac{-\log(a)}{d} \\
@@ -916,7 +916,7 @@ Design Rationale
 
 The Enterprise PBR Shading Model is the basis for a large variety of use-cases, ranging from high-performance VR applications to high-quality offline GI renderings. However, it is not expected that it will cover all use-cases one can imagine, but it should be sufficient for day-to-day use. This requires some tradeoffs, which are based on the following guidelines and requirements.
 
-Most important, the material should be *easy to use* for inexperienced users, but still powerful enough for trained artists in real-time rendering and global illumination. For this reason, the material has only a small amount parameters, following industry-standard workflows known from real-time engines (Unreal Engine 4, Unity Engine) and movie production (Disney BRDF). Using the *metallic/roughness workflow*, it is possible to create a wide varietey of materials from just a very small subset of the whole parameter set, namely albedo, metallic, roughness and normal map. Another aspect of this is the fact that it allows users to parametrize materials in a way that they are *physically-based as a default*, but can be tweaked when needed for more artistic freedom, for example via the specular tint and specular parameters. Wherever possible, the parameters are linear and texturable, so that *layering via parameter blending* is possible. Notable exceptions are parameters affecting the volume, because there are no texture coordinates available inside an object.
+Most important, the material should be *easy to use* for inexperienced users, but still powerful enough for trained artists in real-time rendering and global illumination. For this reason, the material has only a small amount parameters, following industry-standard workflows known from real-time engines (Unreal Engine 4, Unity Engine) and movie production (Disney BRDF). Using the *metallic/roughness workflow*, it is possible to create a wide varietey of materials from just a very small subset of the whole parameter set, namely albedo, metallic, roughness and normal map. Another aspect of this is the fact that it allows users to parameterize materials in a way that they are *physically-based as a default*, but can be tweaked when needed for more artistic freedom, for example via the specular tint and specular parameters. Wherever possible, the parameters are linear and texturable, so that *layering via parameter blending* is possible. Notable exceptions are parameters affecting the volume, because there are no texture coordinates available inside an object.
 
 Especially for GI renderers, there are certain physical and mathematical properties that materials or BSDFs must fullfill. A BSDF must obey *Helmholtz reciprocity* (for bidirectional rendering methods), be *positive* and *energy conserving* (for fast convergence).
 
@@ -1094,7 +1094,7 @@ Instead of lookup tables, it is also possible to use a numerical fit for the dat
 
 \begin{eqnarray}
 \label{energycomp-ggx-fit}
-E_m(\theta; \alpha_{uv}) &=& 1 - 1.4594\alpha_{uv}\cos\theta \\
+E_m(\cos\theta; \alpha_{uv}) &=& 1 - 1.4594\alpha_{uv}\cos\theta \\
 &&* \left(-0.20277 + \alpha_{uv} (2.772 + \alpha_{uv} (-2.6175 + 0.73343 \alpha_{uv}))\right) \nonumber\\
 &&* \left(3.09507 + \cos\theta (-9.11369 + \cos\theta (15.8884 + \cos\theta (-13.70343 + 4.51786 \cos\theta)))\right)
 \nonumber\\
@@ -1196,7 +1196,7 @@ We precompute the directional albedo of the alternative sheen BRDF using Equatio
 
 ![Figure [energy-compensation-sheen-ash-e]: Directional albedo of the alternative sheen BRDF.](img/energycomp_sheen_ash_e.png)
 
-![Figure [white-furnace-sheen-ash-e]: White furnace test of alternative sheen BRDF. Red pixels indicate energy gain.](img/furnace_ashikhmin.png)
+![Figure [white-furnace-sheen-ash-e]: White furnace test of alternative sheen BRDF with roughness from 0 to 1, left to right. Red pixels indicate energy gain.](img/furnace_ashikhmin.png)
 
 The lookup table is also provided for download in our Github repository:
 * [res/Sheen_ash_E.exr](https://github.com/DassaultSystemes-Technology/EnterprisePBRShadingModel/tree/master/res/Sheen_ash_E.exr)

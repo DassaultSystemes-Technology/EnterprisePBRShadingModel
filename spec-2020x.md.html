@@ -153,7 +153,7 @@ The BSDF looks as follows:
 \end{aligned}
 \end{equation}
 
-![Figure [bsdf-opaque-dielectric]: The dielectric BSDF for opaque surfaces is composed of a diffuse lobe and a specular lobe.](img/bsdf_opaque_dielectric.png)
+![Figure [bsdf-opaque-dielectric]: The dielectric BSDF for opaque surfaces is composed of a diffuse lobe and a specular lobe.](img/bsdf_opaque_dielectric_opaque_only.png)
 
 Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#Kel01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF out of it. Controlled by the parameter $s$ (i.e., the amount of specular contribution), we gradually blend to this new diffuse BRDF $B_c$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
 
