@@ -170,10 +170,14 @@ B_{\text{sheen}}(\mathbf{v}, \mathbf{l}; b) = \frac{1}{\pi}\hat{b} + (1 - \hat{b
 
 with $\hat{b} = (1-b)^5$. $M_b$ is given in Section [In-depth look at the BSDFs].
 
-Finally, we arrive at the base BSDF $B$ by multiplying diffuse and sheen:
+We apply the diffuse energy compensation term also to the sheen BRDF, so that we finally arrive at the base BSDF $B$ by multiplying diffuse and sheen:
 
 \begin{equation}
-B = B_{\text{diffuse}} \, B_{\text{sheen}}
+\begin{aligned}
+B &= \text{lerp}(B_\text{sheen}, \pi B_c B_\text{sheen}, s) \\
+  &= \text{lerp}(B_\text{diffuse}, \pi M_b B_\text{diffuse}, 1-\hat{b}) \\
+  &= \pi \, B_{\text{diffuse}} \, B_{\text{sheen}}
+\end{aligned}
 \end{equation}
 
 ### Putting It All Together
@@ -199,7 +203,7 @@ In case the material is thin-walled, $F = F_d$, i.e., the metallic and the diele
 &\quad\quad\quad\quad M_r \, F(\rho_{s,r,0}, \rho_{s,r,90}) \, \\
 &\quad\quad\quad +M_{r,ms} \, F_{ms}(\rho_{s,r,0}, \rho_{s,r,90}) \\
 &\quad\quad\quad +\rho_t {M_t}^\prime(1 - s F(F_0 \rho_s, 1)) \\
-&\quad\quad\quad +\rho_d \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right] \left[\frac{1}{\pi}\hat{b} + (1 - \hat{b}) M_b\right]
+&\quad\quad\quad +\rho_d \, \pi \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right] \left[\frac{1}{\pi}\hat{b} + (1 - \hat{b}) M_b\right]
 \end{aligned}
 \end{equation}
 
@@ -220,7 +224,7 @@ If the material is volumetric, the dielectric Fresnel term handles refraction an
 &\quad\quad\quad\quad M_r \, [m \, F(\rho, 1) + (1-m) s F_d(F_0 \rho_s, 1)]\, \\
 &\quad\quad\quad +M_{r,ms} \, F_{ms}(\rho_{s,r,0}, \rho_{s,r,90}) \\
 &\quad\quad\quad +\rho_t M_t(1 - s F_d(F_0 \rho_s, 1)) \\
-&\quad\quad\quad +\rho_d \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right] \left[\frac{1}{\pi}\hat{b} + (1 - \hat{b}) M_b\right]
+&\quad\quad\quad +\rho_d \, \pi \left[\frac{1}{\pi}(1-s) + s B_c(F_0 \rho_s)\right] \left[\frac{1}{\pi}\hat{b} + (1 - \hat{b}) M_b\right]
 \end{aligned}
 \end{equation}
 
