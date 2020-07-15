@@ -82,8 +82,8 @@ for reference in glob.glob(os.path.join(args.ref, '*/*.exr')):
     fullpath = os.path.join(imgdir, imgfile)
     if not os.path.exists(fullpath):
       print('File not found: ', fullpath, '\n')
-      parser.print_help()
-      exit(-1)
+      continue
+    
     img = imageio.imread(fullpath)
     img = img[:,:,0:3]
     img = img / 255.
