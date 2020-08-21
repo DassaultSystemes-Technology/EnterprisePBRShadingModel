@@ -7,7 +7,7 @@
 
 The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. Inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13], it combines a metallic and a dielectric BSDF, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat, metallic flakes and sheen to cover a wide range of appearances.
 
-In this document we provide in-depth instructions on how to implement the model in a physically-based renderer.
+In this document we provide a mathematical description of the Enterprise PBR Shading Model in terms of bidirectional scattering distribution functions (BSDF) and related concepts. Following the description makes it possible to derive a visually consistent implementation in a physically-based renderer.
 
 Versions: [2019x](spec-2019x.md.html) 2021x</a>
 
@@ -144,9 +144,9 @@ The Fresnel term at normal incidence depends on the index of refraction: $F_0 = 
 
 ### Dielectric BSDF for Opaque Surfaces
 
-A lot of dielectric materials, like the majority of plastics, appear semi-transparent or opaque. This results from the strong subsurface scattering due to particles in the volume below the surface that interact with the transmitted light. A diffuse BRDF is a simple approximation for this effect. Consequently, we replace the BTDF introduced before by a diffuse-like BRDF (Figure [bsdf-opaque-dielectric]), resulting in a combination of a diffuse-like base BRDF $B$ and a Fresnel-weighted microfacet BRDF $M_r$. Parameter $\rho$ controls the color of $B$, all other parameters behave consistent to the transparent BSDF: The amount of specular contribution from the microfacet BRDF is determined by the parameters for specular tint $\rho_s$ and the index of refraction $\eta$, which both influence the Fresnel term. In addition, there is a directional-independent scaling factor $s$. $r_u$ and $r_v$ change the anisotropic roughness of the microfacet BRDF.
+A lot of dielectric materials, like the majority of plastics, appear semi-transparent or opaque. This results from the strong subsurface scattering due to particles in the volume below the surface interacting with the transmitted light. A diffuse BRDF is a simple approximation for this effect. Consequently, we replace the BTDF introduced before by a diffuse-like BRDF (Figure [bsdf-opaque-dielectric]), resulting in a combination of a diffuse-like base BRDF $B$ and a Fresnel-weighted microfacet BRDF $M_r$. Parameter $\rho$ controls the color of $B$, all other parameters behave consistent to the transparent BSDF: The amount of specular contribution from the microfacet BRDF is determined by the parameters for specular tint $\rho_s$ and the index of refraction $\eta$, which both influence the Fresnel term. In addition, there is a directional-independent scaling factor $s$. $r_u$ and $r_v$ change the anisotropic roughness of the microfacet BRDF.
 
-Paper, leaves of plants and other thin, dielectric objects transmit some of the incoming light into a random direction to the backside of the surface, the material looks translucent. To achieve this effect, we provide the parameter $l$ that blends from the diffuse BRDF to a diffuse BTDF. Besides thin objects, this can be useful for objects with subsurface scattering and short scattering distances. By scattering the light not only inside the volume, but also already when passing the interface, objects look more blurry and may converge much faster in a ray tracer.
+Paper, leaves of plants and other thin, dielectric objects transmit some of the incoming light into a random direction to the backside of the surface, the material looks translucent. Translucency is the physical property of a material which allows light to pass through, but not necessarily follow Snell's law on a macroscopic scale. A translucent material is made up of components with different indices of refraction. To achieve this effect, we provide the parameter $l$ that controls the blending between the diffuse BRDF and a diffuse BTDF. Besides thin objects, this can be useful for volumetric objects with subsurface scattering and short scattering distances. By scattering the light not only inside the volume, but also already when passing the interface, objects look more blurry and may converge much faster in a ray tracer.
 
 As in the metallic BSDF, the energy loss of the microfacet term is compensated via $M_{r,ms}\,F_{ms}$.
 
@@ -322,19 +322,19 @@ The directional albedo $E(\theta)$ and average albedo $E_{avg}$ are expensive to
 
 Table [core-parameters] describes the user parameters of the Enterprise PBR Shading Model. The parameters $s$, $m$ and $t$ make the model very flexible. Table [mst] shows a list of all available combinations and explains their meaning.
 
- Name        | Type          | Default | Range  | Description
--------------|---------------|---------|--------|-------------
-$\mu$        | uniform bool  | true    |        | Material describes volume boundary (false) or thin, two-sided object (true).
-$\rho$       | color         | 1       | 0..1   | Albedo of the material.
-$\rho_{s}$   | color         | 1       | 0..1   | Specular tint to adjust the color of the specular lobe near $\theta=0^\circ$.
-$m$          | float         | 0       | 0..1   | Metallic-ness (0 = dielectric, 1 = metallic).
-$s$          | float         | 1       | 0..1   | Directional-independent amount of specular contribution to fine-tune the effect of the index of refraction.
-$l$          | float         | 0       | 0..1   | Translucency (0 = opaque, 1 = translucent).
-$t$          | float         | 0       | 0..1   | Transparency (0 = opaque, 1 = transparent).
-$\eta$       | uniform float | 1.5     | 1..inf | Index of refraction of the volume (t=1) or the dielectric coating (m=0).
-$r$          | float         | 0       | 0..1   | Roughness of microfacet distribution.
-$o$          | float         | 0       | 0..1   | Anisotropy strength.
-$\beta$      | float         | 0       | 0..1   | Anisotropy rotation angle (counter-clockwise rotation of the tangent space around local normal, where $0.25\equiv90^\circ$, $0.5\equiv180^\circ$, $1.0\equiv360^\circ$.
+ Name        | Type          | Default | Range   | Description
+-------------|---------------|---------|---------|-------------
+$\mu$        | uniform bool  | true    |         | Material describes volume boundary (false) or thin, two-sided object (true).
+$\rho$       | color         | 1       | [0,1]   | Albedo of the material.
+$\rho_{s}$   | color         | 1       | [0,1]   | Specular tint to adjust the color of the specular lobe near $\theta=0^\circ$.
+$m$          | float         | 0       | [0,1]   | Metallic-ness (0 = dielectric, 1 = metallic).
+$s$          | float         | 1       | [0,1]   | Directional-independent amount of specular contribution to fine-tune the effect of the index of refraction.
+$l$          | float         | 0       | [0,1]   | Translucency (0 = opaque, 1 = translucent).
+$t$          | float         | 0       | [0,1]   | Transparency (0 = opaque, 1 = transparent).
+$\eta$       | uniform float | 1.5     | [1,inf) | Index of refraction of the volume (t=1) or the dielectric coating (m=0).
+$r$          | float         | 0       | [0,1]   | Roughness of microfacet distribution.
+$o$          | float         | 0       | [0,1]   | Anisotropy strength.
+$\beta$      | float         | 0       | [0,1]   | Anisotropy rotation angle (counter-clockwise rotation of the tangent space around local normal, where $0.25\equiv90^\circ$, $0.5\equiv180^\circ$, $1.0\equiv360^\circ$.
 $\mathbf{n}$ | float3        | (0,0,1) | $\lVert\mathbf{n}\rVert=1$ | Normal for normal mapping.
 [Table [core-parameters]: List of core parameters.]
 
@@ -367,9 +367,9 @@ For rendering cloth-like materials diffuse and specular BRDFs are not sufficient
 
  Name        | Type          | Default | Range  | Description
 -------------|---------------|---------|--------|-------------
-$b$          | float         | 0       | 0..1   | Sheen intensity (0 = no sheen, 1 = full sheen).
-$\rho_b$     | color         | 1       | 0..1   | Sheen color.
-$r_b$        | float         | 0.3     | 0..1   | Roughness of sheen microfacet distribution.
+$b$          | float         | 0       | [0,1]  | Sheen intensity (0 = no sheen, 1 = full sheen).
+$\rho_b$     | color         | 1       | [0,1]  | Sheen color.
+$r_b$        | float         | 0.3     | [0,1]  | Roughness of sheen microfacet distribution.
 [Table [sheen-parameters]: List of sheen parameters.]
 
 Sheen is layered on top of the core like a coating [#CK17]. Similar to the diffuse BRDF (Section [Diffuse BRDF]), we scale the bottom layer via the directional albedo of the top layer, resulting in an energy-conserving and (almost) energy-preserving mix of the BSDFs. The directional albedo of the sheen BRDF is fetched from a lookup table.
@@ -434,17 +434,17 @@ Some materials, such as car paint or grainy metals, exhibit shifting random patt
 
  Name        | Type          | Default | Range  | Description
 -------------|---------------|---------|--------|-------------
-$f$          | float         | 0       | 0..1   | Flake coverage (0 = no flakes, 1 = only flakes).
-$s_f$        | float         | 0       | 0..1   | Flake size (diameter) in mm in world space.
-$r_f$        | float         | 0       | 0..1   | Roughness of distribution that controls flake orientation.
-$\rho_f$     | color         | 1       | 0..1   | Flake color.
+$f$          | float         | 0       | [0,1]  | Flake coverage (0 = no flakes, 1 = only flakes).
+$s_f$        | float         | 0       | [0,1]  | Flake size (diameter) in mm in world space.
+$r_f$        | float         | 0       | [0,1]  | Roughness of distribution that controls flake orientation.
+$\rho_f$     | color         | 1       | [0,1]  | Flake color.
 [Table [flakes-parameters]: List of flakes parameters]
 
-![Figure [flakes-parameters-fig]: Result for various values of flakes parameters](img/params_flakes_2021x.png)
+![Figure [flakes-parameters-fig]: Result for various values of flakes parameters.](img/params_flakes_2021x.png)
 
 Flake coverage $f$ determines the probability for a flake to be opaque. Flakes are layered on top of the sheen as seen on the Figure [components-diagram]. It's a boolean layering operation which either shows flakes or the underlying material depending on the transparency of individual flakes.
 
-![Figure [flakes-coverage-fig]: Close-up look at effect of increasing flake coverage $f$: 0.0, 0.25, 0.5, 0.75, 1.0](img/flakes_coverage_small.png)
+![Figure [flakes-coverage-fig]: Close-up look at effect of increasing flake coverage $f$: 0.0, 0.25, 0.5, 0.75, 1.0.](img/flakes_coverage_small.png)
 
 Flake size $s_f$ chooses the average flake diameter in millimeters. Thus the conversion factor from scene unit to physical length unit must be known by the renderer in order to guarantee the correct appearance.
 
@@ -644,8 +644,8 @@ As shown in Table [clearcoat-parameters], the clearcoat is parameterized via two
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
-$c$            | float         | 0       | 0..1   | Clearcoat reflectivity (0 = no clearcoat, 1 = full clearcoat).
-$r_c$          | float         | 0       | 0..1   | Roughness of clearcoat's microfacet distribution.
+$c$            | float         | 0       | [0,1]  | Clearcoat reflectivity (0 = no clearcoat, 1 = full clearcoat).
+$r_c$          | float         | 0       | [0,1]  | Roughness of clearcoat's microfacet distribution.
 $\mathbf{n}_c$ | float3        | (0,0,1) | $\lVert\mathbf{n}_c\rVert=1$ | Clearcoat normal for normal mapping.
 [Table [clearcoat-parameters]: List of clearcoat parameters.]
 
@@ -658,7 +658,7 @@ The cut-out acts like an alpha channel for the surface. It makes parts of the su
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
-$\nu$          | float         | 0       | 0..1   | Cut-out opacity value (0 = transparent, 1 = opaque).
+$\nu$          | float         | 0       | [0,1]  | Cut-out opacity value (0 = transparent, 1 = opaque).
 [Table [cutout-parameters]: List of cut-out parameters.]
 
 ![Figure [cutout-parameters-fig]: Result for various values of cut-out parameters.](img/params_cutout_2021x.png)
@@ -676,9 +676,9 @@ Displacement mapping modifies the position $\mathbf{p}$ of surface points to add
 \mathbf{p}^{\prime} = \mathbf{p} + \mathbf{x} h_x + \mathbf{y} h_y + \mathbf{n} h_z
 \end{eqnarray}
 
- Name          | Type          | Default | Range     | Description
----------------|---------------|---------|-----------|-------------
-$h$            | float3        | 0       | -inf..inf | Displacement in the direction of the surface normal.
+ Name          | Type          | Default | Range      | Description
+---------------|---------------|---------|------------|-------------
+$h$            | float3        | 0       | (-inf,inf) | Displacement in the direction of the surface normal.
 [Table [displacement-parameters]: List of displacement parameters.]
 
 Emission
@@ -696,11 +696,11 @@ L_e(v) =
 
 $\rho_e$ is luminance given in $\frac{\text{lm}}{\text{m}^2 \text{ sr}}$. It is computed from the parameters given in Table [emission-parameters].
 
- Name          | Type          | Default | Range  | Description
----------------|---------------|---------|--------|-------------
-$l_c$          | color         | 1       | 0..inf | Emission color.
-$l_v$          | uniform float | 0       | 0..inf | Emission value in $\text{lx}$ ($=\frac{\text{lm}}{\text{m}^2}$) (luminous emittance, the relative power leaving the object per surface area) or $\text{lm}$ (luminous power, the absolute power leaving the object).
-$l_\text{norm}$| uniform bool  | false   |        | Normalize emission color.
+ Name          | Type          | Default | Range   | Description
+---------------|---------------|---------|---------|-------------
+$l_c$          | color         | 1       | [0,inf) | Emission color.
+$l_v$          | uniform float | 0       | [0,inf) | Emission value in $\text{lx}$ ($=\frac{\text{lm}}{\text{m}^2}$) (luminous emittance, the relative power leaving the object per surface area) or $\text{lm}$ (luminous power, the absolute power leaving the object).
+$l_\text{norm}$| uniform bool  | false   |         | Normalize emission color.
 [Table [emission-parameters]: List of emission parameters.]
 
 ![Figure [emission-parameters-fig]: Result for various values of emission parameters.](img/params_emission_2021x.png)
@@ -729,7 +729,7 @@ Volume
 
 If the thin-walled material parameter is set to false, the surface to which the material is applied is treated as the volume boundary. Light rays falling to such a boundary may enter the volume, depending on the transparency or translucency of the surface's BSDF. Inside the volume light might be absorbed or scattered by particles, and eventually hit some surface from inside the volume. It can be a different surface and will most probably be a different point in space compared to the entrance point. At this exit point, if the material properties of the surface allow, light may leave the volume.
 
-Absorption is controlled by the absorption coefficient $\sigma_a$; subsurface scattering by the scattering coefficient $\sigma_s$ and the phase function $p(\mathbf{v},\mathbf{l})$. The coefficients $\sigma_a$ and $\sigma_s$ are wavelength-dependent values in range $0..\inf$. Such an infinite range makes them hard to be controlled by the users.
+Absorption is controlled by the absorption coefficient $\sigma_a$; subsurface scattering by the scattering coefficient $\sigma_s$ and the phase function $p(\mathbf{v},\mathbf{l})$. The coefficients $\sigma_a$ and $\sigma_s$ are wavelength-dependent values in range $[0,\inf)$. Such an infinite range makes them hard to be controlled by the users.
 
 To provide convenient parameterization for users we introduce three new user-friendly parameters: attenuation color $a$, attenuation distance $d$, and subsurface color $\rho_{ms}$. Attenuation color and distance are mapped to the attenuation coefficient $\sigma_t$ (or its inverse, the mean free path length $\text{mfp}$). Subsurface color is mapped to the single-scattering albedo $\rho_{ss}$ [#KC17].
 
@@ -749,7 +749,7 @@ Intuitively, the mean free path length describes the reciprocal of the density o
 
 When a particle is hit, the light color gets multiplied by the single-scattering color $\rho_{ss}$. On the surface, the color $\rho_{ms}$ can be observed from the multiple scattering events occurring in the medium.
 
-In addition the phase function $p(\mathbf{v},\mathbf{l})$ determines the probability density of outgoing directions $\mathbf{l}$ given an incident direction $\mathbf{v}$ at a scattering event. We use the phase function developed by Henyey-Greenstein [#HG41]. It is controlled by a single parameter $g$ in the range $-1..1$, the *anisotropy parameter*.
+In addition the phase function $p(\mathbf{v},\mathbf{l})$ determines the probability density of outgoing directions $\mathbf{l}$ given an incident direction $\mathbf{v}$ at a scattering event. We use the phase function developed by Henyey-Greenstein [#HG41]. It is controlled by a single parameter $g$ in the range $[-1,1]$, the *anisotropy parameter*.
 
 \begin{eqnarray}
 p(\mathbf{v},\mathbf{l}; g) = \frac{1}{4 \pi} \frac{1-g^2}{(1+g^2+2g(\mathbf{v} \cdot \mathbf{l}))^{3/2}}
@@ -757,12 +757,12 @@ p(\mathbf{v},\mathbf{l}; g) = \frac{1}{4 \pi} \frac{1-g^2}{(1+g^2+2g(\mathbf{v} 
 
 Negative values of $g$ correspond to backward scattering and positive values to forward scattering. $g=0$ results in isotropic scattering.
 
- Name          | Type          | Default | Range  | Description
----------------|---------------|---------|--------|-------------
-$a$            | uniform color | 1       | 0..1   | Attenuation color.
-$d$            | uniform float | inf     | 0..inf | Attenuation distance. A value of 0 will make to surface opaque.
-$\rho_{ms}$    | uniform color | 0       | 0..1   | Subsurface color. Subsurface scattering is disabled if $\rho_{ms}=0$.
-$g$            | uniform float | 0       | -1..1  | Subsurface anisotropy (<0:&#160;backward, =0:&#160;isotropic, >0:&#160;forward scattering).
+ Name          | Type          | Default | Range   | Description
+---------------|---------------|---------|---------|-------------
+$a$            | uniform color | 1       | [0,1]   | Attenuation color.
+$d$            | uniform float | inf     | [0,inf) | Attenuation distance. A value of 0 will make to surface opaque.
+$\rho_{ms}$    | uniform color | 0       | [0,1]   | Subsurface color. Subsurface scattering is disabled if $\rho_{ms}=0$.
+$g$            | uniform float | 0       | [-1,1]  | Subsurface anisotropy (<0:&#160;backward, =0:&#160;isotropic, >0:&#160;forward scattering).
 [Table [volume-parameters]: List of volume parameters.]
 
 ![Figure [volume-parameters-fig]: Result for various values of volume parameters.](img/params_volume_2021x.png)
@@ -1065,7 +1065,7 @@ E_m(\mu_v) = \int_{0}^{2\pi} \int_{0}^{1} M_r(\mu_l, \phi, \mu_v)  \, \mu_l \, \
 
 Evaluating this integral for different values of $\mu_v$ and isotropic roughness $r$ results in the image shown in Figure [energy-compensation-ggx-e].
 
-![Figure [energy-compensation-ggx-e]: Directional albedo of single-scattering microfacet GGX BRDF](img/energycomp_ggx_e.png)
+![Figure [energy-compensation-ggx-e]: Directional albedo of single-scattering microfacet GGX BRDF.](img/energycomp_ggx_e.png)
 
 Integrating over the hemisphere once more gives us the average albedo (Figure [energy-compensation-ggx-e-avg]):
 
@@ -1073,7 +1073,7 @@ Integrating over the hemisphere once more gives us the average albedo (Figure [e
 E_{m, avg} &=& 2 \int_0^1 E_{m}(\mu_v) \mu_v \, \mathrm d \mu_v
 \end{eqnarray}
 
-![Figure [energy-compensation-ggx-e-avg]: Average albedo of single-scattering microfacet GGX BRDF](img/energycomp_ggx_e_avg.png)
+![Figure [energy-compensation-ggx-e-avg]: Average albedo of single-scattering microfacet GGX BRDF.](img/energycomp_ggx_e_avg.png)
 
 We are now able to store these results in a lookup table (e.g., with a size of 32x32 pixels) and fetch them during the evaluation of the BSDF to compute the energy compensation term $M_{r,ms}(\mathbf{v},\mathbf{l})$.
 Including the Fresnel term [#Hil18], the complete multiple-scattering GGX BRDF looks as follows:
@@ -1149,8 +1149,8 @@ It is possible to use the following approximations instead of the look up tables
 
 \begin{eqnarray}
 \label{energycomp-base-fit}
-E(\cos\theta) &=& \operatorname{lerp}(E_0 + (1.0 - E_0)(1 - \cos\theta)^5, 0.04762 + 0.95238 E_0, 1 - (1 -
-\alpha_{uv})^5) \\
+E(\cos\theta) &=& (1 - \alpha_{uv})^5 (E_0 + (1.0 - E_0)(1 - \cos\theta)^5) \,+ \\
+&& (1 - (1 - \alpha_{uv})^5) (0.04762 + 0.95238 E_0) \\
 E_{avg} &=& E_0 + (-0.33263 \alpha_{uv} - 0.072359) (1 - E_0) E_0
 \end{eqnarray}
 
