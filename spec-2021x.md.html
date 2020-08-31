@@ -5,7 +5,7 @@
         ![][license.png]
            Version 2021x - WORK IN PROGRESS
 
-The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. Inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13], it combines a metallic and a dielectric BSDF, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat, metallic flakes and sheen to cover a wide range of appearances.
+The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. Inspired by the Disney Principled BRDF [#Bur12, #Bur15] and the Unreal Shading Model [#Kar13], it combines a metallic and a dielectric BSDF, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat, metallic flakes and sheen to cover a wide range of appearances.
 
 In this document we provide a mathematical description of the Enterprise PBR Shading Model in terms of bidirectional scattering distribution functions (BSDF) and related concepts. Following the description makes it possible to derive a visually consistent implementation in a physically-based renderer.
 
@@ -223,7 +223,7 @@ If the material is volumetric, the dielectric Fresnel term handles refraction an
 
 #### Microfacet BSDF
 
-Reflection and transmission are based on microfacet BSDFs [#Cook82] [#WMLT07]. As in [#Bur12] we square the roughness $(r_u, r_v)$ to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_o$, respectively.
+Reflection and transmission are based on microfacet BSDFs [#Cook82, #WMLT07]. As in [#Bur12] we square the roughness $(r_u, r_v)$ to make it perceptually more linear. The index of refraction of the media on the incident and transmitted side of the surface is denoted by $\eta_i$ and $\eta_o$, respectively.
 
 \begin{eqnarray}
 M_r(\mathbf{v},\mathbf{l}; r_u, r_v) &=& \frac{D(\mathbf{h},r_u^2,r_v^2) G(\mathbf{v},\mathbf{l},r_u^2,r_v^2)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})} \\
@@ -612,7 +612,7 @@ where target cone angle ${\theta_\text{cone}^\prime = 7^\circ }$. Flake BSDF is 
 Rendering flakes is a challenging task for both offline and real-time renderers. While offline renderers solve pixel aliasing via Monte Carlo method, real-time renderers don't have computational budget high enough to afford that.
 Calculating reflected light on a flaky surface is very hard when single pixel contains hundreds or thousands of flakes. In this case raw point based Monte Carlo method can cause extremely high variance and therefore suffer from an aliasing artifacts,
 on the other hand none of the existing denoisers work well with flakes because it's hard to distinguish it from actual noise.
-So it becomes necessary to do some type of filtering of the reflection, which will efficiently find most of the flakes under the pixel, which reflect light towards the viewer [#Jak14] [#AK16].
+So it becomes necessary to do some type of filtering of the reflection, which will efficiently find most of the flakes under the pixel, which reflect light towards the viewer [#Jak14, #AK16].
 Additional optimization can be done for a flaky surface seen from a large distance. When the number of flakes per pixel gets too high the reflection becomes smoother and therefore could be well approximated with Cook-Torrance reflection model with GGX distribution [#Cook82].
 
 Clearcoat
@@ -1249,4 +1249,4 @@ The Enterprise PBR Shading Model (DSPBR), © Dassault Systèmes 2019, is license
 
 [license.png]: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAPCAMAAABEF7i9AAAAllBMVEUAAAD///+rsapERER3d3eIiIjMzMzu7u4iIiKUmZO6v7rKzsoODg4RERFVVVUNDQ0NDg0PEA8zMzNLTEtbXltmZmZydnF9gn2AgICPkI+ZmZmqqqq7u7vFxsXIzMgNDQwZGRkgICAhISEkJSMnKCcuMC4xMzE5Ozk7PTtBQkFCQkJDQ0Nna2eGhoaHh4ezuLLGysbd3d1wVGpAAAAA0klEQVR42q2T1xbCIAyGk0CXdlmto3XvPd7/5QRL1432WHI4XED4+PMHALQHag0JJBlXMNQScx2ibu9PdTnQcY3iErYl6oxbAo/rUrUJA6J5vx0wNNC0gVkMbBPZXtQ8Uf6qpNJwOf0EjmCKto+ce1aSIg9FzTO1/xlYyVeL34FDMC3ZFT+SNXOX6PEsBKm0rIOYPYuGClnsWTxBHtQV1gRhI4UUGJh6EAsPoxdedjUPK+dzT38DDyvNXXYW9wJ43mh4h6ItN8U7Ldv+FN1/WXO8Aed5CQIgC4KiAAAAAElFTkSuQmCC
 
-<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/1.04/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="https://casual-effects.com/markdeep/1.11/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

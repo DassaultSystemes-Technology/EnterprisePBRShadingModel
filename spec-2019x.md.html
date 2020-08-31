@@ -5,7 +5,7 @@
         ![][license.png]
            Version 2019x
 
-The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. Inspired by the Disney Principled BRDF [#Bur12] [#Bur15] and the Unreal Shading Model [#Kar13], it combines a metallic and a dielectric BSDF, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat and sheen to cover a wide range of appearances.
+The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material optimized for performance in real-time and interactive scenarios, suitable for rasterization and ray tracing. Inspired by the Disney Principled BRDF [#Bur12, #Bur15] and the Unreal Shading Model [#Kar13], it combines a metallic and a dielectric BSDF, including transparency for thin-walled and volumetric objects. In addition, it provides effects like emission, clear coat and sheen to cover a wide range of appearances.
 
 In this document we provide in-depth instructions on how to implement the model in a physically-based renderer.
 
@@ -345,7 +345,7 @@ with $E_0 = F_0 \rho_{s,\text{max}}$, where $\rho_{s,\text{max}}$ denotes the ma
 
 #### Sheen BRDF
 
-For sheen effects we use the Ashikhmin BRDF with the "inverted Gaussian distribution" [#AP07] [#NP13].
+For sheen effects we use the Ashikhmin BRDF with the "inverted Gaussian distribution" [#AP07, #NP13].
 
 \begin{eqnarray}
 M_b(\mathbf{v},\mathbf{l}; b) &=& \frac{D_{inv}(b,\mathbf{h})}{4 \left[(\mathbf{n}\cdot\mathbf{l}) + (\mathbf{n}\cdot\mathbf{v}) - (\mathbf{n}\cdot\mathbf{l})(\mathbf{n}\cdot\mathbf{v})\right]} \\
@@ -910,4 +910,4 @@ The Enterprise PBR Shading Model (DSPBR), © Dassault Systèmes 2019, is license
 
 [license.png]: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAPCAMAAABEF7i9AAAAllBMVEUAAAD///+rsapERER3d3eIiIjMzMzu7u4iIiKUmZO6v7rKzsoODg4RERFVVVUNDQ0NDg0PEA8zMzNLTEtbXltmZmZydnF9gn2AgICPkI+ZmZmqqqq7u7vFxsXIzMgNDQwZGRkgICAhISEkJSMnKCcuMC4xMzE5Ozk7PTtBQkFCQkJDQ0Nna2eGhoaHh4ezuLLGysbd3d1wVGpAAAAA0klEQVR42q2T1xbCIAyGk0CXdlmto3XvPd7/5QRL1432WHI4XED4+PMHALQHag0JJBlXMNQScx2ibu9PdTnQcY3iErYl6oxbAo/rUrUJA6J5vx0wNNC0gVkMbBPZXtQ8Uf6qpNJwOf0EjmCKto+ce1aSIg9FzTO1/xlYyVeL34FDMC3ZFT+SNXOX6PEsBKm0rIOYPYuGClnsWTxBHtQV1gRhI4UUGJh6EAsPoxdedjUPK+dzT38DDyvNXXYW9wJ43mh4h6ItN8U7Ldv+FN1/WXO8Aed5CQIgC4KiAAAAAElFTkSuQmCC
 
-<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/1.04/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="https://casual-effects.com/markdeep/1.11/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
