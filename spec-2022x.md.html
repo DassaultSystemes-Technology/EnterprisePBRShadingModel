@@ -363,11 +363,10 @@ For more fine-grained artistic control, the material can now be tweaked even fur
 Sheen
 -----
 
-For rendering cloth-like materials diffuse and specular BRDFs are not sufficient. Fibers standing perpendicular to the surface lead to backscattering, brightening the rims of objects. We simulate this effect with a microfacet-based sheen BRDF $M_b$, layered on top of the core described in Section [Core]. Its distribution with roughness $r_b$ generates micro-fiber normals, centered around grazing directions. The intensity and color are controlled via parameters $b$ and $\rho_b$, respectively. The BRDF and layering technique is taken from [#CK17].
+For rendering cloth-like materials diffuse and specular BRDFs are not sufficient. Fibers standing perpendicular to the surface lead to backscattering, brightening the rims of objects. We simulate this effect with a microfacet-based sheen BRDF $M_b$, layered on top of the core described in Section [Core]. Its distribution with roughness $r_b$ generates micro-fiber normals, centered around grazing directions. The color is controlled via $\rho_b$. The BRDF and layering technique is taken from [#CK17].
 
  Name        | Type          | Default | Range  | Description
 -------------|---------------|---------|--------|-------------
-$b$          | float         | 0       | [0,1]  | Sheen intensity (0 = no sheen, 1 = full sheen).
 $\rho_b$     | color         | 1       | [0,1]  | Sheen color.
 $r_b$        | float         | 0.3     | [0,1]  | Roughness of sheen microfacet distribution.
 [Table [sheen-parameters]: List of sheen parameters.]
@@ -376,9 +375,9 @@ Sheen is layered on top of the core like a coating [#CK17]. Similar to the diffu
 
 \begin{equation}
 \begin{aligned}
-&\text{ShinyCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b, \rho_b, r_b) = \\
-&\quad\quad\quad\quad \text{Core}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s) \, \min(1 - b \hat{\rho}_b E_b(\mathbf{v}\cdot\mathbf{n}), 1 - b \hat{\rho}_b E_b(\mathbf{l}\cdot\mathbf{n})) \\
-&\quad\quad\quad + M_b(r_b) \, b \, \rho_b
+&\text{ShinyCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, \rho_b, r_b) = \\
+&\quad\quad\quad\quad \text{Core}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s) \, \min(1 - \hat{\rho}_b E_b(\mathbf{v}\cdot\mathbf{n}), 1 - \hat{\rho}_b E_b(\mathbf{l}\cdot\mathbf{n})) \\
+&\quad\quad\quad + M_b(r_b) \, \rho_b
 \end{aligned}
 \end{equation}
 
@@ -786,7 +785,6 @@ We recommend to display the parameters to users in the UI in the following order
   - Specular
   - Specular Tint
 * Sheen
-  - Sheen
   - Sheen Color
   - Sheen Roughness
 * Flakes
@@ -873,8 +871,7 @@ Anisotropy Rotation | *0*                                               | *0*   
 Normal              | (0,0,1)                                           | *(0,0,1)*                                        | (0,0,1)                                           | (0,0,1)                                    |
 Transparency        | *0*                                               | *0*                                              | 0                                                 | 0                                          |
 Cut-Out Opacity     | 1                                                 | 1                                                | 1                                                 | 1                                          |
-Sheen               | *0*                                               | *0*                                              | 0.3                                               | *0*                                        |
-Sheen Color         | *(1,1,1)*                                         | *(1,1,1)*                                        | (0.844,<br/>0.82,<br/>0.666)                      | *(1,1,1)*                                  |
+Sheen Color         | *(1,1,1)*                                         | *(1,1,1)*                                        | (0.253,<br/>0.246,<br/>0.2)                       | *(1,1,1)*                                  |
 Sheen Roughness     | *0.3*                                             | *0.3*                                            | 0.3                                               | *0.3*                                      |
 Specular            | *1*                                               | *0*                                              | *1*                                               | *1*                                        |
 Specular Tint       | *(1,1,1)*                                         | *(0,0,0)*                                        | *(1,1,1)*                                         | *(1,1,1)*                                  |
@@ -932,6 +929,8 @@ Changelog
 
 Version 2022x
 -------------
+
+* Removed sheen parameter.
 
 Version 2021x
 -------------
