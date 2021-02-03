@@ -434,9 +434,11 @@ Some materials, such as car paint or grainy metals, exhibit shifting random patt
  Name        | Type          | Default | Range  | Description
 -------------|---------------|---------|--------|-------------
 $f$          | float         | 0       | [0,1]  | Flake coverage (0 = no flakes, 1 = only flakes).
+$\rho_f$     | color         | 1       | [0,1]  | Flake color.
 $s_f$        | float         | 0       | [0,1]  | Flake size (diameter) in mm in world space.
 $r_f$        | float         | 0       | [0,1]  | Roughness of distribution that controls flake orientation.
-$\rho_f$     | color         | 1       | [0,1]  | Flake color.
+$f_f$        | float         | 0       | [0,1]  | Flip flop effect (0 = none, 1 = full).
+$\rho_{ff}$  | color         | 1       | [0,1]  | Light-facing color of flip flop effect.
 [Table [flakes-parameters]: List of flakes parameters]
 
 ![Figure [flakes-parameters-fig]: Result for various values of flakes parameters.](img/params_flakes_2022x.png)
@@ -449,16 +451,17 @@ Flake size $s_f$ chooses the average flake diameter in millimeters. Thus the con
 
 The total roughness $r_f$ is distributed mostly to the orientation roughness of the normals and to a smaller part to the cone angle of the cone BSDF used for the individual flakes (Equation [roughness-distribution]). To determine the distribution of flake orientations we sample from a GGX normal distribution function.
 
-The cone BSDF used in opaque flakes is tinted/multiplied with $\rho_f$ to allow choice of a global flake color for the material (Equation [flake-bsdf]).
+The flake color $\rho_f$ determines the color of the individual flakes. This is sufficient for a large variety of car paints. There are, however, some paints that exhibit strong directional-dependent color effects. These are often referred to as "flip flop effects" or "pearlescent paints". To mimic these effects, we provide an additional light-facing color $\rho_{ff}$ and an intensity parameter $f_f$.
 
 ### Layering
-With flake opacity texture $o_{f}(\mathbf{p}; f, s_f)$ and flake normal texture $n_f(\mathbf{p}; f, s_f,r_f)$ the layers are combined as follows:
+
+With flake opacity texture $o_{f}(\mathbf{p}; f, s_f)$, flake normal texture $\mathbf{n}_f(\mathbf{p}; f, s_f,r_f)$ and flake flip-flop color $c_f(\mathbf{v}, \mathbf{l}; \rho_f, f_f, \rho_{ff})$ the layers are combined as follows:
 
 \begin{equation}
 \begin{aligned}
 &\text{GlitteryCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b, \rho_b, r_b, f, s_f, r_f, \rho_f) = \\
 &\quad\quad\quad\quad \text{ShinyCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, b, \rho_b, r_b) \, (1 - o_{f}(\mathbf{p}; f, s_f)) \\
-&\quad\quad\quad + \rho_fB_f^\prime(\mathbf{v}, \mathbf{l}; \mathbf{p}, r_f, \mathbf{n}_f) o_{f}(\mathbf{p}; f, s_f)
+&\quad\quad\quad + c_f(\mathbf{v}, \mathbf{l}; \rho_f, f_f, \rho_{ff}) B_f(\mathbf{v}, \mathbf{l}; r_f, \mathbf{n}_f) o_{f}(\mathbf{p}; f, s_f)
 \end{aligned}
 \end{equation}
 
@@ -580,6 +583,7 @@ We can now derive the textures $o_f(\mathbf{p}; f, s_f)$ and $\mathbf{n}_f(\math
 [Listing [flakes]: Sampling the procedural flake textures $o_{f}(\mathbf{p}; f, s_f)$ and $n_f(\mathbf{p}; f, s_f,r_f)$.]
 
 ### Flake BSDF
+
 Generated flakes have a very simple BSDF. They behave like blurred mirrors, so they reflect light uniformly within a small cone aligned to a perfect reflection direction. Solid angle of the cone is defined as 
 \begin{eqnarray}
   \Omega_{cone}(\cos\theta) = 2\pi(1-\cos\theta)
@@ -588,7 +592,7 @@ Generated flakes have a very simple BSDF. They behave like blurred mirrors, so t
 Taking it into account the flake BSDF looks like this : 
 \begin{eqnarray}
   \label{flake-bsdf}
-  B_f(\mathbf{v}, \mathbf{l}, r_f, \mathbf{n}_f) &=&
+  B_f(\mathbf{v}, \mathbf{l}; r_f, \mathbf{n}_f) &=&
   \begin{cases}
     \frac{1}{\Omega_{cone}(\cos\theta_\text{cone})} & \text{if } (\mathbf{l} \cdot \mathbf{r}) > \cos\theta_\text{cone} \\
     0 & \text{otherwise}
@@ -604,7 +608,22 @@ with ${\mathbf{r}} = {2 \mathbf{n}_f (\mathbf{v} \cdot \mathbf{n}_f) - \mathbf{v
   \alpha_\text{cone}^2 = \min\left(\frac{\Omega_{cone}(\cos(\theta_\text{cone}^\prime))} {4\pi - \Omega_{cone}(\cos(\theta_\text{cone}^\prime))}, \frac{r_f^2}{2}\right)
 \end{eqnarray}
 
-where target cone angle ${\theta_\text{cone}^\prime = 7^\circ }$. Flake BSDF is additionally tinted with a flake color $\rho_f$.
+where target cone angle ${\theta_\text{cone}^\prime = 7^\circ}$.
+
+### Flip-Flop Effect
+
+The flake BSDF is tinted with flake color $\rho_f$ and flip flop color $\rho_{ff}$. The two colors are mixed depending on the angle between view direction and flake normal. As the flakes itself are not perfectly specular, we take the reflection half-vector instead of the flake normal. This ensures that the BRDF is reciprocal.
+
+The flip flop strength $f_f$ determines how much of the flip flop color is visible. A strength of 0 disables the effect.
+
+The function $c_f$ that computes the angle-dependent flake tint is given as follows:
+
+\begin{eqnarray}
+  c_f(\mathbf{v}, \mathbf{l}; \rho_f, f_f, \rho_{ff}) &=& \rho_f + (\rho_{ff} - \rho_f) (\mathbf{v} \cdot \mathbf{h}_r)^\frac{1}{f_f^2} \\
+  \mathbf{h}_r &=& \frac{\mathbf{v} + \mathbf{l}}{\lVert\mathbf{v} + \mathbf{l}\rVert} & \quad &
+\end{eqnarray}
+
+Instead of $(\mathbf{v}\cdot\mathbf{h}_r)$ renderers may also choose the dot product of view vector and surface normal $(\mathbf{v}\cdot\mathbf{n})$. This may give more accurate results with certain approximations like preconvolved IBL.
 
 ### Efficient implementation
 
@@ -792,6 +811,8 @@ We recommend to display the parameters to users in the UI in the following order
   - Flake Color
   - Flake Size
   - Flake Roughness
+  - Flip Flop
+  - Flip Flop Color
 * Coating
   - Clearcoat
   - Clearcoat Roughness
@@ -931,6 +952,7 @@ Version 2022x
 -------------
 
 * Removed sheen parameter.
+* Added flip-flop effect to flakes.
 
 Version 2021x
 -------------
