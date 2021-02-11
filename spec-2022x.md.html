@@ -625,7 +625,7 @@ The function $c_f$ that computes the angle-dependent flake tint is given as foll
 
 Instead of $(\mathbf{v}\cdot\mathbf{h}_r)$ renderers may also choose the dot product of view vector and surface normal $(\mathbf{v}\cdot\mathbf{n})$. This may give more accurate results with certain approximations like preconvolved IBL.
 
-### Efficient implementation
+### Efficient Implementation
 
 Rendering flakes is a challenging task for both offline and real-time renderers. While offline renderers solve pixel aliasing via Monte Carlo method, real-time renderers don't have computational budget high enough to afford that.
 Calculating reflected light on a flaky surface is very hard when single pixel contains hundreds or thousands of flakes. In this case raw point based Monte Carlo method can cause extremely high variance and therefore suffer from an aliasing artifacts,
@@ -676,7 +676,7 @@ The cut-out acts like an alpha channel for the surface. It makes parts of the su
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
-$\nu$          | float         | 0       | [0,1]  | Cut-out opacity value (0 = transparent, 1 = opaque).
+$\alpha$       | float         | 0       | [0,1]  | Cut-out opacity value (0 = transparent, 1 = opaque).
 [Table [cutout-parameters]: List of cut-out parameters.]
 
 ![Figure [cutout-parameters-fig]: Result for various values of cut-out parameters.](img/params_cutout_2022x.png)
@@ -785,6 +785,52 @@ $g$            | uniform float | 0       | [-1,1]  | Subsurface anisotropy (<0:&
 
 ![Figure [volume-parameters-fig]: Result for various values of volume parameters.](img/params_volume_2022x.png)
 
+Dispersion
+----------
+
+In optics, dispersion is the phenomenon in which the index of refraction depends on the wavelength of the light. It is usually quantified by the Abbe number $\nu_d$. Typical values for the Abbe number range from 20 (flint glass) to 60 (crown glass). The larger the Abbe number, the weaker the effect.
+
+![Figure [prism]: A dispersive prism breaks up white light into its spectral components (colors of the rainbow). This is the consequence of refraction angles varying with the wavelength of light rays.](img/prism.png)
+
+The Abbe number $\nu_d$ is defined as
+
+\begin{equation}
+\nu_d = \frac{\eta_d - 1}{\eta_F - \eta_C},
+\end{equation}
+
+where $\eta_d$, $\eta_F$ and $\eta_C$ are the indices of refraction at the wavelengths corresponding to the Fraunhofer d, F and C lines:
+
+\begin{eqnarray}
+d &=& 587.56 \text{ nm} \\
+F &=& 486.13 \text{ nm} \\
+C &=& 656.27 \text{ nm}
+\end{eqnarray}
+
+For rendering, we need a function that maps from any wavelength to an index of refraction, given the material's index of refraction $\eta_d$ and Abbe number $\nu_d$. One such mapping is Cauchy's equation. In its most general form, the equation is
+
+\begin{equation}
+\eta(\lambda) = a + \frac{b}{\lambda^2} + \frac{c}{\lambda^4} + ...,
+\end{equation}
+
+where $\lambda$ is the wavelength and $a$, $b$, $c$, ... are coefficients obtained by fitting measured data. Usually, its sufficient to use the first two coefficients. We can compute those from the two given values $\eta_d$ and $\nu_d$ as follows:
+
+\begin{eqnarray}
+b &=& \frac{\eta_d-1}{\nu_d} \frac{1}{\frac{1}{F^2} - \frac{1}{C^2}} \\
+a &=& \eta_d - \frac{b}{d^2}
+\end{eqnarray}
+
+Thus Cauchy's equation based on the Abbe number is (with symbolic constants replaced by their actual value):
+
+\begin{equation}
+\eta(\lambda) = \max(\eta_d + \frac{\eta_d-1}{\nu_d} \left( \frac{523655}{\lambda^2} - 1.5168 \right), 1)
+\end{equation}
+
+$\eta_d$ in this equation has to be set to the original value of the user-facing parameter for index of refraction $\eta$. The result $\eta(\lambda)$ then replaces the parameter's value. As a special case we disable dispersion if Abbe number $\nu_d = 0$.
+
+ Name    | Type          | Default | Range   | Description
+---------|---------------|---------|---------|-------------
+$\nu_d$  | uniform float | 0       | [0,inf) | Abbe number. Dispersion effect is disabled if $\nu_d = 0$.
+
 Parameter Order
 ===============
 
@@ -825,6 +871,7 @@ We recommend to display the parameters to users in the UI in the following order
 * Volume
   - Thin Walled
   - Index of Refraction
+  - Abbe Number
   - Attenuation Color
   - Attenuation Distance
   - Subsurface Color
