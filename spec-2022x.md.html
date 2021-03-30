@@ -377,7 +377,7 @@ Sheen is layered on top of the core like a coating [#CK17]. Similar to the diffu
 \begin{aligned}
 &\text{ShinyCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, \rho_b, r_b) = \\
 &\quad\quad\quad\quad \text{Core}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s) \, \min(1 - \hat{\rho}_b E_b(\mathbf{v}\cdot\mathbf{n}), 1 - \hat{\rho}_b E_b(\mathbf{l}\cdot\mathbf{n})) \\
-&\quad\quad\quad + M_b(r_b) \, \rho_b
+&\quad\quad\quad + M_b(r_b^2) \, \rho_b
 \end{aligned}
 \end{equation}
 
@@ -386,43 +386,53 @@ As in Section [Diffuse BRDF], we subtract the maximum value $\hat{\rho_b} = \max
 The sheen BRDF follows the usual microfacet equation:
 
 \begin{equation}
-M_b(\mathbf{v},\mathbf{l}; r_b) = \frac{D_b(\mathbf{h},r_b) G_b(\mathbf{v},\mathbf{l},r_b)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})}
+M_b(\mathbf{v},\mathbf{l}; \alpha_b) = \frac{D_b(\mathbf{h},\alpha_b) G_b(\mathbf{v},\mathbf{l},\alpha_b)}{4 (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})}
 \end{equation}
 
-The distribution of normals and the shadowing-masking term as given in [#CK17] :
+The distribution of normals as given in [#CK17]:
 
 \begin{eqnarray}
-D_b(\mathbf{h},r_b) &=& \frac{(2+1/r_b) \sin^{1/r_b}\theta_b}{2\pi} \\
+D_b(\mathbf{h},\alpha_b) &=& \frac{(2+1/\alpha_b) \sin^{1/\alpha_b}\theta_b}{2\pi} \\
 \sin\theta_b &=& \sqrt{1-(\textbf{h}\cdot\textbf{n})^2} \\
 \end{eqnarray}
+
+Since there is no easy analytical solution for the shadowing-masking term, [#CK17] compute the term numerically and use curve fitting. Although their fit is good, the error becomes quite noticable at small roughness values. The final sheen BRDF shows significant brightening at grazing angles in a white furnace test. For this reason we refined the fit to reduce the error, in particular near $\alpha_b = 0$. The key improvement is the new interpolation function for intermediate roughness values, which in our case is a bit more costly to compute.
+
 \begin{eqnarray}
-G_b(\mathbf{v},\mathbf{l},r_b) &=& \frac{1}{1+\Lambda(\mathbf{v}\cdot\mathbf{n})+\Lambda(\mathbf{l}\cdot\mathbf{n})} \\
+G_b(\mathbf{v},\mathbf{l},\alpha_b) &=& \frac{1}{1+\Lambda(\mathbf{v}\cdot\mathbf{n})+\Lambda(\mathbf{l}\cdot\mathbf{n})} \\
 \Lambda(\cos\theta) &=& \begin{cases}
 e^{L(|\cos\theta|)} & \text{if } |\cos\theta|<0.5 \\
 e^{2 L(0.5) - L(1 - |\cos\theta|)} & \text{otherwise}
 \end{cases} \\
-L(x) &=& \frac{a}{1+bx^c}+dx+e
+L(x) &=& \frac{a_0}{1 + a_1 x^{a_2}} + a_3 x + a_4
 \end{eqnarray}
 
-$r_b$ |     $a$ |     $b$ |     $c$ |      $d$ |      $e$
+      |   $a_0$ |   $a_1$ |   $a_2$ |    $a_3$ |    $a_4$
 ------|---------|---------|---------|----------|----------
- 0.0  | 25.3245 | 3.32435 | 0.16801 | -1.27393 | -4.85967
- 1.0  | 21.5473 | 3.82987 | 0.19823 | -1.97760 | -4.32054
- [Table [sheen-lambda-fit]: Values for $\Lambda$ curve fitting. Parameters are interpolated according to $P = (1-r_b)^2 P_{0.0} + (1-(1-r_b)^2) P_{1.0}$ [#CK17].]
+$p_0$ | 11.9095 | 4.68753 | 0.33467 | -2.22664 | -1.76591
+$p_1$ | 13.7000 | 2.92754 | 0.28670 | -0.81757 | -1.22466
+[Table [sheen-lambda-fit]: Values for $L(x)$ used in $\Lambda$ curve fitting. Parameters are interpolated according to $\left(1.0 - w(\alpha_b)\right) p_1 + w(\alpha_b) p_0$.]
+
+\begin{eqnarray}
+w(\alpha_b) &=& \frac{c_0}{1 + c_1 {\alpha_b}^{c_2}} + c_3
+\end{eqnarray}
+
+   $c_0$ |   $c_1$ |    $c_2$ |   $c_3$
+---------|---------|----------|---------
+-1.59612 | 0.20375 | -0.55825 | 1.32805
+[Table [sheen-lambda-fit-w]: Constants for $w(\alpha_b)$.]
  
 If performance is a concern, due to the computation cost of the term above, we propose an alternative visibility term,
 given in [#NP13] :
 
 \begin{equation}
-M_b(\mathbf{v},\mathbf{l}; r_b) = \frac{D_b(\mathbf{h},r_b)}{4 ((\mathbf{v} \cdot \mathbf{n}) + (\mathbf{l} \cdot \mathbf{n}) - (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n}))}
+M_b(\mathbf{v},\mathbf{l}; \alpha_b) = \frac{D_b(\mathbf{h},\alpha_b)}{4 ((\mathbf{v} \cdot \mathbf{n}) + (\mathbf{l} \cdot \mathbf{n}) - (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n}))}
 \end{equation}
 The visual differences between the main model and the alternative model can be interactively observed on the following ShaderToy: https://www.shadertoy.com/view/wl3SWs.
 ![Figure [visu-main-sheen]: Main sheen model for growing roughness.](img/fabric_estevezkulla.png)
 ![Figure [visu-alt-sheen]: Alternative sheen model for growing roughness.](img/fabric_ashikhmin.png)
 We can see through Figure [visu-main-sheen] and Figure [visu-alt-sheen] that consistency gets better as roughness grows. The alternative model is noticeably brighter for very low roughness values.
 The directional albedo changes can be found in Section [Alternative Sheen BRDF]
-
-We clamp the roughness to range [0.07;1] to avoid numerical issues and because we observed that the directional albedo at grazing angles becomes larger than 1 if roughness is below 0.07.
 
 Flakes
 ------
@@ -999,6 +1009,8 @@ Version 2022x
 -------------
 
 * Removed sheen parameter.
+* Sheen roughness is now squared.
+* Improved sheen shadowing-masking term.
 * Added flip-flop effect to flakes.
 * Added dispersion.
 
