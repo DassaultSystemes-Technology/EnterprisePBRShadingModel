@@ -984,12 +984,13 @@ Material Subtypes
 
 The Enterprise PBR Shading Model offers a limited but still substantial amount of parameters. For easier usability, especially for novice users, we recommend to use the following subtypes, which expose only subsets of parameters:
 * Car Paint
-* Emissive
-* Glass
 * Metal
-* Plastic
-* Textile/Leather
+* Emissive
+* Textile
+* Leather
 * Wood
+* Glass
+* Plastic
 
 For compatibility with the widely spread Unreal model [#Kar13], additionally a general purpose material called "Basic" is recommended.
 
@@ -1008,74 +1009,84 @@ Table [subtypes-parameters-metals], Table [subtypes-parameters-opaque-dielectric
 </style>
 
 <div class="materialtypes">
- Name               |     Car Paint                                        |       Metal       
---------------------|:----------------------------------------------------:|:-----------------:
-Albedo              | (0.009,0.013,0.028)                                  | (0.5,0.5,0.5)
-Metallic            | *1*                                                  | *1*
-Roughness           | 0.4                                                  | 0.1        
-Anisotropy          | *0*                                                  | 0        
-Anisotropy Rotation | *0*                                                  | 0        
-Normal              | *(0,0,1)*                                            | (0,0,1)      
-Transparency        | *0*                                                  | *0*
-Cut-Out Opacity     | 1                                                    | 1        
-Specular            | *1*                                                  | *1*      
-Specular Tint       | *(1,1,1)*                                            | *(1,1,1)*
-Flake Coverage      | 0.8                                                  | *0*
-Flake Size          | 0.05                                                 | *0*
-Flake Roughness     | 0.25                                                 | *0*
-Flake Color         | (0.49,0.180,0.3537)                                  | *(1,1,1)*
-Clearcoat           | 1                                                    | *0*      
-Clearcoat Roughness | 0                                                    | *0*      
-Clearcoat Normal    | (0,0,1)                                              | *(0,0,1)*      
-                    | ![](img/subtypes_carpaint.png width="160px")         | ![](img/subtypes_metal.png width="160px")
+ Name               |     Car Paint                                        |       Metal                                     |
+--------------------|:----------------------------------------------------:|:-----------------------------------------------:|
+Albedo              | (0.009,0.013,0.028)                                  | (0.5,0.5,0.5)                                   |
+Metallic            | *1*                                                  | *1*                                             |
+Roughness           | 0.4                                                  | 0.1                                             |
+Anisotropy          | *0*                                                  | 0                                               |
+Anisotropy Rotation | *0*                                                  | 0                                               |
+Normal              | *(0,0,1)*                                            | (0,0,1)                                         |
+Displacement        | (0,0,0)                                              | (0,0,0)                                         |
+Translucency        | *0*                                                  | *0*                                             |
+Transparency        | *0*                                                  | *0*                                             |
+Cut-Out Opacity     | 1                                                    | 1                                               |
+Specular            | *1*                                                  | *1*                                             |
+Specular Tint       | *(1,1,1)*                                            | *(1,1,1)*                                       |
+Flake Coverage      | 0.8                                                  | *0*                                             |
+Flake Size          | 0.05                                                 | *0*                                             |
+Flake Roughness     | 0.25                                                 | *0*                                             |
+Flake Color         | (0.255,0.459,0.624)                                  | *(0,0,0)*                                       |
+Flip Flop           | 0                                                    | *0*                                             |
+Flip Color          | (0.255,0.459,0.624)                                  | *(0,0,0)*                                       |
+Clearcoat           | 1                                                    | *0*                                             |
+Clearcoat Roughness | 0                                                    | *0*                                             |
+Clearcoat Normal    | (0,0,1)                                              | *(0,0,1)*                                       |
+                    | ![](img/subtypes_2022x_carpaint.png width="160px")   | ![](img/subtypes_2022x_metal.png width="160px") |
 [Table [subtypes-parameters-metals]: List of fixed (italic light grey) and user-defined values with their defaults for the parameters of the different recommended metallic material subtypes. Emissive, sheen, clear-coat and volumetric parameters are omitted because the effects are not available and parameters can be kept at their defaults (Section [components]).]
 </div>
 
 <div class="materialtypes">
- Name               |     Basic                                         |     Emissive                                     |      Textile                                      |       Wood                                 |
---------------------|:-------------------------------------------------:|:------------------------------------------------:|:-------------------------------------------------:|:------------------------------------------:|
-Albedo              | (0.284,<br/>0.284,<br/>0.284)                     | *(0,0,0)*                                        | (0.302,<br/>0.294,<br/>0.236)                     | (0.344,<br/>0.227,<br/>0.07)               |
-Roughness           | 0.3                                               | *0*                                              | 0.4                                               | 0.5                                        |
-Anisotropy          | 0                                                 | *0*                                              | *0*                                               | *0*                                        |
-Anisotropy Rotation | *0*                                               | *0*                                              | 0                                                 | 0                                          |
-Normal              | (0,0,1)                                           | *(0,0,1)*                                        | (0,0,1)                                           | (0,0,1)                                    |
-Transparency        | *0*                                               | *0*                                              | 0                                                 | 0                                          |
-Cut-Out Opacity     | 1                                                 | 1                                                | 1                                                 | 1                                          |
-Sheen Color         | *(1,1,1)*                                         | *(1,1,1)*                                        | (0.253,<br/>0.246,<br/>0.2)                       | *(1,1,1)*                                  |
-Sheen Roughness     | *0.3*                                             | *0.3*                                            | 0.3                                               | *0.3*                                      |
-Specular            | *1*                                               | *0*                                              | *1*                                               | *1*                                        |
-Specular Tint       | *(1,1,1)*                                         | *(0,0,0)*                                        | *(1,1,1)*                                         | *(1,1,1)*                                  |
-Clearcoat           | *0*                                               | *0*                                              | *0*                                               | 1                                          |
-Clearcoat Roughness | *0*                                               | *0*                                              | *0*                                               | 0                                          |
-Clearcoat Normal    | *(0,0,1)*                                         | *(0,0,1)*                                        | *(0,0,1)*                                         | (0,0,1)                                    |
-Emission Color      | *(1,1,1)*                                         | (0.5,<br/>0.442,<br/>0.298)                      | *(1,1,1)*                                         | *(1,1,1)*                                  |
-Emission Value      | *0 lx*                                            | 10 lx                                            | *0 lx*                                            | *0 lx*                                     |
-Energy Norm.        | *false*                                           | false                                            | *false*                                           | *false*                                    |
-Thin Walled         | *true*                                            | *true*                                           | *true*                                            | *true*                                     |
-Index of Refraction | *1.5*                                             | *1.5*                                            | *1.5*                                             | *1.5*                                      |
-                    | ![](img/subtypes_basic.png width="100px")         | ![](img/subtypes_emissive.png width="100px")     | ![](img/subtypes_textileleather.png width="100px")| ![](img/subtypes_wood.png width="100px")   |
+ Name               |     Basic                                       |     Emissive                                       |      Textile                                     |      Leather                                      |       Wood                                     |
+--------------------|:-----------------------------------------------:|:--------------------------------------------------:|:------------------------------------------------:|:-------------------------------------------------:|:----------------------------------------------:|
+Albedo              | (0.284,<br/>0.284,<br/>0.284)                   | *(0,0,0)*                                          | (0.302,<br/>0.294,<br/>0.236)                    | (0.302,<br/>0.294,<br/>0.236)                     | (0.344,<br/>0.227,<br/>0.07)                   |
+Roughness           | 0.3                                             | *0*                                                | 0.4                                              | 0.4                                               | 0.5                                            |
+Anisotropy          | *0*                                             | *0*                                                | 0                                                | *0*                                               | 0                                              |
+Anisotropy Rotation | *0*                                             | *0*                                                | 0                                                | *0*                                               | 0                                              |
+Normal              | (0,0,1)                                         | *(0,0,1)*                                          | (0,0,1)                                          | (0,0,1)                                           | (0,0,1)                                        |
+Displacement        | (0,0,0)                                         | (0,0,0)                                            | (0,0,0)                                          | (0,0,0)                                           | (0,0,0)                                        |
+Translucency        | *0*                                             | *0*                                                | *0*                                              | *0*                                               | *0*                                            |
+Transparency        | *0*                                             | *0*                                                | *0*                                              | *0*                                               | *0*                                            |
+Cut-Out Opacity     | 1                                               | 1                                                  | 1                                                | 1                                                 | 1                                              |
+Specular            | *1*                                             | *0*                                                | *1*                                              | *1*                                               | *1*                                            |
+Specular Tint       | *(1,1,1)*                                       | *(0,0,0)*                                          | *(1,1,1)*                                        | *(1,1,1)*                                         | *(1,1,1)*                                      |
+Sheen Color         | *(0,0,0)*                                       | *(0,0,0)*                                          | (0.5,<br/>0.5,<br/>0.5)                          | *(0,0,0)*                                         | *(0,0,0)*                                      |
+Sheen Roughness     | *0.5*                                           | *0.5*                                              | 0.53                                             | *0.5*                                             | *0.5*                                          |
+Clearcoat           | *0*                                             | *0*                                                | *0*                                              | *0*                                               | 1                                              |
+Clearcoat Roughness | *0*                                             | *0*                                                | *0*                                              | *0*                                               | 0                                              |
+Clearcoat Normal    | *(0,0,1)*                                       | *(0,0,1)*                                          | *(0,0,1)*                                        | *(0,0,1)*                                         | (0,0,1)                                        |
+Emission Color      | *(1,1,1)*                                       | (0.5,<br/>0.442,<br/>0.298)                        | *(1,1,1)*                                        | *(1,1,1)*                                         | *(1,1,1)*                                      |
+Emission Value      | *0 lx*                                          | 10 lx                                              | *0 lx*                                           | *0 lx*                                            | *0 lx*                                         |
+Energy Norm.        | *false*                                         | false                                              | *false*                                          | *false*                                           | *false*                                        |
+Thin Walled         | *true*                                          | *true*                                             | *true*                                           | *true*                                            | *true*                                         |
+Index of Refraction | *1.5*                                           | *1.5*                                              | *1.5*                                            | *1.5*                                             | *1.5*                                          |
+                    | ![](img/subtypes_2022x_basic.png width="70px") | ![](img/subtypes_2022x_emissive.png width="70px") | ![](img/subtypes_2022x_textile.png width="70px")| ![](img/subtypes_2022x_leather.png width="70px") | ![](img/subtypes_2022x_wood.png width="70px") |
 [Table [subtypes-parameters-opaque-dielectrics]: List of fixed (italic light grey) and user-defined values with their defaults for the parameters of the different recommended non-volumetric dielectric material subtypes. Volumetric parameters are omitted because the effects are not available and parameters can be kept at their defaults (Section [components]).]
 </div>
 
 <div class="materialtypes">
- Name               |       Glass                                     |      Plastic                                        |
---------------------|:-----------------------------------------------:|:---------------------------------------------------:|
-Albedo              | (1,1,1)                                         | (0.004,<br/>0.004,<br/>0.004)                       |
-Roughness           | 0                                               | 0.25                                                |
-Metallic            | *0*                                             | *0*                                                 |
-Anisotropy          | *0*                                             | *0*                                                 |
-Anisotropy Rotation | *0*                                             | *0*                                                 |
-Normal              | (0,0,1)                                         | (0,0,1)                                             |
-Transparency        | *1*                                             | 0                                                   |
-Cut-Out Opacity     | 1                                               | 1                                                   |
-Specular            | *1*                                             | *1*                                                 |
-Specular Tint       | *(1,1,1)*                                       | *(1,1,1)*                                           |
-Thin Walled         | false                                           | true                                                |
-Index of Refraction | *1.5*                                           | 1.5                                                 |
-Attenuation Color   | (0.99,<br/>0.99,<br/>0.99)                      | (1,1,1)                                             |
-Attenuation Distance| 5 mm                                            | 0.01 mm                                             |
-Subsurface Color    | *(0,0,0)*                                       | (0,0,0)                                             |
-                    | ![](img/subtypes_glass.png width="160px")       | ![](img/subtypes_plastic.png width="160px")         |
+ Name                 |       Glass                                     |      Plastic                                        |
+----------------------|:-----------------------------------------------:|:---------------------------------------------------:|
+Albedo                | (1,1,1)                                         | (0.004,<br/>0.004,<br/>0.004)                       |
+Metallic              | *0*                                             | *0*                                                 |
+Roughness             | 0                                               | 0.25                                                |
+Anisotropy            | *0*                                             | *0*                                                 |
+Anisotropy Rotation   | *0*                                             | *0*                                                 |
+Normal                | (0,0,1)                                         | (0,0,1)                                             |
+Displacement          | (0,0,0)                                         | (0,0,0)                                             |
+Translucency          | *0*                                             | 0                                                   |
+Transparency          | *1*                                             | 0                                                   |
+Cut-Out Opacity       | 1                                               | 1                                                   |
+Specular              | *1*                                             | *1*                                                 |
+Specular Tint         | *(1,1,1)*                                       | *(1,1,1)*                                           |
+Thin Walled           | false                                           | true                                                |
+Index of Refraction   | *1.5*                                           | 1.5                                                 |
+Abbe number           | *0*                                             | *0*                                                 |
+Attenuation Color     | (0.99,<br/>0.99,<br/>0.99)                      | (1,1,1)                                             |
+Attenuation Distance  | 5 mm                                            | 0.01 mm                                             |
+Subsurface Color      | *(0,0,0)*                                       | (0,0,0)                                             |
+Subsurface Anisotropy | *0*                                             | *0*                                                 |
+                      | ![](img/subtypes_2022x_glass.png width="160px") | ![](img/subtypes_2022x_plastic.png width="160px")   |
 [Table [subtypes-parameters-transparent-dielectrics]: List of fixed (italic light grey) and user-defined values with their defaults for the parameters of the different recommended transparent dielectric material subtypes. Emissive, sheen and clear-coat parameters are omitted because the effects are not available and parameters can be kept at their defaults (Section [components]).]
 </div>
 
@@ -1100,6 +1111,8 @@ Changelog
 Version 2022x
 -------------
 
+* Added material subtype for Leather and changed defaults of Textile, Basic (anisotropy is now hidden) and CarPaint (flake color).
+* Specified displacement, translucency and subsurface anisotropy parameters for material subtypes.
 * Removed sheen parameter.
 * Sheen roughness is now squared.
 * Improved sheen shadowing-masking term.
