@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "title": "3DS_materials_volume glTF extension",
+    "type": "object",
+    "description": "glTF extension that defines the parameters for scattering in the volume of a material.",
+    "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
+    "properties": {
+        "subsurfaceColor": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "description": "Overall color an object has after multiple scattering events (assuming non-colored attenuation) in linear sRGB.",
+            "default": [ 0, 0, 0 ],
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "subsurfaceAsymmetry": {
+            "type": "number",
+            "minimum": -1.0,
+            "maximum": 1.0,
+            "description": "Asymmetry of the phase function.",
+            "default": 0.0
+        }
+    }
+}

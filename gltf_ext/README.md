@@ -62,29 +62,31 @@ emissiveFactor -> emissionColor * emissionValue
             "anisotropyFactor": 0.0,
             "anisotropyRotationFactor": 0.0
         },
-        "3DS_materials_transparency": {
-            "transparencyFactor": 0.0
+        "KHR_materials_transmission": {
+            "transmissionFactor": 0.0
         },
         "3DS_materials_translucency": {
             "translucencyFactor": 0.0
         },
-        "3DS_materials_sheen": {
-            "sheenFactor": 0.0,
+        "KHR_materials_sheen": {
             "sheenColorFactor": [ 1.0, 1.0, 1.0 ],
             "sheenRoughnessFactor": 0.2
         },
-        "3DS_materials_specular": {
+        "KHR_materials_specular": {
             "specularFactor": 1.0,
             "specularColorFactor": [ 1.0, 1.0, 1.0 ]
         },
-        "3DS_materials_ior": {
+        "KHR_materials_ior": {
             "ior": 1.5
         },
-        "3DS_materials_volume": {
-            "thinWalled": false,
+        "KHR_materials_volume": {
+            "thicknessFactor": 1,
             "attenuationColor": [ 1.0, 1.0, 1.0 ],
             "attenuationDistance": 200.0,
-            "subsurfaceColor": [ 0.0, 0.0, 0.0 ]
+        },
+        "3DS_materials_sss": {
+            "subsurfaceColor": [ 0.0, 0.0, 0.0 ],
+            "subsurfaceAsymmetry": 0.0
         }
     }
 }
@@ -110,7 +112,8 @@ emissiveFactor -> emissionColor * emissionValue
     },
     "extensions": {
         "3DS_materials_emission": {
-            "emissionMode": "POWER",
+            "emissionValue": 5,
+            "emissionMode": "LUMINOUS_EMITTANCE",
             "emissionEnergyNormalization": false
         }
     }

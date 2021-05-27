@@ -5,6 +5,11 @@
     "description": "glTF extension that defines the parameters for the emission mode of a material.",
     "allOf": [ { "$ref": "glTFProperty.schema.json" } ],
     "properties": {
+        "emissionValue": {
+            "description": "Emission strength in lm/m^2 (luminous emittance) or lm (luminous power).",
+            "default": 0.0,
+            "minimum": 0.0
+        },
         "emissionMode": {
             "description": "Emission mode of the emitted light.",
             "default": "LUMINOUS_EMITTANCE",
