@@ -120,10 +120,10 @@
                 "roughnessFactor" : 0
             }, 
             "extensions" : {
-                "3DS_materials_specular" : {
+                "KHR_materials_specular" : {
                     "specularFactor" : 0.0
                 }, 
-                "3DS_materials_clearcoat" : {
+                "KHR_materials_clearcoat" : {
                     "clearcoatFactor" : 1, 
                     "clearcoatRoughnessFactor" : 0.1
                 }

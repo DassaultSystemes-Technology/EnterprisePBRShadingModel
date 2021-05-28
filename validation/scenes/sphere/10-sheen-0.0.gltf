@@ -120,12 +120,11 @@
                 "roughnessFactor" : 0.1
             }, 
             "extensions" : {
-                "3DS_materials_sheen" : {
-                    "sheenFactor" : 0.0, 
+                "KHR_materials_sheen" : {
                     "sheenColorFactor" : [
-                        1, 
-                        0.75, 
-                        0.33
+                        0, 
+                        0, 
+                        0
                     ], 
                     "sheenRoughnessFactor" : 0.2
                 }

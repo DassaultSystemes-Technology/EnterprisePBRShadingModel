@@ -120,7 +120,7 @@
                 "roughnessFactor" : 0.4
             }, 
             "extensions" : {
-                "3DS_materials_specular" : {
+                "KHR_materials_specular" : {
                     "specularColorFactor" : [
                         0, 
                         1, 

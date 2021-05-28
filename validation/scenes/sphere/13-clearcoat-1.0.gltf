@@ -120,7 +120,7 @@
                 "roughnessFactor" : 0.5
             }, 
             "extensions" : {
-                "3DS_materials_clearcoat" : {
+                "KHR_materials_clearcoat" : {
                     "clearcoatFactor" : 1.0, 
                     "clearcoatRoughnessFactor" : 0.2
                 }

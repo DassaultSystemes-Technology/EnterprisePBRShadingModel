@@ -72,11 +72,11 @@
                 "roughnessFactor" : 0
             }, 
             "extensions" : {
-                "3DS_materials_volume" : {
-                    "thinWalled" : false
+                "KHR_materials_volume" : {
+                    "thicknessFactor" : 1
                 }, 
-                "3DS_materials_transparency" : {
-                    "transparencyFactor" : 1
+                "KHR_materials_transmission" : {
+                    "transmissionFactor" : 1
                 }
             }
         }
