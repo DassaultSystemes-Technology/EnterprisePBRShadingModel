@@ -1,0 +1,221 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <title>Parameters of the Enterprise PBR Shading Model</title>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div class="row">
+                <h1 class="mt-5">Enterprise PBR Shading Model</h1>
+                <h2 class="mt-1">Parameters</h2>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p>
+                        This page lists all parameters of the Enterprise PBR Shading Model and its subtypes.
+                    </p>
+                    <p>
+                        Each parameter is of a certain type, and has a default, minimum and maximum value. We recommend
+                        that a UI displays the parameters in the order given in the following table, grouped
+                        by the string in the "Group" property.
+                    </p>
+                    <p>
+                        Subtypes provide defaults for certain classes of materials, like metal, textile, or glass.
+                        Subtypes significantly reduce the amount of parameters presented to the user. The "Hidden"
+                        property of a parameter indicates that a parameter must not be visible in the UI.
+                    </p>
+                    <p class="needs-data d-none">
+                        The data on this page is generated from <a id="dataLink" href=""></a>.
+                    </p>
+                </div>
+            </div>
+            <div class="row needs-data d-none">
+                <div class="col col-form-label">
+                    <label for="materialList">Subtype</label>
+                </div>
+                <div class="col-10">
+                    <select id="materialList" onchange="materialSelectionChanged(event);" class="form-select" >
+                        <template id="materialItem">
+                            <option></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-3 align-self-end">
+            <img id="previewImage" alt="Preview Image" width="200px" class="img-fluid float-end needs-data d-none" />
+        </div>
+    </div>
+    <div class="row needs-data d-none">
+        <table class="table table-sm table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Minimum</th>
+                    <th>Maximum</th>
+                    <th>Hidden</th>
+                    <th>Group</th>
+                </tr>
+            </thead>
+            <tbody id="paramTableBody">
+                <template id="param">
+                    <tr>
+                        <td class="uiOrder"></td>
+                        <td class="name"></td>
+                        <td class="type"></td>
+                        <td class="default"></td>
+                        <td class="min fade-if-hidden"></td>
+                        <td class="max fade-if-hidden"></td>
+                        <td class="hidden fade-if-hidden"></td>
+                        <td class="group fade-if-hidden"></td>
+                    </tr>
+                </template>    
+            </tbody>
+        </table>
+    </div>
+    <div class="row fetch-instructions">
+        <div id="dropZone" class="border border-3 rounded text-center p-5 mt-5" style="border-style: dashed !important; cursor: hand;" onclick="openFile(event);" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+            <p class="lead">Drop JSON file here or click to load.</p>
+            <p>Due to security restrictions in the browser we cannot automatically load files from local disk.</p>
+            <p>Please drag&drop <span class="font-monospace">params-&lt;version&gt;.json</span> to open the file.</p>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"></script>
+<script type="text/javascript">
+function create(templateId) {
+    const c = document.getElementById(templateId).content
+    return c.cloneNode(true).children[0]
+};
+
+function setElement(element, className, value) {
+    element.getElementsByClassName(className)[0].innerText = value
+}
+
+function mergeMaterials(materialId) {
+    let cur = materialId
+    let inheritedMaterials = []
+    do {
+        inheritedMaterials.push(data.materials[cur])
+        cur = data.materials[cur].inherits || ''
+    } while (cur != '')
+
+    return inheritedMaterials.reduceRight(_.merge, {})
+}
+
+function get(value, def) {
+    return value === undefined ? def : value;
+};
+
+function formatMinMaxDefault(p) {
+    if (p.type == 'color') {
+        return [ '0,0,0', get(p.max, '+inf, +inf, +inf'), get(p.default, '')]
+    } else if (p.type == 'float') {
+        return [
+            p.min === undefined ? '-inf' : p.min,
+            p.max === undefined ? '+inf' : p.max,
+            typeof p.default === 'object' && p.default.infinity === true ? '+inf' : (get(p.default, ''))]
+    }
+    return [ get(p.min, ''), get(p.max, ''), get(p.default, '')]
+}
+
+function updateParamTable(materialId) {
+    const table = document.getElementById('paramTableBody')
+    table.querySelectorAll('tr').forEach(el => el.remove())
+    const material = mergeMaterials(materialId);
+    const parameters = Object.entries(material.parameters).sort((a, b) => {
+        return a[1].uiOrder - b[1].uiOrder
+    })
+    for (const param of parameters) {
+        let row = create('param')
+        setElement(row, 'uiOrder', get(param[1].uiOrder, -1))
+        setElement(row, 'name', param[1].name || '')
+        setElement(row, 'type', param[1].type || '')
+        const [min, max, def] = formatMinMaxDefault(param[1])
+        setElement(row, 'default', def)
+        const hidden = param[1].hidden || false
+        if (hidden) {
+            row.querySelectorAll('.fade-if-hidden').forEach(el => el.classList.add('text-muted'));
+        }
+        setElement(row, 'min', min)
+        setElement(row, 'max', max)
+        setElement(row, 'hidden', hidden)
+        setElement(row, 'group', param[1].group || '')
+        table.insertBefore(row, null)
+    }
+    document.getElementById('previewImage').src = material.preview
+}
+
+function materialSelectionChanged(event) {
+    updateParamTable(event.target.value)
+    window.location.hash = '#' + event.target.value
+}
+
+function dataReceived(d) {
+    data = d
+
+    document.querySelectorAll('.fetch-instructions').forEach(el => el.classList.add('d-none'))
+    document.querySelectorAll('.needs-data').forEach(el => el.classList.remove('d-none'))
+
+    let materialList = document.getElementById('materialList')
+    for (const id in data.materials) {
+        let option = create('materialItem')
+        option.text = data.materials[id].name
+        option.value = id
+        materialList.insertBefore(option, null)
+    }
+
+    materialList.value = (window.location.hash || 'generic').replace('#', '')
+    updateParamTable(materialList.value)
+}
+
+async function loadFile(file) {
+    const text = await file.text()
+    dataReceived(JSON.parse(text))
+    document.getElementById('dataLink').innerText = file.name
+    document.getElementById('dataLink').href = file.name
+}
+
+function openFile(event) {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = _ => {
+        let files = Array.from(input.files);
+        loadFile(files[0])
+    };
+    input.click();
+}
+
+async function dropHandler(event) {
+    event.preventDefault()
+
+    if (event.dataTransfer.items.length < 1) {
+        return
+    }
+    if (event.dataTransfer.items[0].kind !== 'file') {
+        return
+    }
+    loadFile(event.dataTransfer.items[0].getAsFile())
+}
+
+function dragOverHandler(event) {
+    event.preventDefault()
+}
+
+let data = null
+
+fetch('params-2022x.json')
+    .then(response => response.json())
+    .then(data => dataReceived(data))
+    .catch(err => console.log(err))
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -933,56 +933,16 @@ $\eta_d$ in this equation has to be set to the original value of the user-facing
 ---------|---------------|---------|---------|-------------
 $\nu_d$  | uniform float | 0       | [0,inf) | Abbe number. Dispersion effect is disabled if $\nu_d = 0$.
 
-Parameter Order
-===============
+Material Parameters
+===================
 
-We recommend to display the parameters to users in the UI in the following order:
-
-* Base
-  - Albedo
-  - Metallic
-  - Roughness
-  - Anisotropy
-  - Anisotropy Rotation
-  - Normal Map
-  - Displacement Map
-  - Translucency
-  - Transparency
-  - Cut-Out Opacity
-  - Specular
-  - Specular Tint
-* Sheen
-  - Sheen Color
-  - Sheen Roughness
-* Flakes
-  - Flake Coverage
-  - Flake Color
-  - Flake Size
-  - Flake Roughness
-  - Flip Flop
-  - Flip Flop Color
-* Coating
-  - Clearcoat
-  - Clearcoat Roughness
-  - Clearcoat Normal Map
-* Emission
-  - Emission Color
-  - Emission Value
-  - Emission Mode
-  - Energy Normalization
-* Volume
-  - Thin Walled
-  - Index of Refraction
-  - Abbe Number
-  - Attenuation Color
-  - Attenuation Distance
-  - Subsurface Color
-  - Subsurface Anisotropy
+All information about parameter ordering and grouping, names, types, ranges, default values etc. required for a UI can be found in [params-2022x.json](params-2022x.json). Application developers should follow these recommendations so that the UI is consistent across applications. The file format is documented in the appendix, Section [Parameter JSON file format]. You can use the [Javascript-based viewer application](param-viewer.html) to inspect the JSON file.
 
 Material Subtypes
 =================
 
 The Enterprise PBR Shading Model offers a limited but still substantial amount of parameters. For easier usability, especially for novice users, we recommend to use the following subtypes, which expose only subsets of parameters:
+
 * Car Paint
 * Metal
 * Emissive
@@ -994,101 +954,7 @@ The Enterprise PBR Shading Model offers a limited but still substantial amount o
 
 For compatibility with the widely spread Unreal model [#Kar13], additionally a general purpose material called "Basic" is recommended.
 
-Table [subtypes-parameters-metals], Table [subtypes-parameters-opaque-dielectrics] and Table [subtypes-parameters-transparent-dielectrics] describe recommended fixed and default values for these eight different material types. While fixed values should not be exposed to the user, we recommend to initialize all other values with the default values stated below. Color values are specified in linear sRGB space.
-
-<style>
-.materialtypes td {
-  color: #000;
-}
-.materialtypes td:first-child {
-  color: #000;
-}
-.materialtypes td .asterisk {
-  color: #999;
-}
-</style>
-
-<div class="materialtypes">
- Name               |     Car Paint                                        |       Metal                                     |
---------------------|:----------------------------------------------------:|:-----------------------------------------------:|
-Albedo              | (0.009,0.013,0.028)                                  | (0.5,0.5,0.5)                                   |
-Metallic            | *1*                                                  | *1*                                             |
-Roughness           | 0.4                                                  | 0.1                                             |
-Anisotropy          | *0*                                                  | 0                                               |
-Anisotropy Rotation | *0*                                                  | 0                                               |
-Normal              | *(0,0,1)*                                            | (0,0,1)                                         |
-Displacement        | (0,0,0)                                              | (0,0,0)                                         |
-Translucency        | *0*                                                  | *0*                                             |
-Transparency        | *0*                                                  | *0*                                             |
-Cut-Out Opacity     | 1                                                    | 1                                               |
-Specular            | *1*                                                  | *1*                                             |
-Specular Tint       | *(1,1,1)*                                            | *(1,1,1)*                                       |
-Flake Coverage      | 0.8                                                  | *0*                                             |
-Flake Size          | 0.05                                                 | *0*                                             |
-Flake Roughness     | 0.25                                                 | *0*                                             |
-Flake Color         | (0.255,0.459,0.624)                                  | *(0,0,0)*                                       |
-Flip Flop           | 0                                                    | *0*                                             |
-Flip Color          | (0.255,0.459,0.624)                                  | *(0,0,0)*                                       |
-Clearcoat           | 1                                                    | *0*                                             |
-Clearcoat Roughness | 0                                                    | *0*                                             |
-Clearcoat Normal    | (0,0,1)                                              | *(0,0,1)*                                       |
-                    | ![](img/subtypes_2022x_carpaint.png width="160px")   | ![](img/subtypes_2022x_metal.png width="160px") |
-[Table [subtypes-parameters-metals]: List of fixed (italic light grey) and user-defined values with their defaults for the parameters of the different recommended metallic material subtypes. Emissive, sheen, clear-coat and volumetric parameters are omitted because the effects are not available and parameters can be kept at their defaults (Section [components]).]
-</div>
-
-<div class="materialtypes">
- Name               |     Basic                                       |     Emissive                                       |      Textile                                     |      Leather                                      |       Wood                                     |
---------------------|:-----------------------------------------------:|:--------------------------------------------------:|:------------------------------------------------:|:-------------------------------------------------:|:----------------------------------------------:|
-Albedo              | (0.284,<br/>0.284,<br/>0.284)                   | *(0,0,0)*                                          | (0.302,<br/>0.294,<br/>0.236)                    | (0.302,<br/>0.294,<br/>0.236)                     | (0.344,<br/>0.227,<br/>0.07)                   |
-Roughness           | 0.3                                             | *0*                                                | 0.4                                              | 0.4                                               | 0.5                                            |
-Anisotropy          | *0*                                             | *0*                                                | 0                                                | *0*                                               | 0                                              |
-Anisotropy Rotation | *0*                                             | *0*                                                | 0                                                | *0*                                               | 0                                              |
-Normal              | (0,0,1)                                         | *(0,0,1)*                                          | (0,0,1)                                          | (0,0,1)                                           | (0,0,1)                                        |
-Displacement        | (0,0,0)                                         | (0,0,0)                                            | (0,0,0)                                          | (0,0,0)                                           | (0,0,0)                                        |
-Translucency        | *0*                                             | *0*                                                | *0*                                              | *0*                                               | *0*                                            |
-Transparency        | *0*                                             | *0*                                                | *0*                                              | *0*                                               | *0*                                            |
-Cut-Out Opacity     | 1                                               | 1                                                  | 1                                                | 1                                                 | 1                                              |
-Specular            | *1*                                             | *0*                                                | *1*                                              | *1*                                               | *1*                                            |
-Specular Tint       | *(1,1,1)*                                       | *(0,0,0)*                                          | *(1,1,1)*                                        | *(1,1,1)*                                         | *(1,1,1)*                                      |
-Sheen Color         | *(0,0,0)*                                       | *(0,0,0)*                                          | (0.5,<br/>0.5,<br/>0.5)                          | *(0,0,0)*                                         | *(0,0,0)*                                      |
-Sheen Roughness     | *0.5*                                           | *0.5*                                              | 0.53                                             | *0.5*                                             | *0.5*                                          |
-Clearcoat           | *0*                                             | *0*                                                | *0*                                              | *0*                                               | 1                                              |
-Clearcoat Roughness | *0*                                             | *0*                                                | *0*                                              | *0*                                               | 0                                              |
-Clearcoat Normal    | *(0,0,1)*                                       | *(0,0,1)*                                          | *(0,0,1)*                                        | *(0,0,1)*                                         | (0,0,1)                                        |
-Emission Color      | *(1,1,1)*                                       | (0.5,<br/>0.442,<br/>0.298)                        | *(1,1,1)*                                        | *(1,1,1)*                                         | *(1,1,1)*                                      |
-Emission Value      | *0 lx*                                          | 10 lx                                              | *0 lx*                                           | *0 lx*                                            | *0 lx*                                         |
-Energy Norm.        | *false*                                         | false                                              | *false*                                          | *false*                                           | *false*                                        |
-Thin Walled         | *true*                                          | *true*                                             | *true*                                           | *true*                                            | *true*                                         |
-Index of Refraction | *1.5*                                           | *1.5*                                              | *1.5*                                            | *1.5*                                             | *1.5*                                          |
-                    | ![](img/subtypes_2022x_basic.png width="70px") | ![](img/subtypes_2022x_emissive.png width="70px") | ![](img/subtypes_2022x_textile.png width="70px")| ![](img/subtypes_2022x_leather.png width="70px") | ![](img/subtypes_2022x_wood.png width="70px") |
-[Table [subtypes-parameters-opaque-dielectrics]: List of fixed (italic light grey) and user-defined values with their defaults for the parameters of the different recommended non-volumetric dielectric material subtypes. Volumetric parameters are omitted because the effects are not available and parameters can be kept at their defaults (Section [components]).]
-</div>
-
-<div class="materialtypes">
- Name                 |       Glass                                     |      Plastic                                        |
-----------------------|:-----------------------------------------------:|:---------------------------------------------------:|
-Albedo                | (1,1,1)                                         | (0.004,<br/>0.004,<br/>0.004)                       |
-Metallic              | *0*                                             | *0*                                                 |
-Roughness             | 0                                               | 0.25                                                |
-Anisotropy            | *0*                                             | *0*                                                 |
-Anisotropy Rotation   | *0*                                             | *0*                                                 |
-Normal                | (0,0,1)                                         | (0,0,1)                                             |
-Displacement          | (0,0,0)                                         | (0,0,0)                                             |
-Translucency          | *0*                                             | 0                                                   |
-Transparency          | *1*                                             | 0                                                   |
-Cut-Out Opacity       | 1                                               | 1                                                   |
-Specular              | *1*                                             | *1*                                                 |
-Specular Tint         | *(1,1,1)*                                       | *(1,1,1)*                                           |
-Thin Walled           | false                                           | true                                                |
-Index of Refraction   | *1.5*                                           | 1.5                                                 |
-Abbe number           | *0*                                             | *0*                                                 |
-Attenuation Color     | (0.99,<br/>0.99,<br/>0.99)                      | (1,1,1)                                             |
-Attenuation Distance  | 5 mm                                            | 0.01 mm                                             |
-Subsurface Color      | *(0,0,0)*                                       | (0,0,0)                                             |
-Subsurface Anisotropy | *0*                                             | *0*                                                 |
-                      | ![](img/subtypes_2022x_glass.png width="160px") | ![](img/subtypes_2022x_plastic.png width="160px")   |
-[Table [subtypes-parameters-transparent-dielectrics]: List of fixed (italic light grey) and user-defined values with their defaults for the parameters of the different recommended transparent dielectric material subtypes. Emissive, sheen and clear-coat parameters are omitted because the effects are not available and parameters can be kept at their defaults (Section [components]).]
-</div>
+In addition to the parameters of the Enterprise PBR Shading Model (Section [Material Parameters]), the JSON file [params-2022x.json](params-2022x.json) documents parameters and default values for the subtypes. The file format is documented in the appendix, Section [Parameter JSON file format]. You can use the [Javascript-based viewer application](param-viewer.html) to inspect the JSON file.
 
 Design Rationale
 ================
@@ -1350,6 +1216,131 @@ The lookup table is also provided for download in our Github repository:
 ## Flake Consistency
 
 You might have noticed that we do not define hashing function and PRNG used for generating flakes. This limits consistency of flakes between different renderers because different random number generators will produce different flake position, orientation values for grid cells, but gives you opportunity to try out different ones depending on your needs. From our experience, this can significantly affect shading performance. Additionally number of flakes per grid cell is also something you can experiment with. For cheaper hashing functions it's beneficial to have low number of flakes per grid cell like 1 or 2.
+
+## Parameter JSON file format
+
+We provide a JSON file containing a machine-readable list of all user-facing parameters of the Enterprise PBR Shading Model and its subtypes: [params-2022x.json](params-2022x.json).
+
+In addition, there is a [Javascript-based viewer application](param-viewer.html) to inspect the file.
+
+### Format
+
+The JSON file contains multiple materials under the root node called `materials`. A material has a unique identifier and a set of properties describing its display name, preview image, and parameters.
+
+```json
+{
+  "materials": {
+    "generic": {
+      "name": "Enterprise PBR Shading Model",
+      "preview": "previewImage.png",
+      "parameters": {
+        ...
+      }
+    }
+  }
+}
+```
+
+Parameters have a unique identifier, a display name, a type, type-specific defaults and ranges, and properties to describe optimal placement in the UI.
+
+```json
+{
+  "materials": {
+    "generic": {
+      ...
+      "parameters": {
+        "albedo": {
+          "name": "Albedo",
+          "type": "color",
+          "max": [1, 1, 1],
+          "default": [1, 1, 1],
+          "uiOrder": 0,
+          "group": "Base"
+        },
+        "metallic": {
+          "name": "Metallic",
+          "type": "float",
+          "min": 0,
+          "max": 1,
+          "default": 0,
+          "uiOrder": 1,
+          "group": "Base"
+        },
+        "ior": {
+          "name": "Index of Refraction",
+          "type": float,
+          "uniform": true,
+          "uiOrder": 28,
+          "group": "Volume",
+          ...
+        }
+        ...
+      }
+    }
+  }
+}
+```
+
+The properties `uiOrder` and `group` specify the order and group in which the parameters should be displayed in the user interface. The empty group `''` must be displayed before any other named group. In addition, the Boolean property `hidden` (not shown in the example) controls the visibility of a parameter in the UI. This is useful in conjunction with inheritance and will be explained later in Section [Inheritance].
+
+### Types
+
+Table [json-types] lists the supported parameter types.
+
+ Type | Default | Min | Max | Description 
+------|---------|-----|-----|--------------------------------
+ `float` | 0 | <nobr>-inf</nobr> | <nobr>+inf</nobr> | Floating-point number.
+ `color` | [0, 0, 0] | [0, 0, 0] | [inf, inf, inf] | Color in linear sRGB, given as an array of 3 numbers.
+ `normal` | [0, 0, 1] | n/a | n/a| Unit-length 3D normal vector, given as an array of 3 numbers.
+ `vector` | [0, 0, 0] | [<nobr>-inf</nobr>, <nobr>-inf</nobr>, <nobr>-inf</nobr>] | [<nobr>+inf</nobr>, <nobr>+inf</nobr>, <nobr>+inf</nobr>] | 3D Vector, given as an array of 3 numbers.
+ `boolean` | false | n/a | n/a | Boolean value, `true` or `false`.
+ `enum` | n/a | n/a | n/a | Enumeration, valid values are given in an array called `enum`. Example: `{ "type" : "enum", "enum": ["apples", "oranges"], "default": "apples" }`.
+[Table [json-types]: List of parameter types supported in the JSON file.]
+
+The properties `min`, `max`, and `default` are optional. If not set, the values are derived from the type.
+
+Since JSON does not define the value `inf`, the following object can be used instead of a floating-point number to indicate `+inf`: `{ "infinity": true }`.
+
+A parameter type can be marked as uniform with the `uniform` property. If unset the parameter is not uniform.
+
+### Inheritance
+
+Materials can derive from other materials via the `inherits` property. Inheriting from a material means to recursively merge the properties from the derived material into the base material. Derived properties overwrite base properties. Example:
+
+```json
+{
+  "materials": {
+    "dielectric": {
+      "name": "Dielectric",
+      "parameters": {
+        "ior": {
+          "type": "float",
+          "default": 1.5
+        },
+        "transparency": {
+          "type": "float",
+          "default": 0
+        }
+      },
+    },
+    "glass": {
+      "inherits": "dielectric",
+      "name": "Glass",
+      "parameters": {
+        "ior": {
+          "default": 1.52
+        },
+        "transparency": {
+          "default": 1,
+          "hidden": true
+        }
+      }
+    }
+  }
+}
+```
+
+We derive a new material `glass` from the base material `dielectric`. The `glass` material changes the default `ior` from 1.5 to 1.52 and the default `transparency` from 0 to 1. In addition, we hide the `transparency` parameter from the user by specifying `{ "hidden": true }`. Note that by default all parameters of the base material are visible in the derived material. Use the `hidden` property to make them invisible in derived materials.
 
 Bibliography
 ============
