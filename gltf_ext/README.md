@@ -1,10 +1,10 @@
-# Dassault Systèmes Enterprise PBR Shading Model (DSPBR) 2021x extensions
+# Dassault Systèmes Enterprise PBR Shading Model (DSPBR) 2022x extensions
 
 ## Overview
 
-This set of extensions defines the Dassault Systèmes Enterprise PBR Shading Model (DSPBR) 2021x for glTF.
+This set of extensions defines the Dassault Systèmes Enterprise PBR Shading Model (DSPBR) 2022x for glTF.
 
-* The [Specification](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec-2021x.md.html) 
+* The [Specification](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec-2022x.md.html) 
 * The [User Guide](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/user_guide.md.html) 
 
 The Dassault Systèmes Enterprise PBR material is defined by adding the respective `3DS_` extension(s) to any glTF material. The extensions reuse the `pbrMetallicRoughness` parameters for parameterization of a new energy conserving microfacet roughness model.
