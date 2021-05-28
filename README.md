@@ -21,7 +21,7 @@ The [Dassault Systèmes](https://www.3ds.com/) Enterprise PBR Shading Model (DSP
 
 ## License
 
-Enterprise PBR Shading Model (c) Dassault Systèmes 2020
+Enterprise PBR Shading Model (c) Dassault Systèmes 2021
 
 Enterprise PBR Shading Model (DSPBR) licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
