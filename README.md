@@ -11,13 +11,7 @@ The [Dassault Systèmes](https://www.3ds.com/) Enterprise PBR Shading Model (DSP
 * [User Guide](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/user_guide.md.html)
 * [Live Demo](https://dassaultsystemes-technology.github.io/dspbr-pt/)
 
-## Raytraced Examples
-
-![raytraced image](img/rt_brownstone_dspbr.jpg)
-![raytraced image](img/rt_darkzink_dspbr.jpg)
-![raytraced image](img/rt_goldmesh_dspbr.jpg)
-![raytraced image](img/rt_sss_plastic_dspbr.jpg)
-![raytraced image](img/rt_scatterglass_dspbr.jpg)
+![Examples](img/examples.png)
 
 ## License
 
