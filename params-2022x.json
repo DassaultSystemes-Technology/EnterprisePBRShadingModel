@@ -280,7 +280,7 @@
                     "name": "Subsurface Color",
                     "type": "color",
                     "uniform": true,
-                    "max": [0, 0, 0],
+                    "max": [1, 1, 1],
                     "default": [0, 0, 0],
                     "uiOrder": 32,
                     "group": "Volume"

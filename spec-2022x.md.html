@@ -60,11 +60,11 @@ The weights $m$ (metallic) and $t$ (transparency) control the blending between t
 *   Opaque    Transparent     *
 * Dielectric  Dielectric      *
 *******************************
-[Figure [blending-diagram]: Blending of metallic and dielectric BSDFs based on parameters $m$ and $t$.]
+[Figure [blending-diagram]: Blending of metallic and dielectric BSDFs based on parameters $m$ (metallic) and $t$ (transparency).]
 
-On top of the core, a Fresnel-weighted specular BSDF adds coating effects, see Section [Clearcoat]. Moreover, the material can be configured to emit light via the emission component (Section [Emission]).
+On top of the core, a Fresnel-weighted specular BSDF adds coating effects, see Section [Clearcoat]. Moreover, the material can be configured to emit light using the emission component (Section [Emission]).
 
-The material can operate in two modes: it can either simulate an infinitesimally thin, two-sided object or a volume boundary. Volume boundaries have to be attached to a closed mesh, i.e., the mesh encloses a volume and does not have any holes. The parameters of the volume extension (Section [Volume]) describe what happens inside the volume.
+The material can operate in two modes: it can either simulate an infinitesimally thin, two-sided object or a volume boundary. Volume boundaries have to be attached to a closed mesh, i.e., the mesh encloses a volume and does not have any holes. The parameters listed in (Section [Volume]) describe what happens inside the volume.
 
 Core
 ----
@@ -73,7 +73,7 @@ The three BSDFs at the core of the Enterprise PBR Shading Model are built from a
 
 ### Metallic BSDF
 
-The metallic BSDF (Figure [bsdf-metallic]) is the combination of a microfacet BSDF $M_r$ and a configurable Fresnel term $F$, corrected for energy loss via the terms $M_{r,ms}$ and $F_{ms}$. Users can change the anisotropic roughness $r_u$, $r_v$ and the color at normal incidence $\rho$. The color at grazing angles is fixed to 1. Section [In-depth look at the BSDFs] describes the building blocks in more detail, for now we just show how they are combined and weighted.
+The metallic BSDF (Figure [bsdf-metallic]) is the combination of a microfacet BSDF $M_r$ and a configurable Fresnel term $F$, corrected for energy loss using the terms $M_{r,ms}$ and $F_{ms}$. Users can change the anisotropic roughness $r_u$, $r_v$ and the color at normal incidence $\rho$. The color at grazing angles is fixed to 1. Section [In-depth look at the BSDFs] describes the building blocks in more detail, for now we just show how they are combined and weighted.
 
 \begin{equation}
 \begin{aligned}
@@ -99,7 +99,7 @@ See Section [In-Depth Look at the BSDFs] for more details about the Fresnel term
 
 ### Dielectric BSDF for Transparent Surfaces
 
-The Fresnel-weighted combination of a microfacet BRDF $M_r$ and a microfacet BTDF $M_t$ forms the BSDF for transparent dielectric surfaces like glass, oil, water, or air. As before, $r_u$ and $r_v$ change the anisotropic roughness of the BSDF. In addition, we now provide a parameter to change the index of refraction $\eta$, which determines how the light ray is refracted when entering the volume beneath the surface, and how the amount of incoming light is distributed to reflection and transmission. $s$ and $\rho_s$ allow fine-tuning the amount of reflection and its color. $\rho$ changes the color of the transmissive component. We again compensate for energy-loss of the reflection component via $M_{r,ms}$ and $F_{ms}$. Energy compensation for transmission may be added in a future revision.
+The Fresnel-weighted combination of a microfacet BRDF $M_r$ and a microfacet BTDF $M_t$ forms the BSDF for transparent dielectric surfaces like glass, oil, water, or air. As before, $r_u$ and $r_v$ change the anisotropic roughness of the BSDF. In addition, we now provide a parameter to change the index of refraction $\eta$, which determines how the light ray is refracted when entering the volume beneath the surface, and how the amount of incoming light is distributed to reflection and transmission. $s$ and $\rho_s$ allow fine-tuning the amount of reflection and its color. $\rho$ changes the color of the transmissive component. We again compensate for energy-loss of the reflection component using $M_{r,ms}$ and $F_{ms}$. Energy compensation for transmission may be added in a future revision.
 
 The BSDF differs for thin-walled and volumetric materials. The volumetric case has to be enabled via a flag, see Section [Volume]. Figure [bsdf-transparent-dielectric] shows the two versions side-by-side. In the thin-walled case (left) the microfacet BTDF is identical to the microfacet BRDF, except that the lobe is mirrored onto the lower hemisphere. In the volumetric case (right) the transmissive lobe is bent according to the refraction angle computed from the index of refraction.
 
@@ -132,6 +132,7 @@ to flip the light direction $\mathbf{l}$ from lower to upper hemisphere in case 
 \begin{eqnarray}
 \cos\theta_r &=& (\mathbf{v} \cdot \mathbf{h}_r) & \quad &
 \cos\theta_r' &=& (\mathbf{v} \cdot \mathbf{h}_r') \\
+\label{h_definition}
 \mathbf{h}_r &=& \frac{\mathbf{v} + \mathbf{l}}{\lVert\mathbf{v} + \mathbf{l}\rVert} & \quad &
 \mathbf{h}_r' &=& \frac{\mathbf{v} + \mathbf{l}'}{\lVert\mathbf{v} + \mathbf{l}'\rVert}
 \end{eqnarray}
@@ -171,11 +172,11 @@ Note that we now also use a different Fresnel term than in the thin-walled versi
 
 ### Dielectric BSDF for Opaque Surfaces
 
-A lot of dielectric materials, like the majority of plastics, appear semi-transparent or opaque. This results from the strong subsurface scattering due to particles in the volume below the surface interacting with the transmitted light. A diffuse BRDF is a simple approximation for this effect. Consequently, we replace the BTDF introduced before by a diffuse-like BRDF (Figure [bsdf-opaque-dielectric]), resulting in a combination of a diffuse-like base BRDF $B$ and a Fresnel-weighted microfacet BRDF $M_r$. Parameter $\rho$ controls the color of $B$, all other parameters behave consistent to the transparent BSDF: The amount of specular contribution from the microfacet BRDF is determined by the parameters for specular tint $\rho_s$ and the index of refraction $\eta$, which both influence the Fresnel term. In addition, there is a directional-independent scaling factor $s$. $r_u$ and $r_v$ change the anisotropic roughness of the microfacet BRDF.
+A lot of dielectric materials, like the majority of plastics, appear semi-transparent or opaque. This results from the strong subsurface scattering due to particles in the volume below the surface interacting with the transmitted light. A diffuse BRDF is a simple approximation for this effect. Consequently, we replace the BTDF introduced before by a diffuse-like BRDF (Figure [bsdf-opaque-dielectric]), resulting in a combination of a diffuse-like base BRDF $B$ and a Fresnel-weighted microfacet BRDF $M_r$. Albedo parameter $\rho$ controls the color of $B$, all other parameters behave consistent to the transparent BSDF: The amount of specular contribution from the microfacet BRDF is determined by the parameters for specular tint $\rho_s$ and the index of refraction $\eta$, which both influence the Fresnel term. In addition, there is a directional-independent scaling factor $s$. $r_u$ and $r_v$ change the anisotropic roughness of the microfacet BRDF.
 
-Paper, leaves of plants and other thin, dielectric objects transmit some of the incoming light into a random direction to the backside of the surface, the material looks translucent. Translucency is the physical property of a material which allows light to pass through, but not necessarily follow Snell's law on a macroscopic scale. A translucent material is made up of components with different indices of refraction. To achieve this effect, we provide the parameter $l$ that controls the blending between the diffuse BRDF and a diffuse BTDF. Besides thin objects, this can be useful for volumetric objects with subsurface scattering and short scattering distances. By scattering the light not only inside the volume, but also already when passing the interface, objects look more blurry and may converge much faster in a ray tracer.
+Paper, leaves of plants and other thin, dielectric objects transmit some of the incoming light into a random direction to the backside of the surface, the material looks translucent. Translucency is the physical property of a material which allows light to pass through, but not necessarily follow Snell's law on a macroscopic scale. A translucent material is made up of components with different indices of refraction. To achieve this effect, we provide the translucency parameter $l$ that controls the blending between the diffuse BRDF and a diffuse BTDF. Besides thin objects, this can be useful for volumetric objects with subsurface scattering and short scattering distances. By scattering the light not only inside the volume, but also already when passing the interface, objects look more blurry and may converge much faster in a ray tracer.
 
-As in the metallic BSDF, the energy loss of the microfacet term is compensated via $M_{r,ms}\,F_{ms}$.
+As in the metallic BSDF, the energy loss of the microfacet term is compensated using $M_{r,ms}\,F_{ms}$.
 
 The BSDF looks as follows:
 
@@ -193,9 +194,11 @@ The BSDF looks as follows:
 \end{aligned}
 \end{equation}
 
+with $\mathbf{h}_r$ from Equation [h_definition].
+
 ![Figure [bsdf-opaque-dielectric]: The dielectric BSDF for opaque ($l=0$, left) and translucent ($l=1$, right) surfaces is composed of a diffuse lobe and a specular lobe.](img/bsdf_opaque_dielectric.png)
 
-Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#KS01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF/BTDF out of it. Controlled by the parameter $s$ (i.e., the amount of specular contribution), we gradually blend between this new diffuse BSDF $B_c$ and the classic Lambertian BSDF $B_u$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
+Typically, the base BSDF $B$ is diffuse-like, reflecting the energy that is left after evaluating the microfacet layer equally in all directions. We follow the approach of [#KS01] and [#KC17] to measure the remaining energy and derive an energy-conserving and energy-preserving diffuse BRDF/BTDF out of it. Controlled by the specular parameter $s$ (i.e., the amount of specular contribution), we gradually blend between this new diffuse BSDF $B_c$ and the classic Lambertian BSDF $B_u$. The derivation of $B_c$ is explained in more detail in Section [In-depth look at the BSDFs] and Section [Energy Compensation].
 
 \begin{equation}
 B(\mathbf{v}, \mathbf{l}; r_u, r_v, l, s, f_0) = B_u(\mathbf{v}, \mathbf{l}; l) (1-s) + s B_c(\mathbf{v}, \mathbf{l}; r_u, r_v, l, f_0)
@@ -212,7 +215,7 @@ The core BSDF of the Enterprise PBR material is a linear combination of the meta
 &+&(1-m)t     & \text{TransparentDielectric}(\rho, s, \eta, \rho_s) \nonumber
 \end{eqnarray}
 
-$\text{TransparentDielectric}$ is either the thin-walled BSDF $\text{ThinTransparentDielectric}$ or the volumetric BSDF $\text{VolumetricTransparentDielectric}$, depending on the corresponding material parameter (Section [Volume]).
+$\text{TransparentDielectric}$ is either the thin-walled BSDF $\text{ThinTransparentDielectric}$ or the volumetric BSDF $\text{VolumetricTransparentDielectric}$, depending on the corresponding thin-walled parameter $\mu$ (see Table [mst]).
 
 Table [bsdf-terms] lists all the terms shared in the three BSDFs. In this and the following sections, we will define these terms. With the shared terms and parameters, we significantly reduce the amount of parameters of the complete material.
 
@@ -313,11 +316,16 @@ The half vector $\mathbf{h}$ can be either the reflection half vector $\mathbf{h
 For the microfacet distribution, the material uses the Generalized Trowbridge-Reitz GTR model (generalized anisotropic GGX) [#Bur12] with $\gamma=2$. Using Equation [h_identities] we have
 
 \begin{eqnarray}
-D(\mathbf{h};\alpha_u,\alpha_v) &=& \frac{1}{\pi \alpha_u \alpha_v} \frac{\chi^+(\mathbf{h} \cdot \mathbf{n})}{\left(\frac{(\mathbf{h} \cdot \mathbf{t})^2}{\alpha_u^2}+\frac{(\mathbf{h} \cdot \mathbf{b})^2}{\alpha_v^2}+(\mathbf{h} \cdot \mathbf{n})^2\right)^2} \\
+D(\mathbf{h};\alpha_u,\alpha_v) &=& \frac{1}{\pi \alpha_u \alpha_v} \frac{\chi^+(\mathbf{h} \cdot \mathbf{n})}{\left(\frac{(\mathbf{h} \cdot \mathbf{t})^2}{\alpha_u^2}+\frac{(\mathbf{h} \cdot \mathbf{b})^2}{\alpha_v^2}+(\mathbf{h} \cdot \mathbf{n})^2\right)^2}
+\end{eqnarray}
+
+with the step function
+
+\begin{eqnarray}
 \chi^+(x) &=&
 \begin{cases}
 1\quad\text{if } x > 0 \\
-0\quad\text{if } x \leq 0
+0\quad\text{otherwise}
 \end{cases}
 \end{eqnarray}
 
@@ -355,7 +363,7 @@ f_0 + (f_{90} - f_0) (1 - |\cos\theta_o|)^5 & \text{if } \eta_o < \eta_i \land \
 \end{cases}
 \end{eqnarray}
 
-where $\theta_o$ is the angle of transmission, computed from the angle of incidence via $\sin^2\theta_o = \left(\frac{\eta_i}{\eta_o}\right)^2 (1 - \cos^2\theta)$ [#Lag13]. Note that in case of total internal reflection, the Fresnel does not depend on $f_{90}$ anymore, so it is impossible to disable the reflection in this situation. This allows users to change the specular component of a refractive object without introducing artifacts, i.e., dark appearance in areas where total internal reflection occurs.
+where $\theta_o$ is the angle of transmission, computed from the angle of incidence using $\sin^2\theta_o = \left(\frac{\eta_i}{\eta_o}\right)^2 (1 - \cos^2\theta)$ [#Lag13]. Note that in case of total internal reflection, the Fresnel does not depend on $f_{90}$ anymore, so it is impossible to disable the reflection in this situation. This allows users to change the specular component of a refractive object without introducing artifacts, i.e., dark appearance in areas where total internal reflection occurs.
 
 #### Energy Preservation
 
@@ -363,7 +371,7 @@ The standard microfacet model does not account for scattering occuring between m
 
 ![Figure [energycomp-microfacet-metallic]: Left: Metallic surface with roughness 0. Middle: Non-energy preserving metallic surface with roughness 1. Right: Energy-preserving metallic surface with roughness 1 by accounting for multiple scattering. Note that the surface in the middle looks significantly darker than the others.](img/energycomp_metallic.png)
 
-Following the approach of [#KS01] and [#KC17], we measure the directional albedo $E_m(\cos\theta; r_{uv})$ and average albedo $E_{m,avg}(r_{uv})$ by integrating the cosine-weighted single-scattering GGX microfacet model over all light directions. We precompute the integrals and store the result in lookup tables. In order to reduce the number of parameters, we replaced the anisotropic roughness $r_u$ and $r_v$ with an isotropic approximation $r_uv$.
+Following the approach of [#KS01] and [#KC17], we measure the directional albedo $E_m(\cos\theta; r_{uv})$ and average albedo $E_{m,avg}(r_{uv})$ by integrating the cosine-weighted single-scattering GGX microfacet model over all light directions. We precompute the integrals and store the result in lookup tables. In order to reduce the number of parameters, we replaced the anisotropic roughness $r_u$ and $r_v$ with an isotropic approximation $r_{uv}$.
 
 Based on the measured albedo, we build an energy compensation term $M_{r,ms}(\mathbf{v},\mathbf{l}; r_u, r_v)\,F_{ms}(f_0, f_{90})$. The term is specifically tailored to $M_r$ and as such added in all places where $M_r$ is present.
 
@@ -374,7 +382,7 @@ Based on the measured albedo, we build an energy compensation term $M_{r,ms}(\ma
 \end{aligned}
 \end{equation}
 
-with $r_{uv} = \sqrt{r_u r_v}$.
+with $r_{uv} = \sqrt{r_u r_v}$. In the isotropic case, $r_{uv} = r_u = r_v$.
 
 #### Diffuse BRDF
 
@@ -389,19 +397,19 @@ with
 \begin{equation}
 T(\mathbf{v}, \mathbf{l}; l) = 
 \begin{cases}
-(1 - l) &\text{ if } (\mathbf{n} \cdot \mathbf{v}) (\mathbf{n} \cdot \mathbf{l}) > 0 \\
+(1 - l) &\text{ if } (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n}) > 0 \\
 l &\text{ otherwise}
 \end{cases}
 \end{equation}
 
-The term $(\mathbf{n} \cdot \mathbf{v}) (\mathbf{n} \cdot \mathbf{l})$ is positive if $\mathbf{v}$ and $\mathbf{l}$ point into the same hemisphere wrt. $\mathbf{n}$. This enables the diffuse reflection (BRDF). The term is negative if $\mathbf{v}$ and $\mathbf{l}$ point into opposite hemispheres wrt. $\mathbf{n}$. This enables the diffuse transmission/translucency (BTDF). The parameter $l$ determines the ratio between reflection and transmission.
+The term $(\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n})$ is positive if $\mathbf{v}$ and $\mathbf{l}$ point into the same hemisphere wrt. $\mathbf{n}$. This enables the diffuse reflection (BRDF). The term is negative if $\mathbf{v}$ and $\mathbf{l}$ point into opposite hemispheres wrt. $\mathbf{n}$. This enables the diffuse transmission/translucency (BTDF). The parameter $l$ (translucency) determines the ratio between reflection and transmission.
 
 As shown Section [Dielectric BSDF for Opaque Surfaces], $B_u$ is only used for the non-specular fraction of the dielectric BSDF. As soon as the microfacet BRDF $M_r$ blends in via $s$, we have to deduct its energy from the diffuse term.
 
 Following the approach of [#KS01] and [#KC17], we measure the directional albedo $E(\cos\theta; r_{uv}, f_0)$ of the Fresnel-weighted microfacet GGX BRDF including the multi-scatter approximation. From this we build a complementary diffuse BRDF $B_c$ that, when added to $M_r$ and $M_{r,ms}$, results in an energy-conserving and energy-preserving total BRDF. Section [Diffuse BRDF] describes the process in more detail. As in Section [Energy Preservation], we use isotropic roughness $r_{uv} = \sqrt{r_u r_v}$.
 
 \begin{eqnarray}
-B_c(\mathbf{v}, \mathbf{l}; r_u, r_v, f_0) &=& \frac{(1-E(\mathbf{v}\cdot\mathbf{n}; r_{uv}, f_{0,\text{max}}))(1-E(\mathbf{l}\cdot\mathbf{n}; r_{uv}, f_{0,\text{max}}))}{\pi(1-E_{avg}(r_{uv}, f_{0,\text{max}}))} T(\mathbf{v}, \mathbf{l}; l)
+B_c(\mathbf{v}, \mathbf{l}; r_u, r_v, l, f_0) &=& \frac{(1-E(\mathbf{v}\cdot\mathbf{n}; r_{uv}, f_{0,\text{max}}))(1-E(\mathbf{l}\cdot\mathbf{n}; r_{uv}, f_{0,\text{max}}))}{\pi(1-E_{avg}(r_{uv}, f_{0,\text{max}}))} T(\mathbf{v}, \mathbf{l}; l)
 \end{eqnarray}
 
 We again use $T(\mathbf{v}, \mathbf{l}; l)$ to blend between diffuse reflection and transmission based on the translucency parameter $l$. $f_{0,\text{max}}$ denotes the maximum value of the wavelength-dependent color $f_0$ in linear sRGB,E color space. The maximum is used because the color is subtracted, leading to unexpected behavior if this is done per channel.
@@ -412,7 +420,7 @@ Directional albedo $E(\cos\theta; r_{uv}, f_0)$ and average albedo $E_{avg}(r_{u
 
 ### Parameters
 
-Table [core-parameters] describes the user parameters of the Enterprise PBR Shading Model. The parameters $s$, $m$ and $t$ make the model very flexible. Table [mst] shows a list of all available combinations and explains their meaning.
+Table [core-parameters] and Figure [core-parameters-fig] describe the user parameters of the Enterprise PBR Shading Model. Most parameters can be textured, i.e., the value may vary across the surface. Some of them cannot be textured. Parameters that cannot be textured have the *uniform* modifier attached to their type.
 
  Name        | Type          | Default | Range   | Description
 -------------|---------------|---------|---------|-------------
@@ -432,6 +440,8 @@ $\mathbf{n}$ | float3        | (0,0,1) | $\lVert\mathbf{n}\rVert=1$ | Normal for
 
 ![Figure [core-parameters-fig]: Examples for various values of core parameters.](img/params_core_2022x.png)
 
+As the list of parameters might be overwhelming at first, Table [mst] shows how to use the main parameters *metallic*, *specular* and *transparency* for different kinds of materials.
+
 $m$ | $s$ | $t$ | Active Components | Use this for | Description
 ----|-----|-----|-------------------|--------------|-------------
 0   | 0   | 0   | Diffuse | | Pure diffuse material.
@@ -444,26 +454,26 @@ $m$ | $s$ | $t$ | Active Components | Use this for | Description
 The basic workflow to configure a physically-plausible material involves three steps:
 
 1. Choose the color $\rho$ of the material.
-2. Choose the material type via $m$ and $t$.
+2. Choose the material type with $m$ and $t$.
 3. Choose an IOR for the coating/refraction.
 
 For more fine-grained artistic control, the material can now be tweaked even further:
 
-4. Fine-tune amount of specular contribution via $s$.
-5. Fine-tune specular color near $\theta=0^\circ$ via $\rho_s$.
+4. Fine-tune amount of specular contribution with $s$.
+5. Fine-tune specular color near $\theta=0^\circ$ with $\rho_s$.
 
 Sheen
 -----
 
-For rendering cloth-like materials diffuse and specular BRDFs are not sufficient. Fibers standing perpendicular to the surface lead to backscattering, brightening the rims of objects. We simulate this effect with a microfacet-based sheen BRDF $M_b$, layered on top of the core described in Section [Core]. Its distribution with roughness $r_b$ generates micro-fiber normals, centered around grazing directions. The color is controlled via $\rho_b$. The BRDF and layering technique is taken from [#CK17].
+For rendering cloth-like materials diffuse and specular BRDFs are not sufficient. Fibers standing perpendicular to the surface lead to backscattering, brightening the rims of objects. We simulate this effect with a microfacet-based sheen BRDF $M_b$, layered on top of the core described in Section [Core]. Its distribution with roughness $r_b$ generates micro-fiber normals, centered around grazing directions. The color is controlled using sheen color parameter $\rho_b$. The BRDF and layering technique is taken from [#CK17].
 
  Name        | Type          | Default | Range  | Description
 -------------|---------------|---------|--------|-------------
 $\rho_b$     | color         | 0       | [0,1]  | Sheen color.
-$r_b$        | float         | 0.3     | [0,1]  | Roughness of sheen microfacet distribution.
+$r_b$        | float         | 0.5     | [0,1]  | Roughness of sheen microfacet distribution.
 [Table [sheen-parameters]: List of sheen parameters.]
 
-Sheen is layered on top of the core like a coating [#CK17]. Similar to the diffuse BRDF (Section [Diffuse BRDF]), we scale the bottom layer via the directional albedo of the top layer, resulting in an energy-conserving and (almost) energy-preserving mix of the BSDFs. The directional albedo of the sheen BRDF is fetched from a lookup table.
+Sheen is layered on top of the core like a coating [#CK17]. Similar to the diffuse BRDF (Section [Diffuse BRDF]), we scale the bottom layer using the directional albedo of the top layer, resulting in an energy-conserving and (almost) energy-preserving mix of the BSDFs. The directional albedo of the sheen BRDF is fetched from a lookup table.
 
 \begin{equation}
 \begin{aligned}
@@ -543,9 +553,9 @@ $f_f$        | float         | 0       | [0,1]  | Flip flop effect (0 = none, 1 
 $\rho_{ff}$  | color         | 1       | [0,1]  | Flake color at normal incidence if flip flop effect is enabled.
 [Table [flakes-parameters]: List of flakes parameters]
 
-![Figure [flakes-parameters-fig]: Result for various values of flakes parameters.](img/params_flakes_2022x.png)
+![Figure [flakes-parameters-fig]: Renderings with various values for flake parameters.](img/params_flakes_2022x.png)
 
-Flake coverage $f$ determines the probability for a flake to be opaque. Flakes are layered on top of the sheen as seen on the Figure [components-diagram]. It's a boolean layering operation which either shows flakes or the underlying material depending on the transparency of individual flakes.
+Flake coverage $f$ determines the probability for a flake to be opaque. Flakes are layered on top of the sheen as seen on the Figure [components-diagram]. It's a boolean layering operation which shows either the flakes or the underlying material, depending on the transparency of individual flakes.
 
 ![Figure [flakes-coverage-fig]: Close-up look at effect of increasing flake coverage $f$: 0.0, 0.25, 0.5, 0.75, 1.0.](img/flakes_coverage_small.png)
 
@@ -738,7 +748,7 @@ Additional optimization can be done for a flaky surface seen from a large distan
 Clearcoat
 ---------
 
-The clearcoat extension adds a dielectric coating as a layer on top of the core described in Section [Core]. $\text{GlitteryCore}(\mathbf{v},\mathbf{l})$ and coating are weighted with a Fresnel term. The parameter $c$ determines the strength of the effect.
+The clearcoat component adds a dielectric coating as a specular layer on top of the core described in Section [Core]. $\text{GlitteryCore}(\mathbf{v},\mathbf{l})$ and coating are weighted with a Fresnel term. The clearcoat reflectivity parameter $c$ determines the strength of the effect.
 
 \begin{equation}
 \begin{aligned}
@@ -760,7 +770,7 @@ The index of refraction in Schlick's Fresnel term is fixed to 1.5 to resemble a 
 F_c(\theta) &=& 0.04 + 0.96 \ (1 - \cos\theta)^5
 \end{eqnarray}
 
-As shown in Table [clearcoat-parameters], the clearcoat is parameterized via two scalar values and a normal.
+As shown in Table [clearcoat-parameters], the clearcoat is parameterized using two scalar values and a normal.
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
@@ -769,28 +779,28 @@ $r_c$          | float         | 0       | [0,1]  | Roughness of clearcoat's mic
 $\mathbf{n}_c$ | float3        | (0,0,1) | $\lVert\mathbf{n}_c\rVert=1$ | Clearcoat normal for normal mapping.
 [Table [clearcoat-parameters]: List of clearcoat parameters.]
 
-![Figure [clearcoat-parameters-fig]: Result for various values of clearcoat parameters.](img/params_clearcoat_2022x.png)
+![Figure [clearcoat-parameters-fig]: Renderings with various values for the clearcoat parameters.](img/params_clearcoat_2022x.png)
 
 Cut-out
 -------
 
-The cut-out acts like an alpha channel for the surface. It makes parts of the surface transparent, independent of Fresnel terms, view and light direction or parameters.
+The cut-out acts like an alpha channel for the surface. It makes parts of the surface partially or fully invisible, independent of any BSDF effects.
 
  Name          | Type          | Default | Range  | Description
 ---------------|---------------|---------|--------|-------------
 $\alpha$       | float         | 0       | [0,1]  | Cut-out opacity value (0 = transparent, 1 = opaque).
 [Table [cutout-parameters]: List of cut-out parameters.]
 
-![Figure [cutout-parameters-fig]: Result for various values of cut-out parameters.](img/params_cutout_2022x.png)
+![Figure [cutout-parameters-fig]: Renderings with various values for the cut-out parameters.](img/params_cutout_2022x.png)
 
-The cut-out parameter is primarily used in conjunction with textures to fake details in geometry, see Figure [cutout-geometry].
+The cut-out parameter is primarily used in conjunction with textures to fake details in thin-walled geometry, see Figure [cutout-geometry]. The behavior of using cut-out on transparent and translucent volume boundaries in combination with attenuation and subsurface scattering is implementation-defined.
 
 ![Figure [cutout-geometry]: Cut-out texture applied to a sphere.](img/params_cutout_geometry_2022x.png)
 
 Displacement
 ------------
 
-Displacement mapping modifies the position $\mathbf{p}$ of surface points to add details to geometry. The displacement parameter $h$ is a vector, specifying the length and direction of the displacement in local surface coordinates defined by normal $\mathbf{n}$, tangent $\mathbf{x}$, and bitangent $\mathbf{y}$. The new position $\mathbf{p}^{\prime}$ is given as
+Displacement mapping modifies the position $\mathbf{p}$ of surface points to add details to geometry. The displacement parameter $h$ is a vector, specifying the direction and length of the displacement in the local surface coordinate system defined by normal $\mathbf{n}$, tangent $\mathbf{t}$, and bitangent $\mathbf{b}$ (see Section [Tangent Space]). The new position $\mathbf{p}^{\prime}$ is given as
 
 \begin{eqnarray}
 \mathbf{p}^{\prime} = \mathbf{p} + \mathbf{x} h_x + \mathbf{y} h_y + \mathbf{n} h_z
@@ -798,7 +808,7 @@ Displacement mapping modifies the position $\mathbf{p}$ of surface points to add
 
  Name          | Type          | Default | Range      | Description
 ---------------|---------------|---------|------------|-------------
-$h$            | float3        | 0       | (-inf,inf) | Displacement in the direction of the surface normal.
+$h$            | float3        | (0,0,0) | (-inf,inf) | Displacement in the direction of the surface normal.
 [Table [displacement-parameters]: List of displacement parameters.]
 
 Emission
@@ -823,24 +833,24 @@ $l_v$          | uniform float | 0       | [0,inf) | Emission value in $\text{lx
 $l_\text{norm}$| uniform bool  | false   |         | Normalize emission color.
 [Table [emission-parameters]: List of emission parameters.]
 
-![Figure [emission-parameters-fig]: Result for various values of emission parameters.](img/params_emission_2022x.png)
+![Figure [emission-parameters-fig]: Renderings with various values for the emission parameters.](img/params_emission_2022x.png)
 
-Lights are defined in photometric units. This means, the energy is spectrally weighted with the response curve of the human eye.
+Lights are defined in photometric units. This means that the energy is spectrally weighted with the response curve of the human eye.
 
-The emission is provided as color $l_c$ and energy value $l_v$. We expect the color to be in linear sRGB color space with a D65 whitepoint. If the energy normalization flag $l_\text{norm}$ is enabled, the color will be normalized by its luminance. This behavior is needed for physical workflows and it guarantees that the light exactly emits the specified value in its respective physical unit.
+The emission is provided as color $l_c$ and energy value $l_v$. We expect the color to be in linear sRGB color space with a D65 whitepoint. If the energy normalization flag $l_\text{norm}$ is enabled, the color will be normalized by its luminance. This behavior is needed for physical workflows and it guarantees that the light exactly emits the specified value in its respective physical units.
 
 The following equations show how to compute $\rho_e$ from these parameters. $\text{area}$ denotes the area of the entire surface of an object in square meters.
 
 \begin{eqnarray}
-l = &
+l_{vc} = &
 \begin{cases}
 l_v l_c & \text{if } l_\text{norm}\text{ is false} \\
 l_v \frac{l_c}{l_c \cdot \begin{pmatrix}0.2126729 \\ 0.7151522 \\ 0.0721750\end{pmatrix}} & \text{otherwise}
 \end{cases} \\
 \rho_e = &
 \begin{cases}
-\frac{1}{\pi \text{ area}} l & \text{if } l_v \text{ is given in lm} \\
-\frac{1}{\pi} l & \text{if } l_v \text{ is given in } \frac{\text{lm}}{\text{m}^2}
+\frac{1}{\pi \text{ area}} l_{vc} & \text{if } l_v \text{ is given in lm} \\
+\frac{1}{\pi} l_{vc} & \text{if } l_v \text{ is given in } \frac{\text{lm}}{\text{m}^2}
 \end{cases}
 \end{eqnarray}
 
@@ -885,7 +895,7 @@ $\rho_{ms}$    | uniform color | 0       | [0,1]   | Subsurface color. Subsurfac
 $g$            | uniform float | 0       | [-1,1]  | Subsurface anisotropy (<0:&#160;backward, =0:&#160;isotropic, >0:&#160;forward scattering).
 [Table [volume-parameters]: List of volume parameters.]
 
-![Figure [volume-parameters-fig]: Result for various values of volume parameters.](img/params_volume_2022x.png)
+![Figure [volume-parameters-fig]: Renderings with various values for the volume parameters.](img/params_volume_2022x.png)
 
 Dispersion
 ----------
@@ -961,9 +971,9 @@ Design Rationale
 
 The Enterprise PBR Shading Model is the basis for a large variety of use-cases, ranging from high-performance VR applications to high-quality offline GI renderings. However, it is not expected that it will cover all use-cases one can imagine, but it should be sufficient for day-to-day use. This requires some tradeoffs, which are based on the following guidelines and requirements.
 
-Most important, the material should be *easy to use* for inexperienced users, but still powerful enough for trained artists in real-time rendering and global illumination. For this reason, the material has only a small amount parameters, following industry-standard workflows known from real-time engines (Unreal Engine 4, Unity Engine) and movie production (Disney BRDF). Using the *metallic/roughness workflow*, it is possible to create a wide varietey of materials from just a very small subset of the whole parameter set, namely albedo, metallic, roughness and normal map. Another aspect of this is the fact that it allows users to parameterize materials in a way that they are *physically-based as a default*, but can be tweaked when needed for more artistic freedom, for example via the specular tint and specular parameters. Wherever possible, the parameters are linear and texturable, so that *layering via parameter blending* is possible. Notable exceptions are parameters affecting the volume, because there are no texture coordinates available inside an object.
+Most important, the material should be *easy to use* for inexperienced users, but still powerful enough for trained artists in real-time rendering and global illumination. For this reason, the material has only a small amount parameters, following industry-standard workflows known from real-time engines (Unreal Engine 4, Unity Engine) and movie production (Disney BRDF). Using the *metallic/roughness workflow*, it is possible to create a wide variety of materials using only a subset of the complete parameter set, namely albedo, metallic, roughness and normal map. Another aspect is the fact that it allows users to parameterize materials in a way that they are *physically-based by default*, but can be tweaked when needed for more artistic freedom using parameters like specular tint and specular. Most parameters are linear and texturable, so that *layering via parameter blending* is possible. Notable exceptions are parameters affecting the volume, because there are no texture coordinates available inside an object.
 
-Especially for GI renderers, there are certain physical and mathematical properties that materials or BSDFs must fullfill. A BSDF must obey *Helmholtz reciprocity* (for bidirectional rendering methods), be *positive* and *energy conserving* (for fast convergence).
+Especially for GI renderers, there are certain physical and mathematical properties that materials or BSDFs must fullfill. A BSDF must obey the *Helmholtz reciprocity* (for bidirectional rendering methods), be *positive* and *energy conserving* (for fast convergence).
 
 *Performance in real-time rendering* is a critical aspect. Most parameters do not influence each other or have a clearly defined state in which an effect is disabled, making it possible to specialize shader code for certain use-cases. Clearly, offline GI rendering also profits from this, but besides that it is also important to choose BSDFs that can be *sampled efficiently*, like the GGX microfacet model.
 
@@ -988,13 +998,13 @@ Version 2022x
 Version 2021x
 -------------
 
-* Displacement mapping.
-* Translucency.
-* New sheen effect based on "Charlie" Sheen BRDF, layered on top of core material via albedo-scaling [#CK17].
-* Alternative visibility term for "Charlie" Sheen BRDF [#NP13].
+* Added displacement mapping.
+* Added translucency.
+* Changed sheen effect. The new effect is based on the "Charlie" Sheen BRDF, layered on top of core material via albedo-scaling [#CK17].
+* Added an alternative visibility term for the "Charlie" Sheen BRDF [#NP13].
 * Emission is now below clearcoat in the layering stack.
-* Henyey-Greenstein phase function for volume scattering [#HG41].
-* Flakes layer.
+* Added Henyey-Greenstein phase function for volume scattering [#HG41].
+* Added flakes layer.
 
 Version 2019x
 -------------
@@ -1007,7 +1017,7 @@ Appendix
 Combining Metallic and Dielectric BSDFs
 ---------------------------------------
 
-The core of the Enterprise PBR Material is a weighted sum of three BSDFs, the metallic BSDF, the opaque and the transparent dielectric BSDF. The similarity between the BSDFs allows us to simplify the material significantly. We start from the sum of the three BSDFs:
+The core of the Enterprise PBR Material is a weighted sum of three BSDFs, the metallic BSDF, the opaque dielectric and the transparent dielectric BSDF. The similarity between the BSDFs allows us to simplify the material significantly. We start from the sum of the three BSDFs:
 
 \begin{eqnarray}
 &\text{ThinCore}(\rho, s, \eta, \rho_s) &=&\\
@@ -1215,7 +1225,9 @@ The lookup table is also provided for download in our Github repository:
 
 ## Flake Consistency
 
-You might have noticed that we do not define hashing function and PRNG used for generating flakes. This limits consistency of flakes between different renderers because different random number generators will produce different flake position, orientation values for grid cells, but gives you opportunity to try out different ones depending on your needs. From our experience, this can significantly affect shading performance. Additionally number of flakes per grid cell is also something you can experiment with. For cheaper hashing functions it's beneficial to have low number of flakes per grid cell like 1 or 2.
+You might have noticed that we do not define the hashing function or the PRNG used for generating flakes. On the one hand this limits consistency of flakes between different renderers because different random number generators will produce different flake position and orientation values for grid cells. On the other hand this gives you an opportunity to try out different hashing functions and PRNGs depending on your needs. From our experience, using different hashing functions and PRNGs can significantly affect shading performance.
+
+Another thing you can experiment with is the the number of flakes per grid cell. For cheaper hashing functions it's beneficial to have low number of flakes per grid cell like 1 or 2.
 
 ## Parameter JSON file format
 
