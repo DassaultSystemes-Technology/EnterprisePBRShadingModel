@@ -29,7 +29,11 @@
                         property of a parameter indicates that a parameter must not be visible in the UI.
                     </p>
                     <p class="needs-data d-none">
-                        The data on this page is generated from <a id="dataLink" href=""></a>.
+                        The data on this page is generated from <a id="dataLink" href=""></a>. The file format is
+                        described in the
+                        <a href="spec-2022x.md.html#appendix/parameterjsonfileformat">
+                            appendix to the Enterprise PBR 2022x specification
+                        </a>.
                     </p>
                 </div>
             </div>
@@ -67,14 +71,14 @@
             <tbody id="paramTableBody">
                 <template id="param">
                     <tr>
-                        <td class="uiOrder"></td>
-                        <td class="name"></td>
-                        <td class="type"></td>
-                        <td class="default"></td>
-                        <td class="min fade-if-hidden"></td>
-                        <td class="max fade-if-hidden"></td>
+                        <td class="uiOrder fade-if-hidden"></td>
+                        <td class="name fade-if-hidden"></td>
+                        <td class="type fade-if-hidden"></td>
+                        <td class="default fade-if-hidden"></td>
+                        <td class="min empty-if-hidden fade-if-hidden"></td>
+                        <td class="max empty-if-hidden fade-if-hidden"></td>
                         <td class="hidden fade-if-hidden"></td>
-                        <td class="group fade-if-hidden"></td>
+                        <td class="group empty-if-hidden fade-if-hidden"></td>
                     </tr>
                 </template>    
             </tbody>
@@ -111,19 +115,41 @@ function mergeMaterials(materialId) {
 }
 
 function get(value, def) {
-    return value === undefined ? def : value;
+    if (value === undefined) {
+        return def;
+    } else if (Array.isArray(value)) {
+        return value.join(', ')
+    } else {
+        return value;
+    }
 };
 
 function formatMinMaxDefault(p) {
     if (p.type == 'color') {
-        return [ '0,0,0', get(p.max, '+inf, +inf, +inf'), get(p.default, '')]
+        return [
+            get(p.min, '0, 0, 0'),
+            get(p.max, '+inf, +inf, +inf'),
+            get(p.default, '')]
     } else if (p.type == 'float') {
         return [
             p.min === undefined ? '-inf' : p.min,
             p.max === undefined ? '+inf' : p.max,
             typeof p.default === 'object' && p.default.infinity === true ? '+inf' : (get(p.default, ''))]
+    } else if (p.type == 'vector') {
+        return [
+            get(p.min, '-inf, -inf, -inf'),
+            get(p.max, '+inf, +inf, +inf'),
+            get(p.default, '0, 0, 0')]
     }
     return [ get(p.min, ''), get(p.max, ''), get(p.default, '')]
+}
+
+function formatType(p) {
+    if (p.uniform) {
+        return 'uniform ' + (p.type || '');
+    } else {
+        return (p.type || '');
+    }
 }
 
 function updateParamTable(materialId) {
@@ -137,17 +163,18 @@ function updateParamTable(materialId) {
         let row = create('param')
         setElement(row, 'uiOrder', get(param[1].uiOrder, -1))
         setElement(row, 'name', param[1].name || '')
-        setElement(row, 'type', param[1].type || '')
+        setElement(row, 'type', formatType(param[1]))
         const [min, max, def] = formatMinMaxDefault(param[1])
         setElement(row, 'default', def)
         const hidden = param[1].hidden || false
-        if (hidden) {
-            row.querySelectorAll('.fade-if-hidden').forEach(el => el.classList.add('text-muted'));
-        }
         setElement(row, 'min', min)
         setElement(row, 'max', max)
         setElement(row, 'hidden', hidden)
         setElement(row, 'group', param[1].group || '')
+        if (hidden) {
+            row.querySelectorAll('.fade-if-hidden').forEach(el => el.classList.add('text-muted'));
+            row.querySelectorAll('.empty-if-hidden').forEach(el => el.style = 'color: rgb(0, 0, 0, 0) !important;');
+        }
         table.insertBefore(row, null)
     }
     document.getElementById('previewImage').src = material.preview
