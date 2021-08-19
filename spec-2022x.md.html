@@ -1097,10 +1097,10 @@ In [#KC17], the missing energy due to the missing multiple-scattering in the GGX
 
 \begin{eqnarray}
 F_{r, 1}(\mathbf{v},\mathbf{l}; r_u, r_v) &=& M_r(\mathbf{v},\mathbf{l}; r_u, r_v) + M_{r,ms}(\mathbf{v},\mathbf{l}; r_u, r_v) \\
-&=& M_r(\mathbf{v},\mathbf{l}; r_u, r_v) + \frac{(1 - E_m(\mathbf{v}\cdot\mathbf{n}; r_{uv}))(1 - E_m(\mathbf{l}\cdot\mathbf{n}; r_{uv}))}{\pi (1 - E_{m,avg}(r_{uv})}
+&=& M_r(\mathbf{v},\mathbf{l}; r_u, r_v) + \frac{(1 - E_m(\mathbf{v}\cdot\mathbf{n}; r_{uv}))(1 - E_m(\mathbf{l}\cdot\mathbf{n}; r_{uv}))}{\pi (1 - E_{m,avg}(r_{uv}))}
 \end{eqnarray}
 
-We use this sum in all core BSDFs of our model. For now, however, we have ommitted the Fresnel term, because at first we are only interested in a surface that is 100% reflective. $E_m$ and $E_{m,avg}$ denote the directional albedo and average albedo respectively. To keep it simple we replaced the anisotropic roughness $r_u, r_v$ with an isotropic approximation $r_{uv} = \sqrt{r_u r_v}$. This means that in the end our multiple-scattering term slightly underestimates the real contribution, but this is not a huge issue in typical scenes.
+We use this sum in all core BSDFs of our model. For now, however, we have omitted the Fresnel term, because at first we are only interested in a surface that is 100% reflective. $E_m$ and $E_{m,avg}$ denote the directional albedo and average albedo respectively. To keep it simple we replaced the anisotropic roughness $r_u, r_v$ with an isotropic approximation $r_{uv} = \sqrt{r_u r_v}$. This means that in the end our multiple-scattering term slightly underestimates the real contribution, but this is not a huge issue in typical scenes.
 
 First we compute the directional albedo $E_m$.
 
