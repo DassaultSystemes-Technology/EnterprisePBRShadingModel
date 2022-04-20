@@ -4,10 +4,14 @@
         "version" : "2.0"
     }, 
     "extensionsUsed" : [
-        "KHR_lights_punctual"
+        "KHR_lights_punctual", 
+        "KHR_materials_specular", 
+        "KHR_materials_clearcoat"
     ], 
     "extensionsRequired" : [
-        "KHR_lights_punctual"
+        "KHR_lights_punctual", 
+        "KHR_materials_specular", 
+        "KHR_materials_clearcoat"
     ], 
     "extensions" : {
         "KHR_lights_punctual" : {
@@ -131,7 +135,9 @@
                 "KHR_materials_clearcoat" : {
                     "clearcoatFactor" : 1, 
                     "clearcoatRoughnessFactor" : 0.1
-                }, 
+                }
+            }, 
+            "extras" : {
                 "3DS_materials_translucency" : {
                     "translucencyFactor" : 1
                 }

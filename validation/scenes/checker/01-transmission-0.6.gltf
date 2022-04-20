@@ -4,10 +4,14 @@
         "version" : "2.0"
     }, 
     "extensionsUsed" : [
-        "KHR_lights_punctual"
+        "KHR_lights_punctual", 
+        "KHR_materials_transmission", 
+        "KHR_materials_specular"
     ], 
     "extensionsRequired" : [
-        "KHR_lights_punctual"
+        "KHR_lights_punctual", 
+        "KHR_materials_transmission", 
+        "KHR_materials_specular"
     ], 
     "extensions" : {
         "KHR_lights_punctual" : {

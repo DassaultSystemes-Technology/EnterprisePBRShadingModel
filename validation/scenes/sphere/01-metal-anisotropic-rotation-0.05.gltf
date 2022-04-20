@@ -119,7 +119,7 @@
                 "metallicFactor" : 1, 
                 "roughnessFactor" : 0.3
             }, 
-            "extensions" : {
+            "extras" : {
                 "3DS_materials_anisotropy" : {
                     "anisotropyFactor" : 0.8, 
                     "anisotropyRotationFactor" : 0.05

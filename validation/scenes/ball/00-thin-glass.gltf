@@ -168,5 +168,11 @@
             "byteLength" : 457884, 
             "uri" : "ball.bin"
         }
+    ], 
+    "extensionsUsed" : [
+        "KHR_materials_transmission"
+    ], 
+    "extensionsRequired" : [
+        "KHR_materials_transmission"
     ]
 }
