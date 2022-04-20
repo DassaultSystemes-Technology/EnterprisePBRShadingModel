@@ -4,10 +4,12 @@
         "version" : "2.0"
     }, 
     "extensionsUsed" : [
-        "KHR_lights_punctual"
+        "KHR_lights_punctual", 
+        "KHR_materials_transmission"
     ], 
     "extensionsRequired" : [
-        "KHR_lights_punctual"
+        "KHR_lights_punctual", 
+        "KHR_materials_transmission"
     ], 
     "extensions" : {
         "KHR_lights_punctual" : {
@@ -144,11 +146,13 @@
                 "roughnessFactor" : 0.4
             }, 
             "extensions" : {
-                "3DS_materials_translucency" : {
-                    "translucencyFactor" : 0.3
-                }, 
                 "KHR_materials_transmission" : {
                     "transmissionFactor" : 0.8
+                }
+            }, 
+            "extras" : {
+                "3DS_materials_translucency" : {
+                    "translucencyFactor" : 0.3
                 }
             }
         }

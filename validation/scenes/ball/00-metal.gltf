@@ -81,8 +81,7 @@
                 ], 
                 "metallicFactor" : 1, 
                 "roughnessFactor" : 0.1
-            }, 
-            "extensions" : {}
+            }
         }
     ], 
     "meshes" : [

@@ -119,7 +119,7 @@
                 "metallicFactor" : 0, 
                 "roughnessFactor" : 0
             }, 
-            "extensions" : {
+            "extras" : {
                 "3DS_materials_translucency" : {
                     "translucencyFactor" : 1.0
                 }

@@ -75,11 +75,13 @@
                 "KHR_materials_volume" : {
                     "thicknessFactor" : 1
                 }, 
-                "3DS_materials_anisotropy" : {
-                    "anisotropyFactor" : 0.8
-                }, 
                 "KHR_materials_transmission" : {
                     "transmissionFactor" : 1
+                }
+            }, 
+            "extras" : {
+                "3DS_materials_anisotropy" : {
+                    "anisotropyFactor" : 0.8
                 }
             }
         }
@@ -163,5 +165,13 @@
             "byteLength" : 365024, 
             "uri" : "sphere-ibl.bin"
         }
+    ], 
+    "extensionsUsed" : [
+        "KHR_materials_volume", 
+        "KHR_materials_transmission"
+    ], 
+    "extensionsRequired" : [
+        "KHR_materials_volume", 
+        "KHR_materials_transmission"
     ]
 }

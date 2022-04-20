@@ -157,5 +157,11 @@
             "byteLength" : 365024, 
             "uri" : "sphere-ibl.bin"
         }
+    ], 
+    "extensionsUsed" : [
+        "KHR_materials_transmission"
+    ], 
+    "extensionsRequired" : [
+        "KHR_materials_transmission"
     ]
 }
