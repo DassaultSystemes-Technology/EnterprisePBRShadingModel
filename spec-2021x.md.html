@@ -776,7 +776,7 @@ Displacement
 Displacement mapping modifies the position $\mathbf{p}$ of surface points to add details to geometry. The displacement parameter $h$ is a vector, specifying the direction and length of the displacement in the local surface coordinate system defined by normal $\mathbf{n}$, tangent $\mathbf{t}$, and bitangent $\mathbf{b}$ (see Section [Tangent Space]). The new position $\mathbf{p}^{\prime}$ is given as
 
 \begin{eqnarray}
-\mathbf{p}^{\prime} = \mathbf{p} + \mathbf{x} h_x + \mathbf{y} h_y + \mathbf{n} h_z
+\mathbf{p}^{\prime} = \mathbf{p} + \mathbf{t} h_x + \mathbf{b} h_y + \mathbf{n} h_z
 \end{eqnarray}
 
  Name          | Type          | Default | Range      | Description
