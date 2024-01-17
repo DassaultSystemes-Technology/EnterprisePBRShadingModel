@@ -9,7 +9,7 @@ The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material
 
 In this document we provide a mathematical description of the Enterprise PBR Shading Model in terms of bidirectional scattering distribution functions (BSDF) and related concepts. Following the description makes it possible to derive a visually consistent implementation in a physically-based renderer.
 
-Versions: [2019x](spec-2019x.md.html) 2021x [2022x](spec-2022x.md.html)
+Versions: [2019x](spec-2019x.md.html) 2021x [2022x](spec-2022x.md.html) [2025x](spec-2025x.md.html)
 
 Components
 ==========
@@ -185,7 +185,7 @@ The BSDF looks as follows:
 &\text{OpaqueDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, l) = \\
 &\quad\quad\quad\quad \rho \,
   \underbrace{B(\mathbf{v}, \mathbf{l}; r_u, r_v, l, s, F_0 \rho_s)}_\text{Diffuse-like base BRDF} \\
-&\quad\quad\quad + s \, 
+&\quad\quad\quad + s \,
   \underbrace{M_r(\mathbf{v}, \mathbf{l}, \mathbf{h}_r; r_u, r_v)}_\text{Microfacet BRDF} \,
   \underbrace{F(\cos\theta_r; F_0 \rho_s, 1)}_\text{Fresnel} \\
 &\quad\quad\quad + s \,
@@ -355,7 +355,7 @@ We use Schlick's Fresnel approximation for performance reasons (Section [Putting
 
 \begin{eqnarray}
 F(\cos\theta; f_0, f_{90}) &=& f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 \\
-F_d(\cos\theta; f_0, f_{90}, \eta_i, \eta_o) &=& 
+F_d(\cos\theta; f_0, f_{90}, \eta_i, \eta_o) &=&
 \begin{cases}
 f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 & \text{if } \eta_o \geq \eta_i \\
 f_0 + (f_{90} - f_0) (1 - |\cos\theta_o|)^5 & \text{if } \eta_o < \eta_i \land \sin^2\theta_o < 1 \\
@@ -395,7 +395,7 @@ B_u(\mathbf{v}, \mathbf{l}; l) = \frac{1}{\pi} T(\mathbf{v}, \mathbf{l}; l)
 with
 
 \begin{equation}
-T(\mathbf{v}, \mathbf{l}; l) = 
+T(\mathbf{v}, \mathbf{l}; l) =
 \begin{cases}
 (1 - l) &\text{ if } (\mathbf{v} \cdot \mathbf{n}) (\mathbf{l} \cdot \mathbf{n}) > 0 \\
 l &\text{ otherwise}
@@ -512,7 +512,7 @@ $r_b$ |     $a$ |     $b$ |     $c$ |      $d$ |      $e$
  0.0  | 25.3245 | 3.32435 | 0.16801 | -1.27393 | -4.85967
  1.0  | 21.5473 | 3.82987 | 0.19823 | -1.97760 | -4.32054
  [Table [sheen-lambda-fit]: Values for $\Lambda$ curve fitting. Parameters are interpolated according to $P = (1-r_b)^2 P_{0.0} + (1-(1-r_b)^2) P_{1.0}$ [#CK17].]
- 
+
 If performance is a concern, due to the computation cost of the term above, we propose an alternative visibility term,
 given in [#NP13] :
 
@@ -630,17 +630,17 @@ In order to generate flake normal we sample GGX normal distribution:
   K(r_f, \xi_1, \xi_2) = \left(\sqrt{1 - w}\cos(2\pi\xi_2), \sqrt{1.0 - w}\sin(2\pi\xi_2), \sqrt{w}\right)
 \end{eqnarray}
 
-where ${w = \frac{1 - \xi_1}{1 - (1 - \alpha_\text{ggx}^2)\xi_1}}$. $\alpha_\text{ggx}$ which controls GGX distribution depends on a $r_f$ paramenter as well as BSDF cone angle $\alpha_\text{cone}$ (Equation [alpha-cone]). 
+where ${w = \frac{1 - \xi_1}{1 - (1 - \alpha_\text{ggx}^2)\xi_1}}$. $\alpha_\text{ggx}$ which controls GGX distribution depends on a $r_f$ paramenter as well as BSDF cone angle $\alpha_\text{cone}$ (Equation [alpha-cone]).
 
 \begin{eqnarray}
   \label{roughness-distribution}
   \alpha_\text{ggx} = \sqrt{r_f^2 - \alpha_\text{cone}^2}
 \end{eqnarray}
 
-During flake generation we also call $O_{f}$ to get flake opaqueness. 
+During flake generation we also call $O_{f}$ to get flake opaqueness.
 \begin{eqnarray}
   \label{flake-transparency}
-  O_{f}(f, \xi) = 
+  O_{f}(f, \xi) =
   \begin{cases}
     \text{1} & \text{if } \xi < f\\
     \text{0} & \text{otherwise}
@@ -655,7 +655,7 @@ We can now derive the textures $o_f(\mathbf{p}; f, s_f)$ and $\mathbf{n}_f(\math
 (o_f, n_f) generate_textures(float3 p, float f, float s_f, float r_f) {
   //Determine (u, v) texture coordinates of the shading point using triplanar mapping
   uv = T_map(p, ...)
-  
+
   //Determine which flake grid cell it belongs
   i, j = grid_cell(uv)
 
@@ -676,7 +676,7 @@ We can now derive the textures $o_f(\mathbf{p}; f, s_f)$ and $\mathbf{n}_f(\math
       }
     }
   }
-  
+
   return nearest_o, nearest_n
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -684,12 +684,12 @@ We can now derive the textures $o_f(\mathbf{p}; f, s_f)$ and $\mathbf{n}_f(\math
 
 ### Flake BSDF
 
-Generated flakes have a very simple BSDF. They behave like blurred mirrors, so they reflect light uniformly within a small cone aligned to a perfect reflection direction. Solid angle of the cone is defined as 
+Generated flakes have a very simple BSDF. They behave like blurred mirrors, so they reflect light uniformly within a small cone aligned to a perfect reflection direction. Solid angle of the cone is defined as
 \begin{eqnarray}
   \Omega_{cone}(\cos\theta) = 2\pi(1-\cos\theta)
 \end{eqnarray}
 
-Taking it into account the flake BSDF looks like this : 
+Taking it into account the flake BSDF looks like this :
 \begin{eqnarray}
   \label{flake-bsdf}
   B_f(\mathbf{v}, \mathbf{l}; r_f, \mathbf{n}_f) &=&
@@ -698,7 +698,7 @@ Taking it into account the flake BSDF looks like this :
     0 & \text{otherwise}
   \end{cases}
 \end{eqnarray}
-with ${\mathbf{r}} = {2 \mathbf{n}_f (\mathbf{v} \cdot \mathbf{n}_f) - \mathbf{v}}$ , which is the reflection of the view vector $\mathbf{v}$ on the generated flake with a normal $\mathbf{n}_f$. $\theta_\text{cone}$ mentioned above is small to guarantee glittery  appearence of flakes and depends only on ${r_f}$ parameter. 
+with ${\mathbf{r}} = {2 \mathbf{n}_f (\mathbf{v} \cdot \mathbf{n}_f) - \mathbf{v}}$ , which is the reflection of the view vector $\mathbf{v}$ on the generated flake with a normal $\mathbf{n}_f$. $\theta_\text{cone}$ mentioned above is small to guarantee glittery  appearence of flakes and depends only on ${r_f}$ parameter.
 
 \begin{eqnarray}
   \cos\theta_\text{cone} = 1 - \frac{2 \alpha_\text{cone}^2}{1 + \alpha_\text{cone}^2}
@@ -943,26 +943,26 @@ Table [subtypes-parameters-metals], Table [subtypes-parameters-opaque-dielectric
 </style>
 
 <div class="materialtypes">
- Name               |     Car Paint                                        |       Metal       
+ Name               |     Car Paint                                        |       Metal
 --------------------|:----------------------------------------------------:|:-----------------:
                     | ![](img/subtypes_carpaint.png width="130px")         | ![](img/subtypes_metal.png width="130px")
 Albedo              | (0.009,0.013,0.028)                                  | (0.5,0.5,0.5)
 Metallic            | *1*                                                  | *1*
-Roughness           | 0.4                                                  | 0.1        
-Anisotropy          | *0*                                                  | 0        
-Anisotropy Rotation | *0*                                                  | 0        
-Normal              | *(0,0,1)*                                            | (0,0,1)      
+Roughness           | 0.4                                                  | 0.1
+Anisotropy          | *0*                                                  | 0
+Anisotropy Rotation | *0*                                                  | 0
+Normal              | *(0,0,1)*                                            | (0,0,1)
 Transparency        | *0*                                                  | *0*
-Cut-Out Opacity     | 1                                                    | 1        
-Specular            | *1*                                                  | *1*      
+Cut-Out Opacity     | 1                                                    | 1
+Specular            | *1*                                                  | *1*
 Specular Tint       | *(1,1,1)*                                            | *(1,1,1)*
 Flake Coverage      | 0.8                                                  | *0*
 Flake Color         | (0.49,0.180,0.3537)                                  | *(1,1,1)*
 Flake Size          | 0.05                                                 | *0*
 Flake Roughness     | 0.25                                                 | *0*
-Clearcoat           | 1                                                    | *0*      
-Clearcoat Roughness | 0                                                    | *0*      
-Clearcoat Normal    | (0,0,1)                                              | *(0,0,1)*      
+Clearcoat           | 1                                                    | *0*
+Clearcoat Roughness | 0                                                    | *0*
+Clearcoat Normal    | (0,0,1)                                              | *(0,0,1)*
 [Table [subtypes-parameters-metals]: List of metallic material subtypes (metallic = 1).]
 </div>
 
@@ -993,7 +993,7 @@ Thin Walled         | *true*                                           | *true* 
 Index of Refraction | *1.5*                                            | *1.5*                                             | *1.5*                                      |
 [Table [subtypes-parameters-opaque-dielectrics]: List of non-volumetric dielectric material subtypes (metallic = 0).]
 </div>
- 
+
 <div class="materialtypes">
  Name               |       Glass                                     |      Plastic                                        |
 --------------------|:-----------------------------------------------:|:---------------------------------------------------:|

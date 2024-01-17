@@ -1,0 +1,1466 @@
+{
+    "materials": {
+        "generic": {
+            "name": "Enterprise PBR Shading Model",
+            "preview": "img/subtypes_2025x_basic.png",
+            "parameters": {
+                "albedo": {
+                    "name": "Albedo",
+                    "type": "color",
+                    "max": [1, 1, 1],
+                    "default": [1, 1, 1],
+                    "uiOrder": 0,
+                    "group": "Base"
+                },
+                "metallic": {
+                    "name": "Metallic",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 1,
+                    "group": "Base"
+                },
+                "roughness": {
+                    "name": "Roughness",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 2,
+                    "group": "Base"
+                },
+                "anisotropy": {
+                    "name": "Anisotropy",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 3,
+                    "group": "Base"
+                },
+                "anisotropyRotation": {
+                    "name": "Anisotropy Rotation",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 4,
+                    "group": "Base"
+                },
+                "normal": {
+                    "name": "Normal",
+                    "type": "normal",
+                    "default": [0, 0, 1],
+                    "uiOrder": 5,
+                    "group": "Base"
+                },
+                "displacement": {
+                    "name": "Displacement",
+                    "type": "vector",
+                    "default": [0, 0, 0],
+                    "uiOrder": 6,
+                    "group": "Base"
+                },
+                "translucency": {
+                    "name": "Translucency",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 7,
+                    "group": "Base"
+                },
+                "translucencyColor": {
+                    "name": "Translucency Color",
+                    "type": "color",
+                    "max": [1, 1, 1],
+                    "default": [1, 1, 1],
+                    "uiOrder": 8,
+                    "group": "Base"
+                },
+                "transparency": {
+                    "name": "Transparency",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 9,
+                    "group": "Base"
+                },
+                "cutoutOpacity": {
+                    "name": "Cut-Out Opacity",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 1,
+                    "uiOrder": 10,
+                    "group": "Base"
+                },
+                "specular": {
+                    "name": "Specular",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 1,
+                    "uiOrder": 11,
+                    "group": "Base"
+                },
+                "specularTint": {
+                    "name": "Specular Tint",
+                    "type": "color",
+                    "max": [1, 1, 1],
+                    "default": [1, 1, 1],
+                    "uiOrder": 12,
+                    "group": "Base"
+                },
+                "thinFilm": {
+                    "name": "Thin Film",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 13,
+                    "group": "Iridescence"
+                },
+                "thinFilmThickness": {
+                    "name": "Thin Film Thickness",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.4,
+                    "uiOrder": 14,
+                    "group": "Iridescence"
+                },
+                "thinFilmIOR": {
+                    "name": "Thin Film IoR",
+                    "type": "float",
+                    "min": 1,
+                    "max": 2.5,
+                    "default": 1.3,
+                    "uiOrder": 15,
+                    "group": "Iridescence"
+                },
+                "sheenColor": {
+                    "name": "Sheen Color",
+                    "type": "color",
+                    "max": [1, 1, 1],
+                    "default": [0, 0, 0],
+                    "uiOrder": 16,
+                    "group": "Sheen"
+                },
+                "sheenRoughness": {
+                    "name": "Sheen Roughness",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0.5,
+                    "uiOrder": 17,
+                    "group": "Sheen"
+                },
+                "flakeCoverage": {
+                    "name": "Flake Coverage",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 18,
+                    "group": "Flakes"
+                },
+                "flakeColor": {
+                    "name": "Flake Color",
+                    "type": "color",
+                    "max": [1, 1, 1],
+                    "default": [1, 1, 1],
+                    "uiOrder": 19,
+                    "group": "Flakes"
+                },
+                "flakeSize": {
+                    "name": "Flake Size",
+                    "type": "float",
+                    "min": 0,
+                    "default": 0,
+                    "uiOrder": 20,
+                    "group": "Flakes"
+                },
+                "flakeRoughness": {
+                    "name": "Flake Roughness",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 21,
+                    "group": "Flakes"
+                },
+                "flipFlop": {
+                    "name": "Flip Flop",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 22,
+                    "group": "Flakes"
+                },
+                "flipFlopColor": {
+                    "name": "Flip Flop Color",
+                    "type": "color",
+                    "max": [1, 1, 1],
+                    "default": [1, 1, 1],
+                    "uiOrder": 23,
+                    "group": "Flakes"
+                },
+                "clearcoat": {
+                    "name": "Clearcoat",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 24,
+                    "group": "Coating"
+                },
+                "clearcoatRoughness": {
+                    "name": "Clearcoat Roughness",
+                    "type": "float",
+                    "min": 0,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 25,
+                    "group": "Coating"
+                },
+                "clearcoatNormal": {
+                    "name": "Clearcoat Normal",
+                    "type": "normal",
+                    "default": [0, 0, 1],
+                    "uiOrder": 26,
+                    "group": "Coating"
+                },
+                "emissionColor": {
+                    "name": "Emission Color",
+                    "type": "color",
+                    "default": [1, 1, 1],
+                    "uiOrder": 27,
+                    "group": "Emission"
+                },
+                "emissionValue": {
+                    "name": "Emission Value",
+                    "type": "float",
+                    "uniform": true,
+                    "min": 0,
+                    "default": 0,
+                    "uiOrder": 28,
+                    "group": "Emission"
+                },
+                "emissionMode": {
+                    "name": "Emission Mode",
+                    "type": "enum",
+                    "uniform": true,
+                    "default": "LUMINOUS_EMITTANCE",
+                    "enum": [ "LUMINOUS_EMITTANCE", "LUMINOUS_POWER" ],
+                    "uiOrder": 29,
+                    "group": "Emission"
+                },
+                "emissionEnergyNormalization": {
+                    "name": "Energy Normalization",
+                    "type": "boolean",
+                    "uniform": true,
+                    "default": false,
+                    "uiOrder": 30,
+                    "group": "Emission"
+                },
+                "thinWalled": {
+                    "name": "Thin Walled",
+                    "type": "boolean",
+                    "uniform": true,
+                    "default": true,
+                    "uiOrder": 31,
+                    "group": "Volume"
+                },
+                "ior": {
+                    "name": "Index of Refraction",
+                    "type": "float",
+                    "uniform": true,
+                    "min": 1,
+                    "default": 1.5,
+                    "uiOrder": 32,
+                    "group": "Volume"
+                },
+                "abbeNumber": {
+                    "name": "Abbe Number",
+                    "type": "float",
+                    "uniform": true,
+                    "min": 0,
+                    "default": 0,
+                    "uiOrder": 33,
+                    "group": "Volume"
+                },
+                "attenuationColor": {
+                    "name": "Attenuation Color",
+                    "type": "color",
+                    "uniform": true,
+                    "max": [1, 1, 1],
+                    "default": [1, 1, 1],
+                    "uiOrder": 34,
+                    "group": "Volume"
+                },
+                "attenuationDistance": {
+                    "name": "Attenuation Distance",
+                    "type": "float",
+                    "uniform": true,
+                    "min": 0,
+                    "default": { "infinity": true },
+                    "uiOrder": 35,
+                    "group": "Volume"
+                },
+                "subsurfaceColor": {
+                    "name": "Subsurface Color",
+                    "type": "color",
+                    "uniform": true,
+                    "max": [1, 1, 1],
+                    "default": [0, 0, 0],
+                    "uiOrder": 36,
+                    "group": "Volume"
+                },
+                "subsurfaceAnisotropy": {
+                    "name": "Subsurface Anisotropy",
+                    "type": "float",
+                    "uniform": true,
+                    "min": -1,
+                    "max": 1,
+                    "default": 0,
+                    "uiOrder": 37,
+                    "group": "Volume"
+                }
+            }
+        },
+        "carpaint": {
+            "name": "Car Paint",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_carpaint.png",
+            "parameters": {
+                "albedo": {
+                    "default": [0.009, 0.013, 0.028],
+                    "group": ""
+                },
+                "metallic": {
+                    "default": 1,
+                    "hidden": true
+                },
+                "roughness": {
+                    "default": 0.4,
+                    "group": ""
+                },
+                "anisotropy": {
+                    "hidden": true
+                },
+                "anisotropyRotation": {
+                    "hidden": true
+                },
+                "normal": {
+                    "hidden": true
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "default": 0.8,
+                    "group": ""
+                },
+                "flakeColor": {
+                    "default": [0.255, 0.459, 0.624],
+                    "group": ""
+                },
+                "flakeSize": {
+                    "default": 0.05,
+                    "group": ""
+                },
+                "flakeRoughness": {
+                    "default": 0.25,
+                    "group": ""
+                },
+                "flipFlop": {
+                    "group": ""
+                },
+                "flipFlopColor": {
+                    "default": [0.255, 0.459, 0.624],
+                    "group": ""
+                },
+                "clearcoat": {
+                    "default": 1,
+                    "group": ""
+                },
+                "clearcoatRoughness": {
+                    "group": ""
+                },
+                "clearcoatNormal": {
+                    "group": ""
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "hidden": true
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "hidden": true
+                },
+                "attenuationDistance": {
+                    "hidden": true
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "metal": {
+            "name": "Metal",
+            "preview": "img/subtypes_2022x_metal.png",
+            "inherits": "generic",
+            "parameters": {
+                "albedo": {
+                    "default": [0.5, 0.5, 0.5],
+                    "group": ""
+                },
+                "metallic": {
+                    "default": 1,
+                    "hidden": true
+                },
+                "roughness": {
+                    "default": 0.1,
+                    "group": ""
+                },
+                "anisotropy": {
+                    "group": ""
+                },
+                "anisotropyRotation": {
+                    "group": ""
+                },
+                "normal": {
+                    "group": ""
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "hidden": true
+                },
+                "clearcoatRoughness": {
+                    "hidden": true
+                },
+                "clearcoatNormal": {
+                    "hidden": true
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "hidden": true
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "hidden": true
+                },
+                "attenuationDistance": {
+                    "hidden": true
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "basic": {
+            "name": "Basic",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_basic.png",
+            "parameters": {
+                "albedo": {
+                    "default": [0.284, 0.284, 0.284],
+                    "group": ""
+                },
+                "metallic": {
+                    "group": ""
+                },
+                "roughness": {
+                    "default": 0.3,
+                    "group": ""
+                },
+                "anisotropy": {
+                    "hidden": true
+                },
+                "anisotropyRotation": {
+                    "hidden": true
+                },
+                "normal": {
+                    "group": ""
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "hidden": true
+                },
+                "clearcoatRoughness": {
+                    "hidden": true
+                },
+                "clearcoatNormal": {
+                    "hidden": true
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "hidden": true
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "hidden": true
+                },
+                "attenuationDistance": {
+                    "hidden": true
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "emissive": {
+            "name": "Emissive",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_emissive.png",
+            "parameters": {
+                "albedo": {
+                    "default": [0, 0, 0],
+                    "hidden": true
+                },
+                "metallic": {
+                    "hidden": true
+                },
+                "roughness": {
+                    "hidden": true
+                },
+                "anisotropy": {
+                    "hidden": true
+                },
+                "anisotropyRotation": {
+                    "hidden": true
+                },
+                "normal": {
+                    "hidden": true
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "default": 0,
+                    "hidden": true
+                },
+                "specularTint": {
+                    "default": [0, 0, 0],
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "hidden": true
+                },
+                "clearcoatRoughness": {
+                    "hidden": true
+                },
+                "clearcoatNormal": {
+                    "hidden": true
+                },
+                "emissionColor": {
+                    "default": [0.5, 0.442, 0.298],
+                    "group": ""
+                },
+                "emissionValue": {
+                    "default": 10,
+                    "group": ""
+                },
+                "emissionMode": {
+                    "default": "LUMINOUS_EMITTANCE",
+                    "group": ""
+                },
+                "emissionEnergyNormalization": {
+                    "default": false,
+                    "group": ""
+                },
+                "thinWalled": {
+                    "hidden": true
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "hidden": true
+                },
+                "attenuationDistance": {
+                    "hidden": true
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "textile": {
+            "name": "Textile",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_textile.png",
+            "parameters": {
+                "albedo": {
+                    "default": [0.302, 0.294, 0.236],
+                    "group": ""
+                },
+                "metallic": {
+                    "hidden": true
+                },
+                "roughness": {
+                    "default": 0.4,
+                    "group": ""
+                },
+                "anisotropy": {
+                    "group": ""
+                },
+                "anisotropyRotation": {
+                    "group": ""
+                },
+                "normal": {
+                    "group": ""
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "default": [0.5, 0.5, 0.5],
+                    "group": ""
+                },
+                "sheenRoughness": {
+                    "default": 0.53,
+                    "group": ""
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "hidden": true
+                },
+                "clearcoatRoughness": {
+                    "hidden": true
+                },
+                "clearcoatNormal": {
+                    "hidden": true
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "hidden": true
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "hidden": true
+                },
+                "attenuationDistance": {
+                    "hidden": true
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "leather": {
+            "name": "Leather",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_leather.png",
+            "parameters": {
+                "albedo": {
+                    "default": [0.302, 0.294, 0.236],
+                    "group": ""
+                },
+                "metallic": {
+                    "hidden": true
+                },
+                "roughness": {
+                    "default": 0.4,
+                    "group": ""
+                },
+                "anisotropy": {
+                    "hidden": true
+                },
+                "anisotropyRotation": {
+                    "hidden": true
+                },
+                "normal": {
+                    "group": ""
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "hidden": true
+                },
+                "clearcoatRoughness": {
+                    "hidden": true
+                },
+                "clearcoatNormal": {
+                    "hidden": true
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "hidden": true
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "hidden": true
+                },
+                "attenuationDistance": {
+                    "hidden": true
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "wood": {
+            "name": "Wood",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_wood.png",
+            "parameters": {
+                "albedo": {
+                    "default": [0.344, 0.227, 0.07],
+                    "group": ""
+                },
+                "metallic": {
+                    "hidden": true
+                },
+                "roughness": {
+                    "default": 0.5,
+                    "group": ""
+                },
+                "anisotropy": {
+                    "group": ""
+                },
+                "anisotropyRotation": {
+                    "group": ""
+                },
+                "normal": {
+                    "group": ""
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "default": 1,
+                    "group": ""
+                },
+                "clearcoatRoughness": {
+                    "group": ""
+                },
+                "clearcoatNormal": {
+                    "group": ""
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "hidden": true
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "hidden": true
+                },
+                "attenuationDistance": {
+                    "hidden": true
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "glass": {
+            "name": "Glass",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_glass.png",
+            "parameters": {
+                "albedo": {
+                    "group": ""
+                },
+                "metallic": {
+                    "hidden": true
+                },
+                "roughness": {
+                    "group": ""
+                },
+                "anisotropy": {
+                    "hidden": true
+                },
+                "anisotropyRotation": {
+                    "hidden": true
+                },
+                "normal": {
+                    "group": ""
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "hidden": true
+                },
+                "translucencyColor": {
+                    "hidden": true
+                },
+                "transparency": {
+                    "default": 1,
+                    "hidden": true
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "hidden": true
+                },
+                "clearcoatRoughness": {
+                    "hidden": true
+                },
+                "clearcoatNormal": {
+                    "hidden": true
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "default": false,
+                    "group": ""
+                },
+                "ior": {
+                    "hidden": true
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "default": [0.99, 0.99, 0.99],
+                    "group": ""
+                },
+                "attenuationDistance": {
+                    "default": 0.005,
+                    "group": ""
+                },
+                "subsurfaceColor": {
+                    "hidden": true
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true
+                }
+            }
+        },
+        "plastic": {
+            "name": "Plastic",
+            "inherits": "generic",
+            "preview": "img/subtypes_2022x_plastic.png",
+            "parameters": {
+                "albedo": {
+                    "default": [0.004, 0.004, 0.004],
+                    "group": ""
+                },
+                "metallic": {
+                    "hidden": true
+                },
+                "roughness": {
+                    "default": 0.25,
+                    "group": ""
+                },
+                "anisotropy": {
+                    "hidden": true
+                },
+                "anisotropyRotation": {
+                    "hidden": true
+                },
+                "normal": {
+                    "group": ""
+                },
+                "displacement": {
+                    "group": ""
+                },
+                "translucency": {
+                    "group": ""
+                },
+                "translucencyColor": {
+                    "default": {
+                        "$ref": "#/materials/plastic/parameters/albedo/default"
+                    },
+                    "group": ""
+                },
+                "transparency": {
+                    "group": ""
+                },
+                "cutoutOpacity": {
+                    "group": ""
+                },
+                "specular": {
+                    "hidden": true
+                },
+                "specularTint": {
+                    "hidden": true
+                },
+                "thinFilm": {
+                    "hidden": true
+                },
+                "thinFilmThickness": {
+                    "hidden": true
+                },
+                "thinFilmIOR": {
+                    "hidden": true
+                },
+                "sheenColor": {
+                    "hidden": true
+                },
+                "sheenRoughness": {
+                    "hidden": true
+                },
+                "flakeCoverage": {
+                    "hidden": true
+                },
+                "flakeColor": {
+                    "hidden": true
+                },
+                "flakeSize": {
+                    "hidden": true
+                },
+                "flakeRoughness": {
+                    "hidden": true
+                },
+                "flipFlop": {
+                    "hidden": true
+                },
+                "flipFlopColor": {
+                    "hidden": true
+                },
+                "clearcoat": {
+                    "hidden": true
+                },
+                "clearcoatRoughness": {
+                    "hidden": true
+                },
+                "clearcoatNormal": {
+                    "hidden": true
+                },
+                "emissionColor": {
+                    "hidden": true
+                },
+                "emissionValue": {
+                    "hidden": true
+                },
+                "emissionMode": {
+                    "hidden": true
+                },
+                "emissionEnergyNormalization": {
+                    "hidden": true
+                },
+                "thinWalled": {
+                    "group": ""
+                },
+                "ior": {
+                    "group": ""
+                },
+                "abbeNumber": {
+                    "hidden": true
+                },
+                "attenuationColor": {
+                    "group": ""
+                },
+                "attenuationDistance": {
+                    "default": 0.00001,
+                    "group": ""
+                },
+                "subsurfaceColor": {
+                    "group": ""
+                },
+                "subsurfaceAnisotropy": {
+                    "hidden": true,
+                    "group": ""
+                }
+            }
+        }
+    }
+}
