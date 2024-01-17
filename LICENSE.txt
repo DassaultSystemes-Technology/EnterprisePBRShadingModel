@@ -1,4 +1,4 @@
-Enterprise PBR Shading Model (c) Dassault Systèmes 2019
+Enterprise PBR Shading Model (c) Dassault Systèmes 2024
 
 Enterprise PBR Shading Model (DSPBR) licensed under a Creative
 Commons Attribution-ShareAlike 4.0 International License.
@@ -7,7 +7,7 @@ In addition, please acknowledge your use of the Dassault Systèmes
 Enterprise PBR Shading Model (DSPBR) when DSPBR is used or implemented
 in a product by adding  the following "[name of the product] is
 implementing DSPBR, the Dassault Systèmes Enterprise PBR Shading
-Model", in a place and format which shall be reasonably visible. 
+Model", in a place and format which shall be reasonably visible.
 
 =======================================================================
 
@@ -62,7 +62,7 @@ exhaustive, and do not form part of our licenses.
      such as asking that all changes be marked or described.
      Although not required by our licenses, you are encouraged to
      respect those requests where reasonable. More considerations
-     for the public: 
+     for the public:
 	wiki.creativecommons.org/Considerations_for_licensees
 
 =======================================================================
