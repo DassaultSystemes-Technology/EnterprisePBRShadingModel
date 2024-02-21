@@ -9,7 +9,7 @@ The [Dassault Systèmes](https://www.3ds.com/) Enterprise PBR Shading Model (DSP
   * [Version 2021x - deprecated](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec-2021x.md.html)
   * [Version 2019x - deprecated](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/spec-2019x.md.html)
 * [User Guide](https://dassaultsystemes-technology.github.io/EnterprisePBRShadingModel/user_guide.md.html)
-* [Live Demo](https://dassaultsystemes-technology.github.io/dspbr-pt/demo/dev)
+* [Live Demo](https://dassaultsystemes-technology.github.io/dspbr-pt)
 
 ![Examples](img/examples.png)
 
