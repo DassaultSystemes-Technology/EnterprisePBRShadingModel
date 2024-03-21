@@ -75,7 +75,9 @@
                     "name": "Translucency Color",
                     "type": "color",
                     "max": [1, 1, 1],
-                    "default": [1, 1, 1],
+                    "default": {
+                        "$ref": "#/materials/generic/parameters/albedo/default"
+                    },
                     "uiOrder": 8,
                     "group": "Base"
                 },
@@ -1366,6 +1368,9 @@
                     "group": ""
                 },
                 "translucencyColor": {
+                    "default": {
+                        "$ref": "#/materials/plastic/parameters/albedo/default"
+                    },
                     "group": ""
                 },
                 "transparency": {
