@@ -576,13 +576,13 @@
                     "hidden": true
                 },
                 "thinFilm": {
-                    "group": ""
+                    "hidden": true
                 },
                 "thinFilmThickness": {
-                    "group": ""
+                    "hidden": true
                 },
                 "thinFilmIOR": {
-                    "group": ""
+                    "hidden": true
                 }
             }
         },
@@ -1075,13 +1075,13 @@
                     "hidden": true
                 },
                 "thinFilm": {
-                    "group": ""
+                    "hidden": true
                 },
                 "thinFilmThickness": {
-                    "group": ""
+                    "hidden": true
                 },
                 "thinFilmIOR": {
-                    "group": ""
+                    "hidden": true
                 }
             }
         },
@@ -1324,13 +1324,13 @@
                     "hidden": true
                 },
                 "thinFilm": {
-                    "group": ""
+                    "hidden": true
                 },
                 "thinFilmThickness": {
-                    "group": ""
+                    "hidden": true
                 },
                 "thinFilmIOR": {
-                    "group": ""
+                    "hidden": true
                 }
             }
         },
