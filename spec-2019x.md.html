@@ -9,7 +9,7 @@ The Enterprise PBR Shading Model (DSPBR) is a high-quality, easy-to-use material
 
 In this document we provide in-depth instructions on how to implement the model in a physically-based renderer.
 
-Versions: 2019x [2021x](spec-2021x.md.html) [2022x](spec-2022x.md.html)
+Versions: 2019x [2021x](spec-2021x.md.html) [2022x](spec-2022x.md.html) [2025x](spec-2025x.md.html)
 
 Components
 ==========
@@ -108,14 +108,14 @@ M_t(\mathbf{v}, \mathbf{l}; r_u, r_v, \eta_i, \eta_o) & \text{ otherwise}
 \end{cases}
 \end{eqnarray}
 
-with ${\mathbf{l}}^\prime = \mathbf{l} + 2 \mathbf{n} (-\mathbf{l} \cdot \mathbf{n})$ to flip the light direction from lower to upper hemisphere in thin-walled case to be able to reuse the microfacet reflection function for transmission (Figure [bsdf-transparent-dielectric-thin]). 
+with ${\mathbf{l}}^\prime = \mathbf{l} + 2 \mathbf{n} (-\mathbf{l} \cdot \mathbf{n})$ to flip the light direction from lower to upper hemisphere in thin-walled case to be able to reuse the microfacet reflection function for transmission (Figure [bsdf-transparent-dielectric-thin]).
 
 ![Figure [bsdf-transparent-dielectric-thin]: The dielectric BSDF for transparent surfaces is composed of a reflective lobe and a transmissive lobe.](img/bsdf_transparent_dielectric_thin.png)
 
 The Fresnel angles $\cos\theta_r$ and $\cos\theta_t$ are based on the half-vector.
 
 \begin{eqnarray}
-\cos\theta_r &=& (\mathbf{v} \cdot \mathbf{h}_r) 
+\cos\theta_r &=& (\mathbf{v} \cdot \mathbf{h}_r)
 & \qquad &
 \cos\theta_t &=&
 \begin{cases}
@@ -274,7 +274,7 @@ We use Schlick's Fresnel approximation for performance reasons (Section [Putting
 
 \begin{eqnarray}
 F(\theta; f_0, f_{90}) &=& f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 \\
-F_d(\theta; f_0, f_{90}) &=& 
+F_d(\theta; f_0, f_{90}) &=&
 \begin{cases}
 f_0 + (f_{90} - f_0) (1 - |\cos\theta|)^5 & \text{if } \eta_o \geq \eta_i \\
 f_0 + (f_{90} - f_0) (1 - |\cos\theta_o|)^5 & \text{if } \eta_o < \eta_i \land \sin^2\theta_o < 1 \\
@@ -585,22 +585,22 @@ Table [subtypes-parameters-metals], Table [subtypes-parameters-opaque-dielectric
 </style>
 
 <div class="materialtypes">
- Name               |     Car Paint                                        |       Metal       
+ Name               |     Car Paint                                        |       Metal
 --------------------|:----------------------------------------------------:|:-----------------:
 Albedo              | (0.009,0.013,0.028)                                  | (0.5,0.5,0.5)
 Metallic            | *1*                                                  | *1*
-Roughness           | 0.4                                                  | 0.1        
-Anisotropy          | *0*                                                  | 0        
-Anisotropy Rotation | *0*                                                  | 0        
-Normal              | *(0,0,1)*                                            | (0,0,1)      
+Roughness           | 0.4                                                  | 0.1
+Anisotropy          | *0*                                                  | 0
+Anisotropy Rotation | *0*                                                  | 0
+Normal              | *(0,0,1)*                                            | (0,0,1)
 Transparency        | *0*                                                  | *0*
-Cut-Out Opacity     | 1                                                    | 1        
-Sheen               | *0*                                                  | *0*      
-Specular            | *1*                                                  | *1*      
+Cut-Out Opacity     | 1                                                    | 1
+Sheen               | *0*                                                  | *0*
+Specular            | *1*                                                  | *1*
 Specular Tint       | *(1,1,1)*                                            | *(1,1,1)*
-Clearcoat           | 1                                                    | *0*      
-Clearcoat Roughness | 0                                                    | *0*      
-Clearcoat Normal    | (0,0,1)                                              | *(0,0,1)*      
+Clearcoat           | 1                                                    | *0*
+Clearcoat Roughness | 0                                                    | *0*
+Clearcoat Normal    | (0,0,1)                                              | *(0,0,1)*
                     | ![](img/subtypes_carpaint.png width="160px")         | ![](img/subtypes_metal.png width="160px")
 [Table [subtypes-parameters-metals]: List of fixed (italic light grey) and user-defined values with their defaults for the parameters of the different recommended metallic material subtypes. Emissive, clear-coat and volumetric parameters are omitted because the effects are not available and parameters can be kept at their defaults (Section [components]).]
 </div>
