@@ -103,8 +103,6 @@ See Section [In-Depth Look at the BSDFs] for more details about the Fresnel term
 
 The Fresnel-weighted combination of a microfacet BRDF $M_r$ and a microfacet BTDF $M_t$ forms the BSDF for transparent dielectric surfaces like glass, oil, water, or air. As before, $r_u$ and $r_v$ change the anisotropic roughness of the BSDF. In addition, we now provide a parameter to change the index of refraction $\eta$, which determines how the light ray is refracted when entering the volume beneath the surface, and how the amount of incoming light is distributed to reflection and transmission. $s$ and $\rho_s$ allow fine-tuning the amount of reflection and its color. $\rho$ changes the color of the transmissive component. We again compensate for energy-loss of the reflection component using $M_{r,ms}$ and $F_{ms}$. Energy compensation for transmission may be added in a future revision.
 
-TODO: Energy compensation for transmission
-
 The BSDF differs for thin-walled and volumetric materials. The volumetric case has to be enabled via a flag, see Section [Volume]. Figure [bsdf-transparent-dielectric] shows the two versions side-by-side. In the thin-walled case (left) the microfacet BTDF is identical to the microfacet BRDF, except that the lobe is mirrored onto the lower hemisphere. In the volumetric case (right) the transmissive lobe is bent according to the refraction angle computed from the index of refraction.
 
 ![Figure [bsdf-transparent-dielectric]: The dielectric BSDF for transparent surfaces is composed of a reflective lobe and a transmissive lobe. The material is configured (left) thin-walled or (right) volumetric. Note the different refraction angles.](img/bsdf_transparent_dielectric.png)
@@ -472,14 +470,14 @@ For more fine-grained artistic control, the material can now be tweaked even fur
 5. Fine-tune specular color near $\theta=0^\circ$ with $\rho_s$.
 
 
-Thin-Film
+Thin Film
 ---------
 Thin-film interference is an optical phenomenon in which a material's surface changes color when viewed or illuminated from different angles (*goniochromatic*). The effect is responsible for the vibrant colors observed in soap bubbles or oil slicks.
 Practical industry applications include the design of anti-reflective coatings, interference filters for cameras, and the enhancement of colors in paints. In a more subtle manner, these color shifts can be observed in everyday scenarios such as finger traces or surface finishes on furniture.
 
 Thin-film interference manifests as an iridescent effect resulting from the interference between light waves that scatter in a wavelength-dependent manner when interacting with films of thickness close to visible wavelengths. This interference occurs at both the upper and lower interfaces of the thin layer, influencing whether reflected light is suppressed or enhanced.
 
-The appearance of the thin-film effect is controlled by the film's thickness $t_i$ and its IoR $\eta_i$.
+The appearance of the thin-film effect is controlled by the film's thickness $t_i$ and its IOR $\eta_i$.
 
 | Name     | Type  | Default | Range   | Description                                  |
 |----------|-------|---------|---------|----------------------------------------------|
@@ -494,18 +492,18 @@ We model the thin-film effect by introducing a thin layer on top of our core mat
 
 Based on the thin-film layer weight $i$, we blend the original Fresnel with the thin-film reflectance for the specular core components
 $$
-OpaqueCore(...) = \mathbf{M}_r (1-i)F(...) + \mathbf{M}_r i R(...)...
+\text{OpaqueCore}(...) = \mathbf{M}_r (1-i)F(...) + \mathbf{M}_r i R(...)...
 $$
 
 Likewise for transmission
 $$
-TransparentCore(...) = \mathbf{M}_t (1-i)(1-sF(...)) + \mathbf{M}_r i (1-R(...))...
+\text{TransparentCore}(...) = \mathbf{M}_t (1-i)(1-sF(...)) + \mathbf{M}_r i (1-R(...))...
 $$
 
 !!!
-    Please note how the specular weight doesn't affect the thin-film reflectance. It's obvious in the transmission equation above, but also true for the reflection as it uses the actual base IoR instead of the $f_0$ term.
+    Please note how the specular weight doesn't affect the thin-film reflectance. It's obvious in the transmission equation above, but also true for the reflection as it uses the actual base IOR instead of the $f_0$ term.
 
-The diffuse BSDF is defined as a blend of the energy correct diffuse BSDF $B_c$ as given in eqn. [b_c] and a new term $B_{c,i}$
+The diffuse BSDF is defined as a blend of the energy correct diffuse BSDF $B_c$ as given in Equation [b_c] and a new term $B_{c,i}$
 
 \begin{equation}
 \begin{aligned}
@@ -526,27 +524,27 @@ $E_i$ is the thin-film reflectance adjusted for energy preservation at higher ro
 \begin{equation}
 \begin{aligned}
 &E_i(cos\Theta;  r_{uv}, \eta, d_i, \eta_i) = \\
-&\quad\quad\quad lerp\left(lum(R(cos\Theta; r_{uv}, \eta, d_i, \eta_i)), F_{m,avg}(f_{0,R12}, 1), 1 - (1-r_{uv}^2)^5\right)
+&\quad\quad\quad lerp\left(\text{lum}(R(cos\Theta; r_{uv}, \eta, d_i, \eta_i)), F_{m,avg}(f_{0,R12}, 1), 1 - (1-r_{uv}^2)^5\right)
 \end{aligned}
 \label{weight_scaling}
 \end{equation}
 
 where
 
-- $lum$ is the relative luminance of the colored thin-film reflectance.
+- $\text{lum}$ is the relative luminance of the colored thin-film reflectance.
 
-- $F_{m,avg}$ is the average Schlick fresnel as defined in eqn.[fr_avg].
+- $F_{m,avg}$ is the average Schlick fresnel as defined in Equation [fr_avg].
 
 - $f_{0,R12}$ the reflectance at normal incidence at the outer thin-film interface.
 
 
 ![Figure [thin-film-furnace]: No roughness compensation. Obvious energy loss with increasing roughness.]("img/white_furnace_thin_film[ior_1.5]no_rough_comp.png")
 
-![Figure [thin-film-furnace-comp]: Using the average Schlick Fresnel at higher roughness values mitigates some of the energy loss (eqn. [weight_scaling]).]("img/white_furnace_thin_film[ior_1.5].png")
+![Figure [thin-film-furnace-comp]: Using the average Schlick Fresnel at higher roughness values mitigates some of the energy loss (Equation [weight_scaling]).]("img/white_furnace_thin_film[ior_1.5].png")
 
 
 !!! Tip: Diffuse weight approximation
-    Evaluating the full thin-film reflectance twice just for energy correction may be prohibitive. We found that using only the view-dependent term $E_i(\mathbf{v}\cdot\mathbf{n};...)$ and replacing the full reflectance with the $C_0$ term as defined by [#BB17] is a viable approximation.
+    Evaluating the thin-film reflectance twice just for energy correction may be prohibitive. We found that using only the view-dependent term $E_i(\mathbf{v}\cdot\mathbf{n};...)$ and replacing the full reflectance $R$ with the $C_0$ term as defined by [#BB17] is a viable approximation.
 
 Sheen
 -----
@@ -1073,8 +1071,8 @@ Changelog
 
 (##) Version 2025x
 
-* Added new feature: thin-film interference (sec. [Thin-Film])
-* Added new parameter to base material: translucency color (sec. [Putting It All Together])
+* Added thin-film interference (Section [Thin Film])
+* Added translucency color base material parameter (Section [Putting It All Together] and Section [Dielectric BSDF for Opaque Surfaces])
 
 (##) Version 2022x
 
@@ -1109,28 +1107,28 @@ Combining Metallic and Dielectric BSDFs
 The core of the Enterprise PBR Material is a weighted sum of three BSDFs, the metallic BSDF, the opaque dielectric and the transparent dielectric BSDF. The similarity between the BSDFs allows us to simplify the material significantly. We start from the sum of the three BSDFs:
 
 \begin{eqnarray}
-&\text{ThinCore}(\rho, s, \eta, \rho_s) &=&\\
+&\text{ThinCore}(\rho, \rho_l, s, \eta, \rho_s) &=&\\
 &&m           & \text{Metallic}(\rho) \nonumber\\
-&+&(1-m)(1-t) & \text{OpaqueDielectric}(\rho, s, \eta, \rho_s) \nonumber\\
+&+&(1-m)(1-t) & \text{OpaqueDielectric}(\rho, \rho_l, s, \eta, \rho_s) \nonumber\\
 &+&(1-m)t     & \text{ThinTransparentDielectric}(\rho, s, \eta, \rho_s) \nonumber
 \end{eqnarray}
 
 Note that we omitted some parameters here to make the equations shorter. These do not influence the weighting.
 
 \begin{eqnarray}
-\text{ThinCore}(\rho, s, \eta, \rho_s) &=& \text{ThinCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, l) \\
+\text{ThinCore}(\rho, \rho_l, s, \eta, \rho_s) &=& \text{ThinCore}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, \rho_l, s, \eta, \rho_s, l) \\
 \text{Metallic}(\rho) &=& \text{Metallic}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho) \\
-\text{OpaqueDielectric}(\rho, s, \eta, \rho_s) &=& \text{OpaqueDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s, l) \\
+\text{OpaqueDielectric}(\rho, \rho_l, s, \eta, \rho_s) &=& \text{OpaqueDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, \rho_l, s, \eta, \rho_s, l) \\
 \text{ThinTransparentDielectric}(\rho, s, \eta, \rho_s) &=& \text{ThinTransparentDielectric}(\mathbf{v}, \mathbf{l}; r_u, r_v, \rho, s, \eta, \rho_s)
 \end{eqnarray}
 
 Substituting all terms leads to
 
 \begin{eqnarray}
-&\text{ThinCore}(\rho, s, \eta, \rho_s) &=& \\
+&\text{ThinCore}(\rho, \rho_l, s, \eta, \rho_s) &=& \\
 &&m           & M_r \, F(\cos\theta_r; \rho, 1) \nonumber\\
 &+&m          & M_{r,ms} \, F_{ms}(\rho, 1) \nonumber\\
-&+&(1-m)(1-t) & \rho \, B(\mathbf{v}, \mathbf{l}; s, F_0, \rho_s) \nonumber\\
+&+&(1-m)(1-t) & B(\mathbf{v}, \mathbf{l}; \rho, \rho_l, s, F_0, \rho_s) \nonumber\\
 &+&(1-m)(1-t) & s\,M_r \, F(\cos\theta_r; F_0 \rho_s, 1) \nonumber\\
 &+&(1-m)(1-t) & s\,M_{r,ms} \, F_{ms}(F_0 \rho_s, 1) \nonumber\\
 &+&(1-m)t     & s \, M_r \, F(\cos\theta_r; F_0 \rho_s, 1) \nonumber\\
@@ -1152,7 +1150,7 @@ and after rearranging we get
         (1-m) t s F_{ms}(F_0 \rho_s, 1)
     \right] \nonumber\\
 &&+& (1-m)t \rho\,{M_r}^\prime \, (1 - s \, F(\cos\theta_r'; F_0 \rho_s, 1)) \nonumber\\
-&&+& (1-m)(1-t) \rho \, B(\mathbf{v}, \mathbf{l}; s, F_0, \rho_s)
+&&+& (1-m)(1-t) B(\mathbf{v}, \mathbf{l}; \rho, \rho_l, s, F_0, \rho_s)
 \end{eqnarray}
 
 With the Schlick approximation for the Fresnel term
@@ -1181,7 +1179,7 @@ This allows us to simplify the combined BSDFs and we arrive at the final form:
 \text{ThinCore}(\rho, s, \eta, \rho_s)&=&& M_r F(\cos\theta_r; (1-m) s F_0 \rho_s + m \rho, (1-m)s + m) \nonumber\\
 &&+& M_{r,ms} F_{ms}((1-m) s F_0 \rho_s + m \rho, (1-m)s + m)) \nonumber\\
 &&+& (1-m)t \rho\,{M_r}^\prime \, (1 - s \, F(\cos\theta_r'; F_0 \rho_s, 1)) \nonumber\\
-&&+& (1-m)(1-t) \rho \, B(\mathbf{v}, \mathbf{l}; s, F_0, \rho_s)
+&&+& (1-m)(1-t) B(\mathbf{v}, \mathbf{l}; \rho, \rho_l, s, F_0, \rho_s)
 \end{eqnarray}
 
 
@@ -1448,11 +1446,17 @@ We derive a new material `glass` from the base material `dielectric`. The `glass
 Bibliography
 ============
 
+[#AK16]: Asen Atanasov and Vladimir Koylazov. A Practical Stochastic Algorithm for Rendering Mirror-Like Flakes. 2016.
+
+[#BB17]: Laurent Belcour, Pascal Barla. A Practical Extension to Microfacet Theory for the Modeling of Varying Iridescence. SIGGRAPH 2017. https://belcour.github.io/blog/research/publication/2017/05/01/brdf-thin-film.html
+
 [#Bur12]: Brent Burley. Physically-Based Shading at Disney, SIGGRAPH 2012.
 
 [#Bur15]: Brent Burley. Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering., SIGGRAPH 2015.
 
 [#CK17]: Alejandro Conty Estevez, Christopher Kulla. Production Friendly Microfacet Sheen BRDF, SIGGRAPH 2017.
+
+[#Cook82]: Robert L. Cook, Kenneth E. Torrance. 1982. A Reflectance Model for Computer Graphics.
 
 [#Fde19]: Carmelo J. Fdez-Agüera. A Multiple-Scattering Microfacet Model for Real-Time Image-based Lighting., Journal of Computer Graphics Techniques Vol. 8, No. 1, 2019.
 
@@ -1462,25 +1466,19 @@ Bibliography
 
 [#Hil18]: Stephen Hill. A Multi-Faceted Exploration, 2018. https://blog.selfshadow.com/2018/05/13/multi-faceted-part-1/
 
+[#Jak14]: Wenzel Jakob et al. Discrete Stochastic Microfacet Models, ACM Transactions on Graphics (ACM SIGGRAPH 2014).
+
 [#Kar13]: Brian Karis. Real Shading in Unreal Engine 4., SIGGRAPH 2013.
 
 [#KC17]: Christopher Kulla, Alejandro Conty. Revisiting Physically Based Shading at Imageworks. 2017.
-
-[#Jak14]: Wenzel Jakob et al. Discrete Stochastic Microfacet Models, ACM Transactions on Graphics (ACM SIGGRAPH 2014).
-
-[#AK16]: Asen Atanasov and Vladimir Koylazov. A Practical Stochastic Algorithm for Rendering Mirror-Like Flakes. 2016.
 
 [#KS01]: Csaba Keleman, Lazlo Szirmay-Kalos. A Microfacet Based Coupled Specular-Matte BRDF Model with Importance Sampling, Eurographics 2001.
 
 [#Lag13]: Sébastien Lagarde. Memo on Fresnel equations, 2013. https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
 
-[#WMLT07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
-
 [#NP13]: David Neubelt and Matt Pettineo. Crafting a Next-Gen Material Pipeline for The Order: 1886. 2013.
 
-[#Cook82]: Robert L. Cook, Kenneth E. Torrance. 1982. A Reflectance Model for Computer Graphics.
-
-[#BB17]: Laurent Belcour, Pascal Barla. A Practical Extension to Microfacet Theory for the Modeling of Varying Iridescence. SIGGRAPH 2017. https://belcour.github.io/blog/research/publication/2017/05/01/brdf-thin-film.html
+[#WMLT07]: Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance. Microfacet models for refraction through rough surfaces., EGSR 2007.
 
 License
 =======
