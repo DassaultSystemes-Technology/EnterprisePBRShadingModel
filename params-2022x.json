@@ -307,7 +307,7 @@
                     "group": ""
                 },
                 "metallic": {
-                    "default": 1,
+                    "default": 0,
                     "hidden": true
                 },
                 "roughness": {
@@ -378,7 +378,7 @@
                     "group": ""
                 },
                 "clearcoatNormal": {
-                    "group": ""                    
+                    "group": ""
                 },
                 "emissionColor": {
                     "hidden": true
