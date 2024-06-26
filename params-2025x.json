@@ -2,7 +2,7 @@
     "materials": {
         "generic": {
             "name": "Enterprise PBR Shading Model",
-            "preview": "img/subtypes_2025x_basic.png",
+            "preview": "img/subtypes_2022x_basic.png",
             "parameters": {
                 "albedo": {
                     "name": "Albedo",
