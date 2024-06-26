@@ -133,7 +133,7 @@
                     "group": "Iridescence"
                 },
                 "thinFilmIOR": {
-                    "name": "Thin Film IoR",
+                    "name": "Thin Film IOR",
                     "type": "float",
                     "min": 1,
                     "max": 2.5,
