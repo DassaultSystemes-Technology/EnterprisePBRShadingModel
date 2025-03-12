@@ -230,8 +230,8 @@ Table [bsdf-terms] lists all the terms shared in the three BSDFs. In this and th
 | $F(\cos\theta; f_0, f_{90})$                                          | Fresnel (reflection only)                                                                                    |
 | $F_d(\cos\theta; f_0, f_{90}, \eta_i, \eta_o)$                        | Fresnel (reflection and refractive transmission)                                                             |
 | $F_{ms}(f_0, f_{90})$                                                 | Multiple-scattering Fresnel (reflection only)                                                                |
-| $B_u(\mathbf{v}, \mathbf{l}; \rho, \rho_l, l)$                                      | Lambertian reflection/translucency BSDF                                                                      |
-| $B_c(\mathbf{v}, \mathbf{l}; \rho, \rho_l, r_u, r_v, l, f_0)$                       | Diffuse-like reflection/translucency BSDF simulating internal scattering layered beneath the microfacet BRDF |
+| $B_u(\mathbf{v}, \mathbf{l}; \rho, \rho_l, l)$                        | Lambertian reflection/translucency BSDF                                                                      |
+| $B_c(\mathbf{v}, \mathbf{l}; \rho, \rho_l, r_u, r_v, l, f_0)$         | Diffuse-like reflection/translucency BSDF simulating internal scattering layered beneath the microfacet BRDF |
 [Table [bsdf-terms]: List of terms that are composed to form the core BSDF.]
 
 Evaluating the complete material as sum of all BSDFs is expensive, as each BSDF contains a microfacet model and, therefore, we would have to compute the microfacet distribution multiple times. In order to avoid this overhead, we merge the microfacet models and put the weights $m$ and $t$ into the Fresnel term. This optimization is possible because we use Schlick's Fresnel approximation, see Section [In-Depth Look at the BSDFs].
@@ -682,14 +682,14 @@ Some materials, such as car paint or grainy metals, exhibit shifting random patt
 
 ### Parameters
 
- | Name        | Type  | Default | Range | Description                                                     |
- |-------------|-------|---------|-------|-----------------------------------------------------------------|
- | $f$         | float | 0       | [0,1] | Flake coverage (0 = no flakes, 1 = only flakes).                |
- | $\rho_f$    | color | 1       | [0,1] | Flake color.                                                    |
- | $s_f$       | float | 0       | [0,1] | Flake size (diameter) in mm in world space.                     |
- | $r_f$       | float | 0       | [0,1] | Roughness of distribution that controls flake orientation.      |
- | $f_f$       | float | 0       | [0,1] | Flip flop effect (0 = none, 1 = full).                          |
- | $\rho_{ff}$ | color | 1       | [0,1] | Flake color at normal incidence if flip flop effect is enabled. |
+ | Name        | Type  | Default | Range   | Description                                                     |
+ |-------------|-------|---------|---------|-----------------------------------------------------------------|
+ | $f$         | float | 0       | [0,1]   | Flake coverage (0 = no flakes, 1 = only flakes).                |
+ | $\rho_f$    | color | 1       | [0,1]   | Flake color.                                                    |
+ | $s_f$       | float | 0       | [0,inf) | Flake size (diameter) in mm in world space.                     |
+ | $r_f$       | float | 0       | [0,1]   | Roughness of distribution that controls flake orientation.      |
+ | $f_f$       | float | 0       | [0,1]   | Flip flop effect (0 = none, 1 = full).                          |
+ | $\rho_{ff}$ | color | 1       | [0,1]   | Flake color at normal incidence if flip flop effect is enabled. |
 [Table [flakes-parameters]: List of flakes parameters]
 
 ![Figure [flakes-parameters-fig]: Renderings with various values for flake parameters.](img/params_flakes_2022x.png)
