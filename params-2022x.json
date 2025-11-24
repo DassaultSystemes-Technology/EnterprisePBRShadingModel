@@ -37,7 +37,10 @@
                     "max": 1,
                     "default": 0,
                     "uiOrder": 3,
-                    "group": "Base"
+                    "group": "Base",
+                    "requires": [
+                        "roughness > 0"
+                    ]
                 },
                 "anisotropyRotation": {
                     "name": "Anisotropy Rotation",
@@ -46,7 +49,11 @@
                     "max": 1,
                     "default": 0,
                     "uiOrder": 4,
-                    "group": "Base"
+                    "group": "Base",
+                    "requires": [
+                        "roughness > 0",
+                        "anisotropy != 0"
+                    ]
                 },
                 "normal": {
                     "name": "Normal",
@@ -62,8 +69,8 @@
                     "uiOrder": 6,
                     "group": "Base"
                 },
-                "translucency": {
-                    "name": "Translucency",
+                "transparency": {
+                    "name": "Transparency",
                     "type": "float",
                     "min": 0,
                     "max": 1,
@@ -71,14 +78,17 @@
                     "uiOrder": 7,
                     "group": "Base"
                 },
-                "transparency": {
-                    "name": "Transparency",
+                "translucency": {
+                    "name": "Translucency",
                     "type": "float",
                     "min": 0,
                     "max": 1,
                     "default": 0,
                     "uiOrder": 8,
-                    "group": "Base"
+                    "group": "Base",
+                    "requires": [
+                        "transparency < 1"
+                    ]
                 },
                 "cutoutOpacity": {
                     "name": "Cut-Out Opacity",
@@ -104,7 +114,10 @@
                     "max": [1, 1, 1],
                     "default": [1, 1, 1],
                     "uiOrder": 11,
-                    "group": "Base"
+                    "group": "Base",
+                    "requires": [
+                        "specular > 0"
+                    ]
                 },
                 "sheenColor": {
                     "name": "Sheen Color",
@@ -121,7 +134,10 @@
                     "max": 1,
                     "default": 0.5,
                     "uiOrder": 13,
-                    "group": "Sheen"
+                    "group": "Sheen",
+                    "requires": [
+                        "sheenColor != (0,0,0)"
+                    ]
                 },
                 "flakeCoverage": {
                     "name": "Flake Coverage",
@@ -138,7 +154,10 @@
                     "max": [1, 1, 1],
                     "default": [1, 1, 1],
                     "uiOrder": 15,
-                    "group": "Flakes"
+                    "group": "Flakes",
+                    "requires": [
+                        "flakeCoverage > 0"
+                    ]
                 },
                 "flakeSize": {
                     "name": "Flake Size",
@@ -146,7 +165,10 @@
                     "min": 0,
                     "default": 0,
                     "uiOrder": 16,
-                    "group": "Flakes"
+                    "group": "Flakes",
+                    "requires": [
+                        "flakeCoverage > 0"
+                    ]
                 },
                 "flakeRoughness": {
                     "name": "Flake Roughness",
@@ -155,7 +177,10 @@
                     "max": 1,
                     "default": 0,
                     "uiOrder": 17,
-                    "group": "Flakes"
+                    "group": "Flakes",
+                    "requires": [
+                        "flakeCoverage > 0"
+                    ]
                 },
                 "flipFlop": {
                     "name": "Flip Flop",
@@ -164,7 +189,10 @@
                     "max": 1,
                     "default": 0,
                     "uiOrder": 18,
-                    "group": "Flakes"
+                    "group": "Flakes",
+                    "requires": [
+                        "flakeCoverage > 0"
+                    ]
                 },
                 "flipFlopColor": {
                     "name": "Flip Flop Color",
@@ -172,7 +200,11 @@
                     "max": [1, 1, 1],
                     "default": [1, 1, 1],
                     "uiOrder": 19,
-                    "group": "Flakes"
+                    "group": "Flakes",
+                    "requires": [
+                        "flakeCoverage > 0",
+                        "flipFlop > 0"
+                    ]
                 },
                 "clearcoat": {
                     "name": "Clearcoat",
@@ -190,14 +222,20 @@
                     "max": 1,
                     "default": 0,
                     "uiOrder": 21,
-                    "group": "Coating"
+                    "group": "Coating",
+                    "requires": [
+                        "clearcoat > 0"
+                    ]
                 },
                 "clearcoatNormal": {
                     "name": "Clearcoat Normal",
                     "type": "normal",
                     "default": [0, 0, 1],
                     "uiOrder": 22,
-                    "group": "Coating"
+                    "group": "Coating",
+                    "requires": [
+                        "clearcoat > 0"
+                    ]
                 },
                 "emissionColor": {
                     "name": "Emission Color",
@@ -213,7 +251,10 @@
                     "min": 0,
                     "default": 0,
                     "uiOrder": 24,
-                    "group": "Emission"
+                    "group": "Emission",
+                    "requires": [
+                        "emissionColor != (0,0,0)"
+                    ]
                 },
                 "emissionMode": {
                     "name": "Emission Mode",
@@ -222,7 +263,11 @@
                     "default": "LUMINOUS_EMITTANCE",
                     "enum": [ "LUMINOUS_EMITTANCE", "LUMINOUS_POWER" ],
                     "uiOrder": 25,
-                    "group": "Emission"
+                    "group": "Emission",
+                    "requires": [
+                        "emissionColor != (0,0,0)",
+                        "emissionValue > 0"
+                    ]
                 },
                 "emissionEnergyNormalization": {
                     "name": "Energy Normalization",
@@ -230,7 +275,11 @@
                     "uniform": true,
                     "default": false,
                     "uiOrder": 26,
-                    "group": "Emission"
+                    "group": "Emission",
+                    "requires": [
+                        "emissionColor != (0,0,0)",
+                        "emissionValue > 0"
+                    ]
                 },
                 "thinWalled": {
                     "name": "Thin Walled",
@@ -238,7 +287,11 @@
                     "uniform": true,
                     "default": true,
                     "uiOrder": 27,
-                    "group": "Volume"
+                    "group": "Volume",
+                    "requires": [
+                        "albedoColor != (0,0,0)",
+                        "transparency > 0"
+                    ]
                 },
                 "ior": {
                     "name": "Index of Refraction",
@@ -256,7 +309,15 @@
                     "min": 0,
                     "default": 0,
                     "uiOrder": 29,
-                    "group": "Volume"
+                    "group": "Volume",
+                    "requires": [
+                        "albedoColor != (0,0,0)",
+                        "transparency > 0",
+                        "thinWalled == false",
+                        "ior > 1",
+                        "attenuationColor != (0,0,0)",
+                        "attenuationDistance > 0"
+                    ]
                 },
                 "attenuationColor": {
                     "name": "Attenuation Color",
@@ -265,7 +326,12 @@
                     "max": [1, 1, 1],
                     "default": [1, 1, 1],
                     "uiOrder": 30,
-                    "group": "Volume"
+                    "group": "Volume",
+                    "requires": [
+                        "albedoColor != (0,0,0)",
+                        "transparency > 0",
+                        "thinWalled == false"
+                    ]
                 },
                 "attenuationDistance": {
                     "name": "Attenuation Distance",
@@ -274,7 +340,14 @@
                     "min": 0,
                     "default": { "infinity": true },
                     "uiOrder": 31,
-                    "group": "Volume"
+                    "group": "Volume",
+                    "requires": [
+                        "albedoColor != (0,0,0)",
+                        "transparency > 0",
+                        "thinWalled == false",
+                        "attenuationColor != (0,0,0)",
+                        "attenuationColor != (1,1,1)"
+                    ]
                 },
                 "subsurfaceColor": {
                     "name": "Subsurface Color",
@@ -283,7 +356,15 @@
                     "max": [1, 1, 1],
                     "default": [0, 0, 0],
                     "uiOrder": 32,
-                    "group": "Volume"
+                    "group": "Volume",
+                    "requires": [
+                        "albedoColor != (0,0,0)",
+                        "transparency > 0",
+                        "thinWalled == false",
+                        "attenuationColor != (0,0,0)",
+                        "attenuationColor != (1,1,1)"
+                        "attenuationDistance > 0"
+                    ]
                 },
                 "subsurfaceAnisotropy": {
                     "name": "Subsurface Anisotropy",
@@ -293,7 +374,15 @@
                     "max": 1,
                     "default": 0,
                     "uiOrder": 33,
-                    "group": "Volume"
+                    "group": "Volume",
+                    "requires": [
+                        "albedoColor != (0,0,0)",
+                        "transparency > 0",
+                        "thinWalled == false",
+                        "attenuationColor != (0,0,0)",
+                        "attenuationColor != (1,1,1)"
+                        "attenuationDistance > 0"
+                    ]
                 }
             }
         },
