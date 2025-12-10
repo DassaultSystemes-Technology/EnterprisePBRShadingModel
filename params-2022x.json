@@ -38,9 +38,9 @@
                     "default": 0,
                     "uiOrder": 3,
                     "group": "Base",
-                    "requires": [
-                        "roughness > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "roughness" }, 0]
+                    }
                 },
                 "anisotropyRotation": {
                     "name": "Anisotropy Rotation",
@@ -50,10 +50,12 @@
                     "default": 0,
                     "uiOrder": 4,
                     "group": "Base",
-                    "requires": [
-                        "roughness > 0",
-                        "anisotropy != 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { ">": [{ "var": "roughness" }, 0] },
+                            { "!=": [{ "var": "anisotropy" }, 0] }
+                        ]
+                    }
                 },
                 "normal": {
                     "name": "Normal",
@@ -86,9 +88,9 @@
                     "default": 0,
                     "uiOrder": 8,
                     "group": "Base",
-                    "requires": [
-                        "transparency < 1"
-                    ]
+                    "requires": {
+                        "<": [{ "var": "transparency" }, 1]
+                    }
                 },
                 "cutoutOpacity": {
                     "name": "Cut-Out Opacity",
@@ -115,9 +117,9 @@
                     "default": [1, 1, 1],
                     "uiOrder": 11,
                     "group": "Base",
-                    "requires": [
-                        "specular > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "specular" }, 0]
+                    }
                 },
                 "sheenColor": {
                     "name": "Sheen Color",
@@ -135,9 +137,9 @@
                     "default": 0.5,
                     "uiOrder": 13,
                     "group": "Sheen",
-                    "requires": [
-                        "sheenColor != (0,0,0)"
-                    ]
+                    "requires": {
+                        "!=": [{ "var": "sheenColor" }, [0, 0, 0]]
+                    }
                 },
                 "flakeCoverage": {
                     "name": "Flake Coverage",
@@ -155,9 +157,9 @@
                     "default": [1, 1, 1],
                     "uiOrder": 15,
                     "group": "Flakes",
-                    "requires": [
-                        "flakeCoverage > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "flakeCoverage" }, 0]
+                    }
                 },
                 "flakeSize": {
                     "name": "Flake Size",
@@ -166,9 +168,9 @@
                     "default": 0,
                     "uiOrder": 16,
                     "group": "Flakes",
-                    "requires": [
-                        "flakeCoverage > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "flakeCoverage" }, 0]
+                    }
                 },
                 "flakeRoughness": {
                     "name": "Flake Roughness",
@@ -178,9 +180,9 @@
                     "default": 0,
                     "uiOrder": 17,
                     "group": "Flakes",
-                    "requires": [
-                        "flakeCoverage > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "flakeCoverage" }, 0]
+                    }
                 },
                 "flipFlop": {
                     "name": "Flip Flop",
@@ -190,9 +192,9 @@
                     "default": 0,
                     "uiOrder": 18,
                     "group": "Flakes",
-                    "requires": [
-                        "flakeCoverage > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "flakeCoverage" }, 0]
+                    }
                 },
                 "flipFlopColor": {
                     "name": "Flip Flop Color",
@@ -201,10 +203,12 @@
                     "default": [1, 1, 1],
                     "uiOrder": 19,
                     "group": "Flakes",
-                    "requires": [
-                        "flakeCoverage > 0",
-                        "flipFlop > 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { ">": [{ "var": "flakeCoverage" }, 0] },
+                            { ">": [{ "var": "flipFlop" }, 0] }
+                        ]
+                    }
                 },
                 "clearcoat": {
                     "name": "Clearcoat",
@@ -223,9 +227,9 @@
                     "default": 0,
                     "uiOrder": 21,
                     "group": "Coating",
-                    "requires": [
-                        "clearcoat > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "clearcoat" }, 0]
+                    }
                 },
                 "clearcoatNormal": {
                     "name": "Clearcoat Normal",
@@ -233,9 +237,9 @@
                     "default": [0, 0, 1],
                     "uiOrder": 22,
                     "group": "Coating",
-                    "requires": [
-                        "clearcoat > 0"
-                    ]
+                    "requires": {
+                        ">": [{ "var": "clearcoat" }, 0]
+                    }
                 },
                 "emissionColor": {
                     "name": "Emission Color",
@@ -252,22 +256,24 @@
                     "default": 0,
                     "uiOrder": 24,
                     "group": "Emission",
-                    "requires": [
-                        "emissionColor != (0,0,0)"
-                    ]
+                    "requires": {
+                        "!=": [{ "var": "emissionColor" }, [0, 0, 0]]
+                    }
                 },
                 "emissionMode": {
                     "name": "Emission Mode",
                     "type": "enum",
                     "uniform": true,
                     "default": "LUMINOUS_EMITTANCE",
-                    "enum": [ "LUMINOUS_EMITTANCE", "LUMINOUS_POWER" ],
+                    "enum": ["LUMINOUS_EMITTANCE", "LUMINOUS_POWER"],
                     "uiOrder": 25,
                     "group": "Emission",
-                    "requires": [
-                        "emissionColor != (0,0,0)",
-                        "emissionValue > 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "emissionColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "emissionValue" }, 0] }
+                        ]
+                    }
                 },
                 "emissionEnergyNormalization": {
                     "name": "Energy Normalization",
@@ -276,10 +282,12 @@
                     "default": false,
                     "uiOrder": 26,
                     "group": "Emission",
-                    "requires": [
-                        "emissionColor != (0,0,0)",
-                        "emissionValue > 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "emissionColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "emissionValue" }, 0] }
+                        ]
+                    }
                 },
                 "thinWalled": {
                     "name": "Thin Walled",
@@ -288,10 +296,12 @@
                     "default": true,
                     "uiOrder": 27,
                     "group": "Volume",
-                    "requires": [
-                        "albedoColor != (0,0,0)",
-                        "transparency > 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "albedoColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "transparency" }, 0] }
+                        ]
+                    }
                 },
                 "ior": {
                     "name": "Index of Refraction",
@@ -310,14 +320,16 @@
                     "default": 0,
                     "uiOrder": 29,
                     "group": "Volume",
-                    "requires": [
-                        "albedoColor != (0,0,0)",
-                        "transparency > 0",
-                        "thinWalled == false",
-                        "ior > 1",
-                        "attenuationColor != (0,0,0)",
-                        "attenuationDistance > 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "albedoColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "transparency" }, 0] },
+                            { "==": [{ "var": "thinWalled" }, false] },
+                            { ">": [{ "var": "ior" }, 1] },
+                            { "!=": [{ "var": "attenuationColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "attenuationDistance" }, 0] }
+                        ]
+                    }
                 },
                 "attenuationColor": {
                     "name": "Attenuation Color",
@@ -327,11 +339,13 @@
                     "default": [1, 1, 1],
                     "uiOrder": 30,
                     "group": "Volume",
-                    "requires": [
-                        "albedoColor != (0,0,0)",
-                        "transparency > 0",
-                        "thinWalled == false"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "albedoColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "transparency" }, 0] },
+                            { "==": [{ "var": "thinWalled" }, false] }
+                        ]
+                    }
                 },
                 "attenuationDistance": {
                     "name": "Attenuation Distance",
@@ -341,13 +355,15 @@
                     "default": { "infinity": true },
                     "uiOrder": 31,
                     "group": "Volume",
-                    "requires": [
-                        "albedoColor != (0,0,0)",
-                        "transparency > 0",
-                        "thinWalled == false",
-                        "attenuationColor != (0,0,0)",
-                        "attenuationColor != (1,1,1)"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "albedoColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "transparency" }, 0] },
+                            { "==": [{ "var": "thinWalled" }, false] },
+                            { "!=": [{ "var": "attenuationColor" }, [0, 0, 0]] },
+                            { "!=": [{ "var": "attenuationColor" }, [1, 1, 1]] }
+                        ]
+                    }
                 },
                 "subsurfaceColor": {
                     "name": "Subsurface Color",
@@ -357,14 +373,16 @@
                     "default": [0, 0, 0],
                     "uiOrder": 32,
                     "group": "Volume",
-                    "requires": [
-                        "albedoColor != (0,0,0)",
-                        "transparency > 0",
-                        "thinWalled == false",
-                        "attenuationColor != (0,0,0)",
-                        "attenuationColor != (1,1,1)"
-                        "attenuationDistance > 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "albedoColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "transparency" }, 0] },
+                            { "==": [{ "var": "thinWalled" }, false] },
+                            { "!=": [{ "var": "attenuationColor" }, [0, 0, 0]] },
+                            { "!=": [{ "var": "attenuationColor" }, [1, 1, 1]] },
+                            { ">": [{ "var": "attenuationDistance" }, 0] }
+                        ]
+                    }
                 },
                 "subsurfaceAnisotropy": {
                     "name": "Subsurface Anisotropy",
@@ -375,14 +393,16 @@
                     "default": 0,
                     "uiOrder": 33,
                     "group": "Volume",
-                    "requires": [
-                        "albedoColor != (0,0,0)",
-                        "transparency > 0",
-                        "thinWalled == false",
-                        "attenuationColor != (0,0,0)",
-                        "attenuationColor != (1,1,1)"
-                        "attenuationDistance > 0"
-                    ]
+                    "requires": {
+                        "and": [
+                            { "!=": [{ "var": "albedoColor" }, [0, 0, 0]] },
+                            { ">": [{ "var": "transparency" }, 0] },
+                            { "==": [{ "var": "thinWalled" }, false] },
+                            { "!=": [{ "var": "attenuationColor" }, [0, 0, 0]] },
+                            { "!=": [{ "var": "attenuationColor" }, [1, 1, 1]] },
+                            { ">": [{ "var": "attenuationDistance" }, 0] }
+                        ]
+                    }
                 }
             }
         },
