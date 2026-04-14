@@ -21,3 +21,11 @@ Enterprise PBR Shading Model (c) Dassault Systèmes 2024
 Enterprise PBR Shading Model (DSPBR) licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 In addition, please acknowledge your use of the Dassault Systèmes Enterprise PBR Shading Model (DSPBR) when DSPBR is used or implemented in a product by adding  the following "[name of the product] is implementing DSPBR, the Dassault Systèmes Enterprise PBR Shading Model", in a place and format which shall be reasonably visible.
+
+
+## Document Rendering
+
+This specification uses [Markdeep](https://casual-effects.com/markdeep) for in-browser rendering.
+A local copy is bundled to avoid external dependencies and ensure reproducibility.
+
+Markdeep is © Morgan McGuire and licensed under the BSD 2-Clause License.

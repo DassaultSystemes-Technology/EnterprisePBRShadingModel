@@ -85,9 +85,9 @@ _Cut-out_ acts like an alpha channel on geometry. It is usually a texture which 
 ![Figure [cutout-geometry]: Cut-out mask (left) applied to a sphere (right). Note that transparent regions are exactly 0, opaque regions are exactly 1. Other values are only used for anti-aliasing at edges.](img/user_guide_cutout_geometry.png)
 
 Note that it is important to distinguish between _Transparency_ and _Cut-Out_. _Transparency_ is a view-dependent effect that blends between reflection and transmission based on a Fresnel term. _Cut-Out_ is not view-dependent, it simply makes the surface transparent after lighting computations have finished.
- 
+
 ![Figure [cutout]: Transparency (top) and (inverted) Cut-Out (bottom) 0 to 1. Note that while the sphere with cut-out completely vanishes, the transparent sphere still reflects light at grazing angles.](img/user_guide_cutout.png)
- 
+
 ### Sheen
 
 Some fabrics like velvet show a significant amount of rim lighting (or sheen), resulting from both forward and backward scattering. This comes from tiny fibers standing straight up on the surface. The _Sheen_ parameter controls the amount of sheen, ranging from 0 (no sheen) to 1 (maximum sheen).
@@ -134,7 +134,7 @@ The brightness of a light source can be specified as luminous power (roughly: th
 ![Figure [emission-modes]: Illustration of the two emission modes. Left: The emission of both spheres is set to 1 lux by specifying an _Emission Value_ of 1 and setting _Emission Mode_ to luminous emittance. When directly looking at them they appear equally bright, but the amount of energy they emit is significantly higher for the large sphere. Right: Emission is set to 1 lm for both spheres by specifying _Emission Mode_ as luminous power. They radiate the same amount of energy into the scene but they are differently bright when looking at them directly.](img/user_guide_emission_modes.png)
 
 !!! Tip: Using suitable emission mode
-    Specify luminous power whenever finding real-world specifications and when using proxy surfaces as light emitters (e.g., for light bulbs often the glass surface surrounding the filament is set as emissive instead of the filament that actually emits light). Use luminous emittance when changing the size of a light source shall impact the amount of energy it emits. 
+    Specify luminous power whenever finding real-world specifications and when using proxy surfaces as light emitters (e.g., for light bulbs often the glass surface surrounding the filament is set as emissive instead of the filament that actually emits light). Use luminous emittance when changing the size of a light source shall impact the amount of energy it emits.
 
 ### Energy Normalization
 
@@ -146,7 +146,7 @@ Emission color can modify the emission in two different ways:
 ![Figure [energy-normalization]: In both images the emissive value of both spheres is set to 1 and emission quantity to luminous power. The left sphere has a dark gray emission color, on the right sphere it is white. Without energy normalization (left) the left sphere is darker as emission color influences intensity. With energy normalization (right) they are equally bright as only emission color chromaticity is considered.](img/user_guide_energy_normalization.png)
 
 !!! Tip: Using _Energy Normalization_
-    Use energy normalization to replicate real light bulbs whose emission characteristic is specified by luminous power and color temperature as in Figure [energy-normalization]. Do not use energy normalization to tweak the intensity of mesh lights via the emission color slider. 
+    Use energy normalization to replicate real light bulbs whose emission characteristic is specified by luminous power and color temperature as in Figure [energy-normalization]. Do not use energy normalization to tweak the intensity of mesh lights via the emission color slider.
 
 Volumetric Component
 --------------------
@@ -230,4 +230,4 @@ The Enterprise PBR Shading Model (DSPBR), © Dassault Systèmes 2019, is license
 
 [license.png]: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAPCAMAAABEF7i9AAAAllBMVEUAAAD///+rsapERER3d3eIiIjMzMzu7u4iIiKUmZO6v7rKzsoODg4RERFVVVUNDQ0NDg0PEA8zMzNLTEtbXltmZmZydnF9gn2AgICPkI+ZmZmqqqq7u7vFxsXIzMgNDQwZGRkgICAhISEkJSMnKCcuMC4xMzE5Ozk7PTtBQkFCQkJDQ0Nna2eGhoaHh4ezuLLGysbd3d1wVGpAAAAA0klEQVR42q2T1xbCIAyGk0CXdlmto3XvPd7/5QRL1432WHI4XED4+PMHALQHag0JJBlXMNQScx2ibu9PdTnQcY3iErYl6oxbAo/rUrUJA6J5vx0wNNC0gVkMbBPZXtQ8Uf6qpNJwOf0EjmCKto+ce1aSIg9FzTO1/xlYyVeL34FDMC3ZFT+SNXOX6PEsBKm0rIOYPYuGClnsWTxBHtQV1gRhI4UUGJh6EAsPoxdedjUPK+dzT38DDyvNXXYW9wJ43mh4h6ItN8U7Ldv+FN1/WXO8Aed5CQIgC4KiAAAAAElFTkSuQmCC
 
-<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/1.04/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="style/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
