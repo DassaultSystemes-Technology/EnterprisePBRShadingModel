@@ -871,8 +871,9 @@ To provide convenient parameterization for users we introduce three new user-fri
 From this we derive the absorption and scattering coefficient.
 
 \begin{eqnarray}
-\sigma_a &=& \frac{1 - \rho_{ss}}{\text{mfp}} = \sigma_t (1 - \rho_{ss}) \\
-\sigma_s &=& \frac{\rho_{ss}}{\text{mfp}} = \sigma_t\rho_{ss} = \sigma_t - \sigma_a
+\sigma_t &=& \frac{1}{\text{mfp}} = \frac{-\log(a)}{d} \\
+\tilde{s} &=& 4.09712 + 4.20863\rho_{ms} - \sqrt{9.59217 + 41.6808\rho_{ms} + 17.7126\rho_{ms}^2} \\
+\rho_{ss} &=& \frac{1 - \tilde{s}^2}{1 - g \tilde{s}^2}
 \end{eqnarray}
 
 Intuitively, the mean free path length describes the reciprocal of the density of the medium. The denser the medium, the shorter the distance until a particle is hit and, therefore, the more light is absorbed or scattered out. In our case, after the light traveled $d$ units into the medium, all that remains is the color $a$.

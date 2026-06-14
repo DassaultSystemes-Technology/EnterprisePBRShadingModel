@@ -1004,7 +1004,8 @@ To provide convenient parameterization for users we introduce three new user-fri
 
 \begin{eqnarray}
 \sigma_t &=& \frac{1}{\text{mfp}} = \frac{-\log(a)}{d} \\
-\rho_{ss} &=& 1 - \left(4.09712 + 4.20863\rho_{ms} - \sqrt{9.59217 + 41.6808\rho_{ms} + 17.7126\rho_{ms}^2}\right)^2
+\tilde{s} &=& 4.09712 + 4.20863\rho_{ms} - \sqrt{9.59217 + 41.6808\rho_{ms} + 17.7126\rho_{ms}^2} \\
+\rho_{ss} &=& \frac{1 - \tilde{s}^2}{1 - g \tilde{s}^2}
 \end{eqnarray}
 
 From this we derive the absorption and scattering coefficient.
