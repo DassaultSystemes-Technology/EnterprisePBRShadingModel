@@ -861,31 +861,23 @@ If the thin-walled material parameter is set to false, the surface to which the 
 
 Absorption is controlled by the absorption coefficient $\sigma_a$; subsurface scattering by the scattering coefficient $\sigma_s$ and the phase function $p(\mathbf{v},\mathbf{l})$. The coefficients $\sigma_a$ and $\sigma_s$ are wavelength-dependent values in range $[0,\inf)$. Such an infinite range makes them hard to be controlled by the users.
 
-To provide convenient parameterization for users we introduce three new user-friendly parameters: attenuation color $a$, attenuation distance $d$, and subsurface color $\rho_{ms}$. Attenuation color and distance are mapped to the attenuation coefficient $\sigma_t$ (or its inverse, the mean free path length $\text{mfp}$). Subsurface color is mapped to the single-scattering albedo $\rho_{ss}$ [#KC17].
+To provide convenient parameterization for users we introduce four new user-friendly parameters: attenuation color $a$, attenuation distance $d$, subsurface color $\rho_{ms}$, and volume-scattering anisotropy $g$. Attenuation color and distance are mapped to the attenuation coefficient $\sigma_t$ (or its inverse, the mean free path length $\text{mfp}$). Subsurface color is mapped to the single-scattering albedo $\rho_{ss}$, taking $g$ into account [#KC17].
 
 \begin{eqnarray}
 \sigma_t &=& \frac{1}{\text{mfp}} = \frac{-\log(a)}{d} \\
-\rho_{ss} &=& 1 - \left(4.09712 + 4.20863\rho_{ms} - \sqrt{9.59217 + 41.6808\rho_{ms} + 17.7126\rho_{ms}^2}\right)^2
-\end{eqnarray}
-
-From this we derive the absorption and scattering coefficient.
-
-\begin{eqnarray}
-\sigma_a &=& \frac{1 - \rho_{ss}}{\text{mfp}} = \sigma_t (1 - \rho_{ss}) \\
-\sigma_s &=& \frac{\rho_{ss}}{\text{mfp}} = \sigma_t\rho_{ss} = \sigma_t - \sigma_a
+\tilde{s} &=& 4.09712 + 4.20863\rho_{ms} - \sqrt{9.59217 + 41.6808\rho_{ms} + 17.7126\rho_{ms}^2} \\
+\rho_{ss} &=& \frac{1 - \tilde{s}^2}{1 - g \tilde{s}^2}
 \end{eqnarray}
 
 Intuitively, the mean free path length describes the reciprocal of the density of the medium. The denser the medium, the shorter the distance until a particle is hit and, therefore, the more light is absorbed or scattered out. In our case, after the light traveled $d$ units into the medium, all that remains is the color $a$.
 
 When a particle is hit, the light color gets multiplied by the single-scattering color $\rho_{ss}$. On the surface, the color $\rho_{ms}$ can be observed from the multiple scattering events occurring in the medium.
 
-In addition the phase function $p(\mathbf{v},\mathbf{l})$ determines the probability density of outgoing directions $\mathbf{l}$ given an incident direction $\mathbf{v}$ at a scattering event. We use the phase function developed by Henyey-Greenstein [#HG41]. It is controlled by a single parameter $g$ in the range $[-1,1]$, the *anisotropy parameter*.
+The phase function $p(\mathbf{v},\mathbf{l})$ determines the probability density of outgoing directions $\mathbf{l}$ given an incident direction $\mathbf{v}$ at a scattering event. It is controlled by the anisotropy parameter $g \in [-1,1]$: negative values produce backward scattering, positive values produce forward scattering, and $g=0$ produces isotropic scattering. We use the phase function developed by Henyey-Greenstein [#HG41]:
 
 \begin{eqnarray}
 p(\mathbf{v},\mathbf{l}; g) = \frac{1}{4 \pi} \frac{1-g^2}{(1+g^2+2g(\mathbf{v} \cdot \mathbf{l}))^{3/2}}
 \end{eqnarray}
-
-Negative values of $g$ correspond to backward scattering and positive values to forward scattering. $g=0$ results in isotropic scattering.
 
  Name          | Type          | Default | Range   | Description
 ---------------|---------------|---------|---------|-------------
